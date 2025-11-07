@@ -114,21 +114,38 @@ export function WidgetList() {
     toast({ title: "Sending test message..." });
     try {
       // In a real app, this would be a server-side call to securely use the webhook secret
+      // for signing the request. For now, we are just sending a test payload.
+      const testPayload = {
+        event: 'test_message',
+        widgetId: widget.id,
+        sender: {
+          id: 'test-user-123',
+          role: 'user',
+        },
+        message: {
+          id: `test-message-${Date.now()}`,
+          text: 'This is a test message from your Chat Widget Factory dashboard.',
+          timestamp: new Date().toISOString(),
+        },
+      };
+
       const response = await fetch(widget.webhookUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: 'This is a test message from your Chat Widget Factory.' }),
+        body: JSON.stringify(testPayload),
       });
+
       if (response.ok) {
         toast({ title: "Test message sent successfully!", description: "Check your webhook endpoint." });
       } else {
-        throw new Error(`Webhook returned status ${response.status}`);
+        const errorBody = await response.text();
+        throw new Error(`Webhook returned status ${response.status}. Response: ${errorBody}`);
       }
     } catch (e: any) {
       toast({
         variant: "destructive",
         title: "Failed to send test message",
-        description: e.message || "Please check the webhook URL and your server.",
+        description: e.message || "Please check the webhook URL and your server's logs.",
       });
     }
   };
