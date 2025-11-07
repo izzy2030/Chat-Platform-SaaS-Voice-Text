@@ -146,17 +146,16 @@ export default function EditWidgetPage({
     setIsLoading(true);
 
     try {
-      const updatedWidget = {
+      const updatedWidgetData: any = {
         name: data.name,
         webhookUrl: data.webhookUrl,
-        webhookSecret: data.webhookSecret,
         allowedDomains: data.allowedDomains.split(',').map(d => d.trim()),
         brand: {
-          bubbleColor: data.bubbleColor,
-          bubbleIcon: data.bubbleIcon,
-          panelColor: data.panelColor,
-          headerTitle: data.headerTitle,
-          welcomeMessage: data.welcomeMessage,
+          bubbleColor: data.bubbleColor || '',
+          bubbleIcon: data.bubbleIcon || '',
+          panelColor: data.panelColor || '',
+          headerTitle: data.headerTitle || '',
+          welcomeMessage: data.welcomeMessage || '',
           position: data.position,
         },
         behavior: {
@@ -165,7 +164,14 @@ export default function EditWidgetPage({
         userId: user.uid,
       };
 
-      await updateDocumentNonBlocking(widgetDocRef, updatedWidget);
+      // Only include webhookSecret if it has a value
+      if (data.webhookSecret) {
+        updatedWidgetData.webhookSecret = data.webhookSecret;
+      } else {
+        updatedWidgetData.webhookSecret = '';
+      }
+
+      await updateDocumentNonBlocking(widgetDocRef, updatedWidgetData);
 
       toast({
         title: 'Widget Updated!',
