@@ -85,7 +85,7 @@ export function ChatWidgetComponent({
       
       const botMessage: Message = {
         id: 'bot-' + Date.now().toString(),
-        text: responseData.text || "Sorry, I didn't understand that.", // Fallback text
+        text: responseData.output || "Sorry, I didn't understand that.", // Fallback text
         sender: 'bot',
       };
       
