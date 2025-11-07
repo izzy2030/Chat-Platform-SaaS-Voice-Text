@@ -1,0 +1,128 @@
+{
+  "entities": {
+    "User": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "User",
+      "type": "object",
+      "description": "Represents a user of the Chat Widget Assistant application.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the User entity."
+        },
+        "username": {
+          "type": "string",
+          "description": "The username of the user."
+        },
+        "email": {
+          "type": "string",
+          "description": "The email address of the user.",
+          "format": "email"
+        },
+        "isAdmin": {
+          "type": "boolean",
+          "description": "Indicates whether the user is an administrator."
+        }
+      },
+      "required": [
+        "id",
+        "username",
+        "email",
+        "isAdmin"
+      ]
+    },
+    "ChatWidget": {
+      "$schema": "http://json-schema.org/draft-07/schema#",
+      "title": "ChatWidget",
+      "type": "object",
+      "description": "Represents a chat widget configuration.",
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the ChatWidget entity."
+        },
+        "name": {
+          "type": "string",
+          "description": "The name of the chat widget."
+        },
+        "configuration": {
+          "type": "string",
+          "description": "JSON configuration for the chat widget's behavior and appearance."
+        },
+        "userId": {
+          "type": "string",
+          "description": "Reference to User. (Relationship: User 1:N ChatWidget). The user that created this widget."
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "configuration",
+        "userId"
+      ]
+    }
+  },
+  "auth": {
+    "providers": [
+      "password",
+      "anonymous"
+    ]
+  },
+  "firestore": {
+    "structure": [
+      {
+        "path": "/users/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Stores user profile information.  No denormalized authorization fields are required as ownership is path-based.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/users/{userId}/chatWidgets/{chatWidgetId}",
+        "definition": {
+          "entityName": "ChatWidget",
+          "schema": {
+            "$ref": "#/backend/entities/ChatWidget"
+          },
+          "description": "Stores chat widget configurations owned by a specific user. Includes denormalized 'userId' for authorization independence.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the user."
+            },
+            {
+              "name": "chatWidgetId",
+              "description": "The unique identifier of the chat widget."
+            }
+          ]
+        }
+      },
+      {
+        "path": "/roles_admin/{userId}",
+        "definition": {
+          "entityName": "User",
+          "schema": {
+            "$ref": "#/backend/entities/User"
+          },
+          "description": "Collection to store admin user IDs. Existence of a document indicates admin role.",
+          "params": [
+            {
+              "name": "userId",
+              "description": "The unique identifier of the admin user."
+            }
+          ]
+        }
+      }
+    ],
+    "reasoning": "This Firestore data structure is designed to support the Chat Widget Assistant application, prioritizing security, scalability, and debuggability by adhering to the principles of Authorization Independence, Clarity of Intent, DBAC (Database-Based Access Control), and QAPs (Rules are not Filters).\n\n**Authorization Independence:** The structure avoids hierarchical authorization dependencies by denormalizing the `userId` within the `ChatWidget` documents. This eliminates the need for `get()` calls in security rules to check user ownership, enabling atomic operations (transactions/batches) and simplifying debugging. Since an admin can manage widgets, a separate collection `/roles_admin/{userId}` is created to assign admin roles, and this role is verified by its existence.\n\n**Clarity of Intent:** The structure is designed to make authorization intent explicit through path-based ownership for user-specific data (chat widgets) and a dedicated collection for global admin roles.\n\n**DBAC (No Custom Claims):** Authorization relies solely on `request.auth.uid` and data stored in the database. Admin roles are managed via the `/roles_admin/{userId}` collection.\n\n**QAPs (Rules are not Filters):** The structure supports secure `list` operations by segregating data based on ownership and roles. Admins have read access to all chat widgets, which can be secured by existence checks of the `/roles_admin/{userId}` collection.\n\n**Invariants:** The structure supports ownership invariants by storing the `userId` within each `ChatWidget` document. Timestamps can be added to each entity to support time-based ordering and filtering.\n\n**Structural Segregation:** Data with different access needs (admin-managed widgets vs. user-owned widgets) is implicitly segregated via the roles-based access control mechanism.\n\nBy following these principles, the data structure enables robust and easily debuggable security rules, promoting a secure and scalable application architecture."
+  }
+}
