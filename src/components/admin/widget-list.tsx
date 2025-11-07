@@ -3,6 +3,7 @@
 import { useMemo, useState } from 'react';
 import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
 import { collection, query } from 'firebase/firestore';
+import Link from 'next/link';
 import {
   Card,
   CardContent,
@@ -177,8 +178,10 @@ export function WidgetList() {
                         <Button variant="outline" size="sm" onClick={() => handleViewScript(widget)}>
                            <Code className="mr-2 h-4 w-4" /> View Script
                         </Button>
-                         <Button variant="outline" size="sm" disabled>
-                           <Edit className="mr-2 h-4 w-4" /> Edit
+                         <Button asChild variant="outline" size="sm">
+                            <Link href={`/admin/widget/${widget.id}`}>
+                               <Edit className="mr-2 h-4 w-4" /> Edit
+                            </Link>
                         </Button>
                         <Button variant="outline" size="sm" onClick={() => handleTestMessage(widget)}>
                            <Send className="mr-2 h-4 w-4" /> Test
