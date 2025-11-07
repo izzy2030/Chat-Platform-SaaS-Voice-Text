@@ -1,21 +1,27 @@
-import { Header } from '@/components/chat-assistant/header';
-import { CanvasInputSection } from '@/components/chat-assistant/canvas-input-section';
-import { FeatureGrid } from '@/components/chat-assistant/feature-grid';
-import { MainProvider } from '@/components/chat-assistant/main-provider';
+'use client';
 
-export default function Home() {
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useUser } from '@/firebase';
+import { Loader2 } from 'lucide-react';
+
+export default function HomePage() {
+  const { user, isUserLoading } = useUser();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isUserLoading) {
+      if (user) {
+        router.push('/admin');
+      } else {
+        router.push('/login');
+      }
+    }
+  }, [user, isUserLoading, router]);
+
   return (
-    <MainProvider>
-      <div className="min-h-screen bg-background text-foreground font-body">
-        <Header />
-        <main className="container mx-auto px-4 py-8 space-y-8">
-          <CanvasInputSection />
-          <FeatureGrid />
-        </main>
-        <footer className="text-center py-4 text-sm text-muted-foreground">
-          <p>Powered by Gemini</p>
-        </footer>
-      </div>
-    </MainProvider>
+    <div className="flex h-screen w-screen items-center justify-center">
+      <Loader2 className="animate-spin" />
+    </div>
   );
 }
