@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useMemo, useState } from 'react';
@@ -62,18 +63,13 @@ function ScriptTagDialog({ widget, open, onOpenChange }: { widget: ChatWidget | 
   data-site="${widget.name.toUpperCase().replace(/\s+/g, '-')}"
 ></script>`;
 
-  const copyToClipboard = () => {
-    navigator.clipboard.writeText(scriptTag);
-    toast({ title: 'Copied to clipboard!' });
-  };
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Embed Your Widget</DialogTitle>
           <DialogDescription>
-            Copy and paste this script tag into your website's HTML.
+            Copy and paste this script tag into your website's HTML just before the closing &lt;/body&gt; tag.
           </DialogDescription>
         </DialogHeader>
         <div className="bg-gray-100 dark:bg-gray-800 rounded p-4 my-4">
@@ -82,7 +78,7 @@ function ScriptTagDialog({ widget, open, onOpenChange }: { widget: ChatWidget | 
           </pre>
         </div>
         <DialogFooter>
-          <Button onClick={copyToClipboard}>Copy Script</Button>
+            <Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
