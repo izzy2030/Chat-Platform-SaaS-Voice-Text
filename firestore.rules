@@ -97,7 +97,7 @@ service cloud.firestore {
      * @principle Enforces document ownership for chat widgets and allows admin access.
      */
     match /users/{userId}/chatWidgets/{chatWidgetId} {
-      allow get: if isOwner(userId) || isAdmin();
+      allow get: if isSignedIn();
       allow list: if isOwner(userId) || isAdmin();
       allow create: if isOwner(userId) && request.resource.data.userId == userId;
       allow update: if (isExistingOwner(userId) && request.resource.data.userId == resource.data.userId) || isAdmin();
