@@ -48,7 +48,7 @@ export function ThemePreview({ theme }: ThemePreviewProps) {
   };
   
   const avatarStyle: React.CSSProperties = {
-      borderRadius: theme.avatarStyle === 'round' ? '9999px' : '4px',
+      borderRadius: theme.avatarStyle === 'round' ? '9999px' : `${theme.roundedCorners / 2}px`,
   }
 
   return (
@@ -97,7 +97,8 @@ export function ThemePreview({ theme }: ThemePreviewProps) {
                         alt="Logo" 
                         width={40} 
                         height={40} 
-                        className="h-10 w-10 object-contain rounded-full"
+                        className="h-10 w-10 object-cover"
+                        style={avatarStyle}
                       />
                     )}
                     <div>
