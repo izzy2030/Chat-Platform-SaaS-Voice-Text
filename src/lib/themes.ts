@@ -14,6 +14,8 @@ export const defaultTheme: WidgetTheme = {
   accentColor: '#B19CD9',
   backgroundBlur: 10,
   colorMode: 'light',
+  bubbleMessage: '👋 Hi! How can we help?',
+  conversationStarters: [],
   idlePulse: true,
   idlePulseStrength: 50,
   hoverRipple: true,

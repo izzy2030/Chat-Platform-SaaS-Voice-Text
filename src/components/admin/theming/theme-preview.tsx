@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Bot, MessageSquare, Send, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
+import { cn } from '@/lib/utils';
 
 
 interface ThemePreviewProps {
@@ -43,7 +44,7 @@ export function ThemePreview({ theme }: ThemePreviewProps) {
   return (
     <div className="flex h-full w-full items-center justify-center bg-muted/30 p-4">
       <div className="w-full max-w-lg">
-        <Tabs defaultValue="widget" className="w-full">
+        <Tabs defaultValue="bubble" className="w-full">
           <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="bubble">Launcher</TabsTrigger>
             <TabsTrigger value="widget">Chat View</TabsTrigger>
@@ -54,9 +55,19 @@ export function ThemePreview({ theme }: ThemePreviewProps) {
             <Card className="mt-4">
                 <CardHeader><CardTitle>Launcher Bubble Preview</CardTitle></CardHeader>
                 <CardContent className="flex items-center justify-center h-48">
-                     <div style={bubbleStyle} className="rounded-full flex items-center justify-center text-white cursor-pointer shadow-lg">
-                        <MessageSquare size={32} />
-                     </div>
+                    <div className={cn(
+                        "relative",
+                        theme.bubblePosition === 'bottom-left' ? 'self-end justify-self-start' : 'self-end justify-self-end'
+                    )}>
+                        {theme.bubbleMessage && (
+                            <div className="absolute bottom-full mb-2 w-max max-w-xs rounded-lg bg-card p-3 shadow-md">
+                                <p className="text-sm text-card-foreground">{theme.bubbleMessage}</p>
+                            </div>
+                        )}
+                         <div style={bubbleStyle} className="rounded-full flex items-center justify-center text-white cursor-pointer shadow-lg">
+                            <MessageSquare size={32} />
+                         </div>
+                    </div>
                 </CardContent>
             </Card>
           </TabsContent>

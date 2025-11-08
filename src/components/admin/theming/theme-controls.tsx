@@ -24,6 +24,7 @@ import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
+import { Textarea } from '@/components/ui/textarea';
 
 interface ThemeControlsProps {
   theme: WidgetTheme;
@@ -196,10 +197,20 @@ export function ThemeControls({ theme, updateTheme }: ThemeControlsProps) {
             </AccordionContent>
           </AccordionItem>
 
-          {/* 3. Bubble Animation */}
+          {/* 3. Bubble */}
           <AccordionItem value="item-3">
-            <AccordionTrigger>Bubble Animation</AccordionTrigger>
+            <AccordionTrigger>Bubble</AccordionTrigger>
             <AccordionContent className="space-y-4">
+                <div className="space-y-2">
+                  <Label>Bubble Message</Label>
+                  <Textarea
+                    value={theme.bubbleMessage}
+                    onChange={(e) => updateTheme({ bubbleMessage: e.target.value })}
+                    placeholder="👋 Hi! How can we help?"
+                  />
+                </div>
+                <Separator />
+                <h4 className="text-sm font-medium">Animation</h4>
                 <div className="flex items-center justify-between">
                     <Label>Idle Pulse</Label>
                     <Switch checked={theme.idlePulse} onCheckedChange={handleValueChange('idlePulse')} />
@@ -365,15 +376,6 @@ export function ThemeControls({ theme, updateTheme }: ThemeControlsProps) {
           </AccordionItem>
           
         </Accordion>
-         <div className="mt-8">
-            <h3 className="text-lg font-semibold mb-2">Embed Snippet</h3>
-            <div className="bg-gray-100 dark:bg-gray-800 rounded p-4 my-2">
-              <pre className="text-sm overflow-x-auto whitespace-pre-wrap break-all">
-                <code>{`<script src="..."></script>`}</code>
-              </pre>
-            </div>
-            <Button className="w-full">Copy to Clipboard</Button>
-        </div>
       </div>
     </ScrollArea>
   );

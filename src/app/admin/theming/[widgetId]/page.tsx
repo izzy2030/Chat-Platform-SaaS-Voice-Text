@@ -34,6 +34,9 @@ export interface WidgetTheme {
   accentColor: string;
   backgroundBlur: number;
   colorMode: 'light' | 'dark' | 'auto';
+  // Bubble
+  bubbleMessage: string;
+  conversationStarters: string[];
   // Bubble Animation
   idlePulse: boolean;
   idlePulseStrength: number;
