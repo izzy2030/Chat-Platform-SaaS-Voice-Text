@@ -3,7 +3,7 @@
 import type { WidgetTheme } from '@/app/admin/theming/[widgetId]/page';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Bot, MessageSquare, Send, Sparkles } from 'lucide-react';
+import { Bot, MessageSquare, Send, Sparkles, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
@@ -64,7 +64,11 @@ export function ThemePreview({ theme }: ThemePreviewProps) {
                                 "absolute bottom-full mb-2 w-max max-w-xs rounded-lg bg-card p-3 shadow-md",
                                 theme.bubblePosition === 'bottom-left' ? "left-0" : "right-0"
                             )}>
-                                <p className="text-sm text-card-foreground">{theme.bubbleMessage}</p>
+                                <button className="absolute top-1 right-1 p-0.5 rounded-full hover:bg-muted">
+                                    <X size={12} />
+                                    <span className="sr-only">Close</span>
+                                </button>
+                                <p className="text-sm text-card-foreground pr-4">{theme.bubbleMessage}</p>
                             </div>
                         )}
                          <div style={bubbleStyle} className="rounded-full flex items-center justify-center text-white cursor-pointer shadow-lg">
