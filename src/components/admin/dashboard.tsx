@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useAuth, useUser } from '@/firebase';
@@ -14,6 +15,7 @@ import { Button } from '../ui/button';
 import { useRouter } from 'next/navigation';
 import { CreateWidget } from './create-widget';
 import { WidgetList } from './widget-list';
+import Link from 'next/link';
 
 export function Dashboard() {
   const auth = useAuth();
@@ -40,12 +42,18 @@ export function Dashboard() {
             <BotMessageSquareIcon className="h-6 w-6" />
             <span className="sr-only">Chat Widget Factory</span>
           </a>
-          <a
-            href="#"
+          <Link
+            href="/admin"
             className="text-foreground transition-colors hover:text-foreground"
           >
             Dashboard
-          </a>
+          </Link>
+          <Link
+            href="/admin/theming"
+            className="text-muted-foreground transition-colors hover:text-foreground"
+          >
+            Theming
+          </Link>
         </nav>
         <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
           <div className="ml-auto flex-1 sm:flex-initial">
