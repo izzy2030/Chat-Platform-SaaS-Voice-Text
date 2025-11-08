@@ -1,5 +1,6 @@
 
 'use client';
+import * as React from 'react';
 import type { WidgetTheme } from '@/app/admin/theming/[widgetId]/page';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -14,6 +15,15 @@ interface ThemePreviewProps {
 }
 
 export function ThemePreview({ theme }: ThemePreviewProps) {
+  const [isBubbleMessageVisible, setIsBubbleMessageVisible] = React.useState(true);
+
+  // When the theme's bubble message changes, re-show the message
+  React.useEffect(() => {
+    if (theme.bubbleMessage) {
+      setIsBubbleMessageVisible(true);
+    }
+  }, [theme.bubbleMessage]);
+
 
   const bubbleStyle: React.CSSProperties = {
     backgroundColor: theme.primaryColor,
@@ -59,12 +69,12 @@ export function ThemePreview({ theme }: ThemePreviewProps) {
                   alignItems: 'flex-end',
                 }}>
                     <div className="relative">
-                        {theme.bubbleMessage && (
+                        {theme.bubbleMessage && isBubbleMessageVisible && (
                             <div className={cn(
                                 "absolute bottom-full mb-2 w-max max-w-xs rounded-lg bg-card p-3 shadow-md",
                                 theme.bubblePosition === 'bottom-left' ? "left-0" : "right-0"
                             )}>
-                                <button className="absolute top-1 right-1 p-0.5 rounded-full hover:bg-muted">
+                                <button onClick={() => setIsBubbleMessageVisible(false)} className="absolute top-1 right-1 p-0.5 rounded-full hover:bg-muted">
                                     <X size={12} />
                                     <span className="sr-only">Close</span>
                                 </button>
