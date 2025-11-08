@@ -128,7 +128,7 @@ interface ChatWidgetDoc {
 
 
 export default function ThemingPage({ params }: { params: { widgetId: string } }) {
-  const { widgetId } = params;
+  const { widgetId } = React.use(params);
   const [theme, setTheme] = React.useState<WidgetTheme>(defaultTheme);
   const [isSaving, setIsSaving] = React.useState(false);
   const firestore = useFirestore();
