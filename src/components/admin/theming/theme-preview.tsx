@@ -4,6 +4,7 @@ import type { WidgetTheme } from '@/app/admin/theming/page';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Bot, MessageSquare, Send, Sparkles } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 
 interface ThemePreviewProps {
