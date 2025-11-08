@@ -1,10 +1,11 @@
 
 'use client';
-import type { WidgetTheme } from '@/app/admin/theming/page';
+import type { WidgetTheme } from '@/app/admin/theming/[widgetId]/page';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Bot, MessageSquare, Send, Sparkles } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import Image from 'next/image';
 
 
 interface ThemePreviewProps {
@@ -61,7 +62,16 @@ export function ThemePreview({ theme }: ThemePreviewProps) {
           </TabsContent>
           <TabsContent value="widget">
             <div style={widgetStyle} className="mt-4 flex flex-col h-[60vh] w-full max-w-sm mx-auto overflow-hidden">
-                <header style={headerStyle} className="p-4 border-b">
+                <header style={headerStyle} className="p-4 border-b flex items-center gap-2">
+                    {theme.logoUrl && (
+                      <Image 
+                        src={theme.logoUrl} 
+                        alt="Logo" 
+                        width={32} 
+                        height={32} 
+                        className="h-8 w-8 object-contain"
+                      />
+                    )}
                     <h3 className="font-bold text-lg">{theme.headerTitle}</h3>
                 </header>
                 <div className="flex-grow p-4 space-y-4">

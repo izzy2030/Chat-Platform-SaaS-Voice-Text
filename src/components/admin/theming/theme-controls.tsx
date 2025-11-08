@@ -2,7 +2,7 @@
 'use client';
 
 import * as React from 'react';
-import type { WidgetTheme } from '@/app/admin/theming/page';
+import type { WidgetTheme } from '@/app/admin/theming/[widgetId]/page';
 import {
   Accordion,
   AccordionContent,
@@ -23,6 +23,7 @@ import {
 import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Separator } from '@/components/ui/separator';
+import { toast } from '@/hooks/use-toast';
 
 interface ThemeControlsProps {
   theme: WidgetTheme;
@@ -44,6 +45,29 @@ export function ThemeControls({ theme, updateTheme }: ThemeControlsProps) {
     (key: keyof WidgetTheme) => (value: number[]) => {
       updateTheme({ [key]: value[0] });
     };
+  
+  const handleLogoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 2 * 1024 * 1024) { // 2MB limit
+        toast({
+          variant: 'destructive',
+          title: 'File too large',
+          description: 'Please upload an image smaller than 2MB.',
+        });
+        return;
+      }
+      const reader = new FileReader();
+      reader.onload = (loadEvent) => {
+        const result = loadEvent.target?.result;
+        if (typeof result === 'string') {
+          updateTheme({ logoUrl: result });
+        }
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
 
   return (
     <ScrollArea className="h-full bg-background">
@@ -55,7 +79,8 @@ export function ThemeControls({ theme, updateTheme }: ThemeControlsProps) {
             <AccordionContent className="space-y-4">
               <div className="space-y-2">
                 <Label>Logo Upload</Label>
-                <Input type="file" />
+                <Input type="file" accept="image/png, image/jpeg, image/gif, image/svg+xml" onChange={handleLogoUpload} />
+                <p className="text-xs text-muted-foreground">Max 2MB. PNG, JPG, GIF, SVG.</p>
               </div>
               <div className="space-y-2">
                 <Label>Header Title</Label>

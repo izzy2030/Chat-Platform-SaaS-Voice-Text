@@ -99,9 +99,12 @@ export default function ThemingPage({ params }: { params: { widgetId: string } }
   const { data: widgetData, isLoading: isWidgetLoading } = useDoc<ChatWidgetDoc>(widgetDocRef);
   
   React.useEffect(() => {
-    if (widgetData) {
+    if (widgetData?.theme) {
       // Merge saved theme with defaults to ensure all keys are present
       setTheme(prevTheme => ({ ...prevTheme, ...widgetData.theme }));
+    } else if (widgetData) {
+      // If there's widget data but no theme, start with the default
+      setTheme(defaultTheme);
     }
   }, [widgetData]);
 
