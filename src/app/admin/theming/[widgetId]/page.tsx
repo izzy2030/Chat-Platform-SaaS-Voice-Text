@@ -12,6 +12,12 @@ import { ThemeControls } from '@/components/admin/theming/theme-controls';
 import { ThemePreview } from '@/components/admin/theming/theme-preview';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
+import { useDoc, useFirestore, useMemoFirebase, useUser, updateDocumentNonBlocking } from '@/firebase';
+import { doc } from 'firebase/firestore';
+import { Loader2 } from 'lucide-react';
+import { toast } from '@/hooks/use-toast';
+import { useRouter } from 'next/navigation';
+
 
 // Define the structure for a theme based on the spec
 export interface WidgetTheme {
@@ -113,8 +119,36 @@ const defaultTheme: WidgetTheme = {
   hapticFeedback: true,
 };
 
-export default function ThemingPage() {
+// Firestore document structure for a widget
+interface ChatWidgetDoc {
+  theme?: Partial<WidgetTheme>;
+  // other widget properties
+  [key: string]: any;
+}
+
+
+export default function ThemingPage({ params }: { params: { widgetId: string } }) {
+  const { widgetId } = params;
   const [theme, setTheme] = React.useState<WidgetTheme>(defaultTheme);
+  const [isSaving, setIsSaving] = React.useState(false);
+  const firestore = useFirestore();
+  const { user } = useUser();
+  const router = useRouter();
+
+  const widgetDocRef = useMemoFirebase(() => {
+    if (!user || !widgetId) return null;
+    return doc(firestore, `users/${user.uid}/chatWidgets/${widgetId}`);
+  }, [firestore, user, widgetId]);
+  
+  const { data: widgetData, isLoading: isWidgetLoading } = useDoc<ChatWidgetDoc>(widgetDocRef);
+  
+  React.useEffect(() => {
+    if (widgetData) {
+      // Merge saved theme with defaults to ensure all keys are present
+      setTheme(prevTheme => ({ ...prevTheme, ...widgetData.theme }));
+    }
+  }, [widgetData]);
+
 
   const updateTheme = (newValues: Partial<WidgetTheme>) => {
     setTheme((prevTheme) => ({ ...prevTheme, ...newValues }));
@@ -123,6 +157,42 @@ export default function ThemingPage() {
   const resetTheme = () => {
     setTheme(defaultTheme);
   };
+  
+  const saveTheme = async () => {
+    if (!widgetDocRef) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Cannot save theme. Widget reference not found.',
+      });
+      return;
+    }
+    setIsSaving(true);
+    try {
+      await updateDocumentNonBlocking(widgetDocRef, { theme: theme });
+      toast({
+        title: 'Theme Saved!',
+        description: 'Your changes have been saved successfully.',
+      });
+      router.push('/admin');
+    } catch (error: any) {
+       toast({
+        variant: 'destructive',
+        title: 'Error Saving Theme',
+        description: error.message,
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+  
+  if (isWidgetLoading) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen w-full flex-col bg-muted/40">
@@ -134,7 +204,10 @@ export default function ThemingPage() {
           </Button>
         <div className="ml-auto flex items-center gap-2">
             <Button variant="outline" onClick={resetTheme}>Reset to Defaults</Button>
-            <Button>Save Theme</Button>
+            <Button onClick={saveTheme} disabled={isSaving}>
+              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Save Theme
+            </Button>
         </div>
       </header>
       <ResizablePanelGroup

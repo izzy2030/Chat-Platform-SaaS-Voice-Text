@@ -20,7 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Loader2, Edit, Code, Eye, Copy } from 'lucide-react';
+import { Loader2, Edit, Code, Eye, Copy, Palette } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { Button } from '../ui/button';
 import {
@@ -179,6 +179,11 @@ export function WidgetList() {
                             <Link href={`/admin/widget/${widget.id}`}>
                                <Edit className="mr-2 h-4 w-4" /> Edit
                             </Link>
+                        </Button>
+                        <Button asChild variant="outline" size="sm">
+                           <Link href={`/admin/theming/${widget.id}`}>
+                              <Palette className="mr-2 h-4 w-4" /> Customize
+                           </Link>
                         </Button>
                         <Button variant="outline" size="sm" onClick={() => handleTestWidget(widget)}>
                            <Eye className="mr-2 h-4 w-4" /> Test
