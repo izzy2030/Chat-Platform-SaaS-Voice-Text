@@ -12,7 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Loader2, Edit, Code, Eye, Copy, Palette } from 'lucide-react';
+import { Loader2, Edit, Code, Eye, Copy, Palette, MessageSquare, Mic } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { Button } from '../ui/button';
 import {
@@ -31,6 +31,7 @@ import type { WidgetTheme } from '@/app/admin/theming/[widgetId]/page';
 interface ChatWidget {
   id: string;
   name: string;
+  type?: 'text' | 'voice';
   userId: string;
   webhookUrl: string;
   allowedDomains: string[];
@@ -128,7 +129,7 @@ export function WidgetList() {
   return (
     <>
       <div className="space-y-6">
-        <div className="bg-card text-card-foreground shadow-sm rounded-lg border p-6">
+        <div className="bg-transparent text-foreground p-2">
            <h3 className="text-2xl font-semibold leading-none tracking-tight">Chat Widgets</h3>
            <p className="text-sm text-muted-foreground mt-2">A list of your created chat widgets.</p>
         </div>
@@ -152,13 +153,20 @@ export function WidgetList() {
           <div className="space-y-4">
             {widgets && widgets.length > 0 ? (
               widgets.map((widget) => (
-                <Card key={widget.id} className="overflow-hidden">
+                <Card key={widget.id} className="overflow-hidden shadow-sm border-0">
                   <CardContent className="p-0">
                     <div className="p-6">
                       <div className="space-y-4">
                         <div>
                            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Name</h3>
-                           <div className="text-lg font-bold text-foreground">{widget.name}</div>
+                           <div className="flex items-center gap-2">
+                             {widget.type === 'voice' ? (
+                               <Mic className="h-5 w-5 text-primary" />
+                             ) : (
+                               <MessageSquare className="h-5 w-5 text-primary" />
+                             )}
+                             <div className="text-lg font-bold text-foreground">{widget.name}</div>
+                           </div>
                         </div>
                          <div>
                            <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Widget ID</h3>
@@ -166,7 +174,7 @@ export function WidgetList() {
                         </div>
                       </div>
                     </div>
-                    <div className="bg-muted/30 p-2 flex gap-2 border-t">
+                    <div className="bg-muted/30 p-2 flex gap-2 border-t border-border/50">
                         <Button variant="ghost" className="flex-1 h-9 bg-background/50 hover:bg-accent hover:text-accent-foreground group" onClick={() => handleViewScript(widget)}>
                             <Code className="mr-2 h-4 w-4 text-muted-foreground group-hover:text-accent-foreground" /> Script
                         </Button>
@@ -188,7 +196,7 @@ export function WidgetList() {
                 </Card>
               ))
             ) : (
-              <Card>
+              <Card className="border-0 shadow-sm">
                 <CardContent className="flex flex-col items-center justify-center py-10 text-center">
                    <div className="rounded-full bg-muted p-4 mb-4">
                       <Palette className="h-8 w-8 text-muted-foreground" />

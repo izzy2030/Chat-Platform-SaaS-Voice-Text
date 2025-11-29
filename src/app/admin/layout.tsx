@@ -2,11 +2,13 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUser } from '@/firebase';
+import { useUser, useFirestore, useDoc, useMemoFirebase, useAuth } from '@/firebase';
 import { Loader2 } from 'lucide-react';
 import { SidebarNav } from '@/components/admin/sidebar-nav';
 import { SidebarInset, SidebarProvider, SidebarTrigger } from '@/components/ui/sidebar';
 import { Separator } from '@/components/ui/separator';
+import { doc } from 'firebase/firestore';
+import { Button } from '@/components/ui/button';
 
 export default function AdminLayout({
   children,
@@ -14,6 +16,8 @@ export default function AdminLayout({
   children: React.ReactNode;
 }) {
   const { user, isUserLoading } = useUser();
+  const firestore = useFirestore();
+  const auth = useAuth();
   const router = useRouter();
 
   useEffect(() => {
@@ -22,10 +26,37 @@ export default function AdminLayout({
     }
   }, [user, isUserLoading, router]);
 
-  if (isUserLoading || !user) {
+  const adminDocRef = useMemoFirebase(() => {
+    if (!user) return null;
+    return doc(firestore, `roles_admin/${user.uid}`);
+  }, [firestore, user]);
+
+  const { data: adminDoc, isLoading: isAdminLoading } = useDoc(adminDocRef);
+
+  if (isUserLoading || (user && isAdminLoading)) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null; // Will redirect via useEffect
+  }
+
+  if (!adminDoc) {
+    return (
+      <div className="flex h-screen w-full flex-col items-center justify-center gap-4 p-8 text-center">
+        <div className="max-w-md space-y-4">
+          <h1 className="text-2xl font-bold text-destructive">Unauthorized Access</h1>
+          <p className="text-muted-foreground">
+            This application is for internal use only. Your account ({user.email}) does not have the required permissions.
+          </p>
+          <Button variant="outline" onClick={() => auth.signOut().then(() => router.push('/login'))}>
+            Sign Out
+          </Button>
+        </div>
       </div>
     );
   }

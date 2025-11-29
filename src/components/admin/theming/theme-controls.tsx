@@ -86,7 +86,7 @@ export function ThemeControls({ theme, updateTheme }: ThemeControlsProps) {
               <div className="space-y-2">
                 <Label>Header Title</Label>
                 <Input
-                  value={theme.headerTitle}
+                  value={theme.headerTitle || ''}
                   onChange={(e) =>
                     updateTheme({ headerTitle: e.target.value })
                   }
@@ -95,7 +95,7 @@ export function ThemeControls({ theme, updateTheme }: ThemeControlsProps) {
                <div className="space-y-2">
                 <Label>Header Subtext</Label>
                 <Input
-                  value={theme.headerSubtext}
+                  value={theme.headerSubtext || ''}
                   onChange={(e) =>
                     updateTheme({ headerSubtext: e.target.value })
                   }
@@ -104,7 +104,7 @@ export function ThemeControls({ theme, updateTheme }: ThemeControlsProps) {
               <div className="space-y-2">
                 <Label>Font Family</Label>
                 <Select
-                  value={theme.fontFamily}
+                  value={theme.fontFamily || 'Inter'}
                   onValueChange={handleValueChange('fontFamily')}
                 >
                   <SelectTrigger>
@@ -121,7 +121,7 @@ export function ThemeControls({ theme, updateTheme }: ThemeControlsProps) {
                <div className="space-y-2">
                 <Label>Font Size: {theme.fontSize}px</Label>
                 <Slider
-                  value={[theme.fontSize]}
+                  value={[theme.fontSize || 14]}
                   onValueChange={handleSliderChange('fontSize')}
                   min={12}
                   max={20}
@@ -131,7 +131,7 @@ export function ThemeControls({ theme, updateTheme }: ThemeControlsProps) {
               <div className="space-y-2">
                 <Label>Avatar Style</Label>
                 <Select
-                  value={theme.avatarStyle}
+                  value={theme.avatarStyle || 'round'}
                   onValueChange={handleValueChange('avatarStyle')}
                 >
                   <SelectTrigger>
@@ -155,7 +155,7 @@ export function ThemeControls({ theme, updateTheme }: ThemeControlsProps) {
                 <Input
                   type="color"
                   className="w-12 h-8"
-                  value={theme.primaryColor}
+                  value={theme.primaryColor || '#000000'}
                   onChange={handleColorChange('primaryColor')}
                 />
               </div>
@@ -164,7 +164,7 @@ export function ThemeControls({ theme, updateTheme }: ThemeControlsProps) {
                 <Input
                   type="color"
                   className="w-12 h-8"
-                  value={theme.secondaryColor}
+                  value={theme.secondaryColor || '#ffffff'}
                   onChange={handleColorChange('secondaryColor')}
                 />
               </div>
@@ -173,7 +173,7 @@ export function ThemeControls({ theme, updateTheme }: ThemeControlsProps) {
                 <Input
                   type="color"
                   className="w-12 h-8"
-                  value={theme.accentColor}
+                  value={theme.accentColor || '#000000'}
                   onChange={handleColorChange('accentColor')}
                 />
               </div>
@@ -181,7 +181,7 @@ export function ThemeControls({ theme, updateTheme }: ThemeControlsProps) {
                <div className="space-y-2">
                  <Label>Color Mode</Label>
                 <Select
-                  value={theme.colorMode}
+                  value={theme.colorMode || 'light'}
                   onValueChange={handleValueChange('colorMode')}
                 >
                   <SelectTrigger>
@@ -204,7 +204,7 @@ export function ThemeControls({ theme, updateTheme }: ThemeControlsProps) {
                 <div className="space-y-2">
                   <Label>Bubble Message</Label>
                   <Textarea
-                    value={theme.bubbleMessage}
+                    value={theme.bubbleMessage || ''}
                     onChange={(e) => updateTheme({ bubbleMessage: e.target.value })}
                     placeholder="👋 Hi! How can we help?"
                   />
@@ -225,7 +225,7 @@ export function ThemeControls({ theme, updateTheme }: ThemeControlsProps) {
                 </div>
                 <div className="space-y-2">
                     <Label>Bubble Size</Label>
-                    <Select value={theme.bubbleSize} onValueChange={handleValueChange('bubbleSize')}>
+                    <Select value={theme.bubbleSize || 'normal'} onValueChange={handleValueChange('bubbleSize')}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="small">Small</SelectItem>
@@ -236,7 +236,7 @@ export function ThemeControls({ theme, updateTheme }: ThemeControlsProps) {
                 </div>
                  <div className="space-y-2">
                     <Label>Position</Label>
-                    <Select value={theme.bubblePosition} onValueChange={handleValueChange('bubblePosition')}>
+                    <Select value={theme.bubblePosition || 'bottom-right'} onValueChange={handleValueChange('bubblePosition')}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="bottom-left">Bottom Left</SelectItem>
@@ -253,7 +253,7 @@ export function ThemeControls({ theme, updateTheme }: ThemeControlsProps) {
             <AccordionContent className="space-y-4">
                 <div className="space-y-2">
                     <Label>Open Animation</Label>
-                    <Select value={theme.openAnimation} onValueChange={handleValueChange('openAnimation')}>
+                    <Select value={theme.openAnimation || 'scale-fade'} onValueChange={handleValueChange('openAnimation')}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="scale-fade">Scale + Fade</SelectItem>
@@ -265,7 +265,7 @@ export function ThemeControls({ theme, updateTheme }: ThemeControlsProps) {
                 </div>
                  <div className="space-y-2">
                     <Label>Close Animation</Label>
-                    <Select value={theme.closeAnimation} onValueChange={handleValueChange('closeAnimation')}>
+                    <Select value={theme.closeAnimation || 'shrink'} onValueChange={handleValueChange('closeAnimation')}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="shrink">Shrink to bubble</SelectItem>
@@ -287,7 +287,7 @@ export function ThemeControls({ theme, updateTheme }: ThemeControlsProps) {
             <AccordionContent className="space-y-4">
                 <div className="space-y-2">
                     <Label>Message Entry Style</Label>
-                    <Select value={theme.messageEntryStyle} onValueChange={handleValueChange('messageEntryStyle')}>
+                    <Select value={theme.messageEntryStyle || 'slide-in'} onValueChange={handleValueChange('messageEntryStyle')}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="bounce">Bounce</SelectItem>
@@ -299,7 +299,7 @@ export function ThemeControls({ theme, updateTheme }: ThemeControlsProps) {
                 </div>
                 <div className="space-y-2">
                     <Label>Typing Indicator Style</Label>
-                    <Select value={theme.typingIndicatorStyle} onValueChange={handleValueChange('typingIndicatorStyle')}>
+                    <Select value={theme.typingIndicatorStyle || 'dots'} onValueChange={handleValueChange('typingIndicatorStyle')}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="dots">Classic Dots</SelectItem>
@@ -317,23 +317,23 @@ export function ThemeControls({ theme, updateTheme }: ThemeControlsProps) {
             <AccordionContent className="space-y-4">
                  <div className="space-y-2">
                     <Label>Rounded Corners: {theme.roundedCorners}px</Label>
-                    <Slider value={[theme.roundedCorners]} onValueChange={handleSliderChange('roundedCorners')} min={0} max={32} step={1}/>
+                    <Slider value={[theme.roundedCorners || 12]} onValueChange={handleSliderChange('roundedCorners')} min={0} max={32} step={1}/>
                 </div>
                  <div className="space-y-2">
                     <Label>Shadow Intensity: {theme.shadowIntensity}%</Label>
-                    <Slider value={[theme.shadowIntensity]} onValueChange={handleSliderChange('shadowIntensity')} min={0} max={100} step={5}/>
+                    <Slider value={[theme.shadowIntensity || 50]} onValueChange={handleSliderChange('shadowIntensity')} min={0} max={100} step={5}/>
                 </div>
                 <div className="space-y-2">
-                    <Label>Border Thickness: {theme.borderThickness}px</Label>
-                    <Slider value={[theme.borderThickness]} onValueChange={handleSliderChange('borderThickness')} min={0} max={5} step={1}/>
+                    <Label>Border Thickness: {theme.borderThickness || 1}px</Label>
+                    <Slider value={[theme.borderThickness || 1]} onValueChange={handleSliderChange('borderThickness')} min={0} max={5} step={1}/>
                 </div>
                  <div className="flex items-center justify-between">
                     <Label>Border Color</Label>
-                    <Input type="color" className="w-12 h-8" value={theme.borderColor} onChange={handleColorChange('borderColor')} />
+                    <Input type="color" className="w-12 h-8" value={theme.borderColor || '#E5E7EB'} onChange={handleColorChange('borderColor')} />
                 </div>
                 <div className="space-y-2">
                     <Label>Window Size</Label>
-                    <Select value={theme.windowSize} onValueChange={handleValueChange('windowSize')}>
+                    <Select value={theme.windowSize || 'medium'} onValueChange={handleValueChange('windowSize')}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="small">Small</SelectItem>
@@ -355,11 +355,11 @@ export function ThemeControls({ theme, updateTheme }: ThemeControlsProps) {
                 </div>
                  <div className="space-y-2">
                     <Label>Volume: {theme.soundVolume}%</Label>
-                    <Slider value={[theme.soundVolume]} onValueChange={handleSliderChange('soundVolume')} min={0} max={100} step={5}/>
+                    <Slider value={[theme.soundVolume || 50]} onValueChange={handleSliderChange('soundVolume')} min={0} max={100} step={5}/>
                 </div>
                 <div className="space-y-2">
                     <Label>Sound Theme</Label>
-                    <Select value={theme.soundTheme} onValueChange={handleValueChange('soundTheme')}>
+                    <Select value={theme.soundTheme || 'soft-pops'} onValueChange={handleValueChange('soundTheme')}>
                       <SelectTrigger><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="soft-pops">Soft Pops</SelectItem>

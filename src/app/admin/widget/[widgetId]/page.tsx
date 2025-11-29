@@ -14,7 +14,7 @@ import {
 } from '@/firebase';
 import { doc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
-import { Loader2 } from 'lucide-react';
+import { Loader2, MessageSquare, Mic } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -45,9 +45,11 @@ import {
 } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
+import { Label } from '@/components/ui/label';
 
 const widgetSchema = z.object({
   name: z.string().min(1, 'Widget Name is required'),
+  type: z.enum(['text', 'voice']).default('text'),
   webhookUrl: z.string().url('Please enter a valid URL'),
   webhookSecret: z.string().optional(),
   allowedDomains: z.string().min(1, 'At least one domain is required'),
@@ -65,6 +67,7 @@ type WidgetFormData = z.infer<typeof widgetSchema>;
 interface ChatWidget {
   id: string;
   name: string;
+  type?: 'text' | 'voice';
   webhookUrl: string;
   webhookSecret?: string;
   allowedDomains: string[];
@@ -105,6 +108,7 @@ export default function EditWidgetPage({
     resolver: zodResolver(widgetSchema),
     defaultValues: {
       name: '',
+      type: 'text',
       webhookUrl: '',
       webhookSecret: '',
       allowedDomains: '',
@@ -120,9 +124,10 @@ export default function EditWidgetPage({
   React.useEffect(() => {
     if (widget) {
       form.reset({
-        name: widget.name,
-        webhookUrl: widget.webhookUrl,
-        webhookSecret: widget.webhookSecret,
+        name: widget.name || '',
+        type: widget.type || 'text',
+        webhookUrl: widget.webhookUrl || '',
+        webhookSecret: widget.webhookSecret || '',
         allowedDomains: Array.isArray(widget.allowedDomains) ? widget.allowedDomains.join(', ') : '',
         bubbleColor: widget.brand?.bubbleColor,
         bubbleIcon: widget.brand?.bubbleIcon,
@@ -150,6 +155,7 @@ export default function EditWidgetPage({
     try {
       const updatedWidgetData: any = {
         name: data.name,
+        type: data.type,
         webhookUrl: data.webhookUrl,
         allowedDomains: data.allowedDomains.split(',').map(d => d.trim()),
         brand: {
@@ -281,6 +287,44 @@ export default function EditWidgetPage({
                           <FormLabel>Widget Name</FormLabel>
                           <FormControl>
                             <Input placeholder="Queens Auto" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="type"
+                      render={({ field }) => (
+                        <FormItem className="space-y-3">
+                          <FormLabel>Widget Type</FormLabel>
+                          <FormControl>
+                            <RadioGroup
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                              className="grid grid-cols-2 gap-4"
+                            >
+                              <div>
+                                <RadioGroupItem value="text" id="text" className="peer sr-only" />
+                                <Label
+                                  htmlFor="text"
+                                  className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                                >
+                                  <MessageSquare className="mb-3 h-6 w-6" />
+                                  Text Chat
+                                </Label>
+                              </div>
+                              <div>
+                                <RadioGroupItem value="voice" id="voice" className="peer sr-only" />
+                                <Label
+                                  htmlFor="voice"
+                                  className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                                >
+                                  <Mic className="mb-3 h-6 w-6" />
+                                  Voice Agent
+                                </Label>
+                              </div>
+                            </RadioGroup>
                           </FormControl>
                           <FormMessage />
                         </FormItem>

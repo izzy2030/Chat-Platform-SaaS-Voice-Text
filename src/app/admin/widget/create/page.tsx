@@ -27,7 +27,7 @@ import { useFirestore, useUser } from '@/firebase';
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { collection } from 'firebase/firestore';
 import { toast } from '@/hooks/use-toast';
-import { Loader2 } from 'lucide-react';
+import { Loader2, MessageSquare, Mic } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
@@ -37,9 +37,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 
 const widgetSchema = z.object({
   name: z.string().min(1, 'Widget Name is required'),
+  type: z.enum(['text', 'voice']).default('text'),
   webhookUrl: z.string().url('Please enter a valid URL'),
   webhookSecret: z.string().optional(),
   allowedDomains: z.string().min(1, 'At least one domain is required'),
@@ -64,6 +66,7 @@ export default function CreateWidgetPage() {
     resolver: zodResolver(widgetSchema),
     defaultValues: {
       name: '',
+      type: 'text',
       webhookUrl: '',
       webhookSecret: '',
       allowedDomains: '',
@@ -96,6 +99,7 @@ export default function CreateWidgetPage() {
       
       const newWidget = {
         name: data.name,
+        type: data.type,
         webhookUrl: data.webhookUrl,
         webhookSecret: data.webhookSecret || '',
         allowedDomains: data.allowedDomains.split(',').map(d => d.trim()),
@@ -160,6 +164,44 @@ export default function CreateWidgetPage() {
                           <FormLabel>Widget Name</FormLabel>
                           <FormControl>
                             <Input placeholder="Queens Auto" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="type"
+                      render={({ field }) => (
+                        <FormItem className="space-y-3">
+                          <FormLabel>Widget Type</FormLabel>
+                          <FormControl>
+                            <RadioGroup
+                              onValueChange={field.onChange}
+                              defaultValue={field.value}
+                              className="grid grid-cols-2 gap-4"
+                            >
+                              <div>
+                                <RadioGroupItem value="text" id="text" className="peer sr-only" />
+                                <Label
+                                  htmlFor="text"
+                                  className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                                >
+                                  <MessageSquare className="mb-3 h-6 w-6" />
+                                  Text Chat
+                                </Label>
+                              </div>
+                              <div>
+                                <RadioGroupItem value="voice" id="voice" className="peer sr-only" />
+                                <Label
+                                  htmlFor="voice"
+                                  className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                                >
+                                  <Mic className="mb-3 h-6 w-6" />
+                                  Voice Agent
+                                </Label>
+                              </div>
+                            </RadioGroup>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
