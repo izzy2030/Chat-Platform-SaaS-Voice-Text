@@ -20,6 +20,8 @@ import {
   LogOut,
   BotMessageSquare,
   Settings,
+  PanelLeftClose,
+  PanelRightClose,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -31,13 +33,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { Separator } from '@/components/ui/separator';
 
 export function SidebarNav() {
   const pathname = usePathname();
   const router = useRouter();
   const auth = useAuth();
   const { user } = useUser();
-  const { state } = useSidebar();
+  const { toggleSidebar, state } = useSidebar();
 
   const handleSignOut = async () => {
     await auth.signOut();
@@ -115,6 +118,15 @@ export function SidebarNav() {
         </SidebarGroup>
       </SidebarContent>
       <SidebarFooter>
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton onClick={toggleSidebar} tooltip={state === 'expanded' ? 'Collapse' : 'Expand'}>
+                {state === 'expanded' ? <PanelLeftClose /> : <PanelRightClose />}
+                <span>{state === 'expanded' ? 'Collapse' : 'Expand'}</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+        <Separator className="my-1" />
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>

@@ -129,13 +129,13 @@ export default function EditWidgetPage({
         webhookUrl: widget.webhookUrl || '',
         webhookSecret: widget.webhookSecret || '',
         allowedDomains: Array.isArray(widget.allowedDomains) ? widget.allowedDomains.join(', ') : '',
-        bubbleColor: widget.brand?.bubbleColor,
-        bubbleIcon: widget.brand?.bubbleIcon,
-        panelColor: widget.brand?.panelColor,
-        headerTitle: widget.brand?.headerTitle,
-        welcomeMessage: widget.brand?.welcomeMessage,
-        defaultLanguage: widget.behavior?.defaultLanguage,
-        position: widget.brand?.position,
+        bubbleColor: widget.brand?.bubbleColor || '#000000',
+        bubbleIcon: widget.brand?.bubbleIcon || '',
+        panelColor: widget.brand?.panelColor || '#FFFFFF',
+        headerTitle: widget.brand?.headerTitle || '',
+        welcomeMessage: widget.brand?.welcomeMessage || '',
+        defaultLanguage: widget.behavior?.defaultLanguage || 'EN',
+        position: widget.brand?.position || 'right',
       });
     }
   }, [widget, form]);
@@ -479,17 +479,13 @@ export default function EditWidgetPage({
                                 <FormControl>
                                   <RadioGroupItem value="left" />
                                 </FormControl>
-                                <FormLabel className="font-normal">
-                                  Left
-                                </FormLabel>
+                                <FormLabel className="font-normal">Left</FormLabel>
                               </FormItem>
                               <FormItem className="flex items-center space-x-2">
                                 <FormControl>
                                   <RadioGroupItem value="right" />
                                 </FormControl>
-                                <FormLabel className="font-normal">
-                                  Right
-                                </FormLabel>
+                                <FormLabel className="font-normal">Right</FormLabel>
                               </FormItem>
                             </RadioGroup>
                           </FormControl>

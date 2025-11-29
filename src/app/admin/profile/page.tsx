@@ -49,6 +49,10 @@ export default function ProfilePage() {
     formState: { errors: passwordErrors },
   } = useForm<PasswordFormData>({
     resolver: zodResolver(passwordFormSchema),
+    defaultValues: {
+      newPassword: '',
+      confirmPassword: '',
+    },
   });
 
   const {
