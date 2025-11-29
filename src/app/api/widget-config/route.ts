@@ -1,25 +1,10 @@
+
 // IMPORTANT! This file should not be used in a production environment.
 // It is a temporary mock server that will be replaced with a real implementation.
 // It is used to mock the response of the widget configuration.
 
 import { NextResponse } from 'next/server';
-import { initializeApp, getApps } from "firebase-admin/app";
-import { getFirestore } from "firebase-admin/firestore";
-import { credential } from "firebase-admin";
-
-// This is a temporary solution to get the widget configuration.
-// In a real-world scenario, you would use a proper admin SDK initialization.
-const serviceAccount = process.env.FIREBASE_SERVICE_ACCOUNT
-  ? JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT)
-  : undefined;
-
-if (!getApps().length) {
-  initializeApp({
-    credential: serviceAccount ? credential.cert(serviceAccount) : undefined,
-  });
-}
-
-const db = getFirestore();
+import { db } from '@/firebase/admin-config';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
