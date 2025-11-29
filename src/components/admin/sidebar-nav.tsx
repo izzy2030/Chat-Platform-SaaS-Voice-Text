@@ -22,6 +22,7 @@ import {
   Settings,
   PanelLeftClose,
   PanelRightClose,
+  Folder,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -78,6 +79,18 @@ export function SidebarNav() {
                   <Link href="/admin">
                     <LayoutDashboard />
                     <span>Dashboard</span>
+                  </Link>
+                </SidebarMenuButton>
+              </SidebarMenuItem>
+              <SidebarMenuItem>
+                <SidebarMenuButton
+                  asChild
+                  tooltip="Projects"
+                  isActive={pathname === '/admin/projects'}
+                >
+                  <Link href="/admin/projects">
+                    <Folder />
+                    <span>Projects</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>

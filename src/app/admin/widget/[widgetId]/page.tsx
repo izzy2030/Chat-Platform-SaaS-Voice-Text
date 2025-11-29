@@ -9,10 +9,11 @@ import {
   useFirestore,
   useUser,
   useDoc,
+  useCollection,
   useMemoFirebase,
   updateDocumentNonBlocking,
 } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { collection, doc, query } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { Loader2, MessageSquare, Mic } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -49,6 +50,7 @@ import { Label } from '@/components/ui/label';
 
 const widgetSchema = z.object({
   name: z.string().min(1, 'Widget Name is required'),
+  projectId: z.string().min(1, 'Please select a project'),
   type: z.enum(['text', 'voice']).default('text'),
   webhookUrl: z.string().url('Please enter a valid URL'),
   webhookSecret: z.string().optional(),
@@ -67,6 +69,7 @@ type WidgetFormData = z.infer<typeof widgetSchema>;
 interface ChatWidget {
   id: string;
   name: string;
+  projectId: string;
   type?: 'text' | 'voice';
   webhookUrl: string;
   webhookSecret?: string;
@@ -85,6 +88,11 @@ interface ChatWidget {
   userId: string;
 }
 
+interface Project {
+  id: string;
+  name: string;
+}
+
 export default function EditWidgetPage({
   params,
 }: {
@@ -101,13 +109,21 @@ export default function EditWidgetPage({
     return doc(firestore, `users/${user.uid}/chatWidgets/${widgetId}`);
   }, [firestore, user, widgetId]);
 
+  const projectsQuery = useMemoFirebase(() => {
+    if (!user) return null;
+    return query(collection(firestore, `users/${user.uid}/projects`));
+  }, [firestore, user]);
+
   const { data: widget, isLoading: isWidgetLoading } =
     useDoc<ChatWidget>(widgetDocRef);
+  
+  const { data: projects, isLoading: isLoadingProjects } = useCollection<Project>(projectsQuery);
 
   const form = useForm<WidgetFormData>({
     resolver: zodResolver(widgetSchema),
     defaultValues: {
       name: '',
+      projectId: '',
       type: 'text',
       webhookUrl: '',
       webhookSecret: '',
@@ -125,6 +141,7 @@ export default function EditWidgetPage({
     if (widget) {
       form.reset({
         name: widget.name || '',
+        projectId: widget.projectId || '',
         type: widget.type || 'text',
         webhookUrl: widget.webhookUrl || '',
         webhookSecret: widget.webhookSecret || '',
@@ -155,6 +172,7 @@ export default function EditWidgetPage({
     try {
       const updatedWidgetData: any = {
         name: data.name,
+        projectId: data.projectId,
         type: data.type,
         webhookUrl: data.webhookUrl,
         allowedDomains: data.allowedDomains.split(',').map(d => d.trim()),
@@ -279,6 +297,34 @@ export default function EditWidgetPage({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-4">
                     <h3 className="text-lg font-medium">Identity</h3>
+                    <FormField
+                      control={form.control}
+                      name="projectId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Project</FormLabel>
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <FormControl>
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select a project for this widget" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              {isLoadingProjects ? (
+                                <SelectItem value="loading" disabled>Loading...</SelectItem>
+                              ) : (
+                                projects?.map((project) => (
+                                  <SelectItem key={project.id} value={project.id}>
+                                    {project.name}
+                                  </SelectItem>
+                                ))
+                              )}
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                     <FormField
                       control={form.control}
                       name="name"

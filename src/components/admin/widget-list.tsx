@@ -3,7 +3,7 @@
 
 import { useMemo, useState } from 'react';
 import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
-import { collection, query, deleteDoc, doc } from 'firebase/firestore';
+import { collection, query, deleteDoc, doc, where } from 'firebase/firestore';
 import Link from 'next/link';
 import {
   Card,
@@ -12,7 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Loader2, Edit, Code, Eye, Copy, Palette, MessageSquare, Mic, Trash2 } from 'lucide-react';
+import { Loader2, Edit, Code, Eye, Copy, Palette, MessageSquare, Mic, Trash2, Folder } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { Button } from '../ui/button';
 import {
@@ -41,12 +41,12 @@ import type { WidgetTheme } from '@/app/admin/theming/[widgetId]/page';
 interface ChatWidget {
   id: string;
   name: string;
+  projectId: string;
   type?: 'text' | 'voice';
   userId: string;
   webhookUrl: string;
   allowedDomains: string[];
   theme?: Partial<WidgetTheme>;
-  // Legacy fields
   brand?: {
     bubbleColor?: string;
     bubbleIcon?: string;
@@ -59,6 +59,12 @@ interface ChatWidget {
     defaultLanguage?: 'EN' | 'ES';
   };
 }
+
+interface Project {
+  id: string;
+  name: string;
+}
+
 
 function ScriptTagDialog({ widget, open, onOpenChange }: { widget: ChatWidget | null, open: boolean, onOpenChange: (open: boolean) => void }) {
   if (!widget) return null;
@@ -108,7 +114,7 @@ function ScriptTagDialog({ widget, open, onOpenChange }: { widget: ChatWidget | 
 }
 
 
-export function WidgetList() {
+export function WidgetList({ projectId }: { projectId?: string }) {
   const firestore = useFirestore();
   const { user } = useUser();
   const [selectedWidget, setSelectedWidget] = useState<ChatWidget | null>(null);
@@ -117,17 +123,42 @@ export function WidgetList() {
   const [widgetToDelete, setWidgetToDelete] = useState<ChatWidget | null>(null);
   const [isDeleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
-  const chatWidgetsQuery = useMemoFirebase(() => {
+  const projectsQuery = useMemoFirebase(() => {
     if (!user) return null;
-    return query(collection(firestore, `users/${user.uid}/chatWidgets`));
+    return query(collection(firestore, `users/${user.uid}/projects`));
   }, [firestore, user]);
 
-  const {
-    data: widgets,
-    isLoading,
-    error,
-  } = useCollection<ChatWidget>(chatWidgetsQuery);
+  const widgetsQuery = useMemoFirebase(() => {
+    if (!user) return null;
+    const baseQuery = query(collection(firestore, `users/${user.uid}/chatWidgets`));
+    if (projectId) {
+      return query(baseQuery, where('projectId', '==', projectId));
+    }
+    return baseQuery;
+  }, [firestore, user, projectId]);
 
+  const { data: projects, isLoading: isLoadingProjects } = useCollection<Project>(projectsQuery);
+  const { data: widgets, isLoading: isLoadingWidgets, error } = useCollection<ChatWidget>(widgetsQuery);
+
+  const widgetsByProject = useMemo(() => {
+    if (!widgets || !projects) return {};
+    const grouped: { [key: string]: ChatWidget[] } = {};
+    widgets.forEach((widget) => {
+      const pId = widget.projectId || 'unassigned';
+      if (!grouped[pId]) {
+        grouped[pId] = [];
+      }
+      grouped[pId].push(widget);
+    });
+    return grouped;
+  }, [widgets, projects]);
+
+
+  const handleDeleteClick = (widget: ChatWidget) => {
+    setWidgetToDelete(widget);
+    setDeleteConfirmOpen(true);
+  };
+  
   const handleViewScript = (widget: ChatWidget) => {
     setSelectedWidget(widget);
     setScriptModalOpen(true);
@@ -136,11 +167,6 @@ export function WidgetList() {
   const handleTestWidget = (widget: ChatWidget) => {
     setSelectedWidget(widget);
     setTestModalOpen(true);
-  };
-
-  const handleDeleteClick = (widget: ChatWidget) => {
-    setWidgetToDelete(widget);
-    setDeleteConfirmOpen(true);
   };
 
   const handleConfirmDelete = async () => {
@@ -157,15 +183,59 @@ export function WidgetList() {
       setWidgetToDelete(null);
     }
   };
+  
+  const renderWidgetCard = (widget: ChatWidget) => (
+      <Card key={widget.id} className="overflow-hidden shadow-sm border-0">
+        <CardContent className="p-0">
+          <div className="p-6">
+            <div className="space-y-4">
+              <div>
+                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Name</h3>
+                <div className="flex items-center gap-2">
+                  {widget.type === 'voice' ? (
+                    <Mic className="h-5 w-5 text-primary" />
+                  ) : (
+                    <MessageSquare className="h-5 w-5 text-primary" />
+                  )}
+                  <div className="text-lg font-bold text-foreground">{widget.name}</div>
+                </div>
+              </div>
+              <div>
+                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Widget ID</h3>
+                <code className="text-sm font-mono text-foreground">{widget.id}</code>
+              </div>
+            </div>
+          </div>
+          <div className="bg-muted/30 p-2 flex flex-wrap gap-2 border-t border-border/50">
+              <Button variant="ghost" className="flex-1 h-9 bg-background/50 hover:bg-accent hover:text-accent-foreground group" onClick={() => handleViewScript(widget)}>
+                  <Code className="mr-2 h-4 w-4 text-muted-foreground group-hover:text-accent-foreground" /> Script
+              </Button>
+              <Button asChild variant="ghost" className="flex-1 h-9 bg-background/50 hover:bg-accent hover:text-accent-foreground group">
+                  <Link href={`/admin/widget/${widget.id}`}>
+                      <Edit className="mr-2 h-4 w-4 text-muted-foreground group-hover:text-accent-foreground" /> Edit
+                  </Link>
+              </Button>
+              <Button asChild variant="ghost" className="flex-1 h-9 bg-background/50 hover:bg-accent hover:text-accent-foreground group">
+                  <Link href={`/admin/theming/${widget.id}`}>
+                      <Palette className="mr-2 h-4 w-4 text-muted-foreground group-hover:text-accent-foreground" /> Customize
+                  </Link>
+              </Button>
+              <Button variant="ghost" className="flex-1 h-9 bg-background/50 hover:bg-accent hover:text-accent-foreground group" onClick={() => handleTestWidget(widget)}>
+                  <Eye className="mr-2 h-4 w-4 text-muted-foreground group-hover:text-accent-foreground" /> Test
+              </Button>
+              <Button variant="ghost" className="flex-1 h-9 bg-background/50 text-destructive hover:bg-destructive hover:text-destructive-foreground group" onClick={() => handleDeleteClick(widget)}>
+                  <Trash2 className="mr-2 h-4 w-4 group-hover:text-destructive-foreground" /> Delete
+              </Button>
+          </div>
+        </CardContent>
+      </Card>
+  );
+
+  const isLoading = isLoadingProjects || isLoadingWidgets;
 
   return (
     <>
       <div className="space-y-6">
-        <div className="bg-transparent text-foreground p-2">
-           <h3 className="text-2xl font-semibold leading-none tracking-tight">Chat Widgets</h3>
-           <p className="text-sm text-muted-foreground mt-2">A list of your created chat widgets.</p>
-        </div>
-
         {isLoading && (
           <div className="flex justify-center py-8">
             <Loader2 className="h-8 w-8 animate-spin" />
@@ -174,7 +244,7 @@ export function WidgetList() {
 
         {error && (
             <Alert variant="destructive">
-                <AlertTitle>Error loading widgets</AlertTitle>
+                <AlertTitle>Error loading data</AlertTitle>
                 <AlertDescription>
                 {error.message}
                 </AlertDescription>
@@ -182,64 +252,46 @@ export function WidgetList() {
         )}
 
         {!isLoading && !error && (
-          <div className="space-y-4">
-            {widgets && widgets.length > 0 ? (
-              widgets.map((widget) => (
-                <Card key={widget.id} className="overflow-hidden shadow-sm border-0">
-                  <CardContent className="p-0">
-                    <div className="p-6">
-                      <div className="space-y-4">
-                        <div>
-                           <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Name</h3>
-                           <div className="flex items-center gap-2">
-                             {widget.type === 'voice' ? (
-                               <Mic className="h-5 w-5 text-primary" />
-                             ) : (
-                               <MessageSquare className="h-5 w-5 text-primary" />
-                             )}
-                             <div className="text-lg font-bold text-foreground">{widget.name}</div>
-                           </div>
-                        </div>
-                         <div>
-                           <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Widget ID</h3>
-                           <code className="text-sm font-mono text-foreground">{widget.id}</code>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="bg-muted/30 p-2 flex flex-wrap gap-2 border-t border-border/50">
-                        <Button variant="ghost" className="flex-1 h-9 bg-background/50 hover:bg-accent hover:text-accent-foreground group" onClick={() => handleViewScript(widget)}>
-                            <Code className="mr-2 h-4 w-4 text-muted-foreground group-hover:text-accent-foreground" /> Script
-                        </Button>
-                        <Button asChild variant="ghost" className="flex-1 h-9 bg-background/50 hover:bg-accent hover:text-accent-foreground group">
-                            <Link href={`/admin/widget/${widget.id}`}>
-                                <Edit className="mr-2 h-4 w-4 text-muted-foreground group-hover:text-accent-foreground" /> Edit
-                            </Link>
-                        </Button>
-                        <Button asChild variant="ghost" className="flex-1 h-9 bg-background/50 hover:bg-accent hover:text-accent-foreground group">
-                            <Link href={`/admin/theming/${widget.id}`}>
-                                <Palette className="mr-2 h-4 w-4 text-muted-foreground group-hover:text-accent-foreground" /> Customize
-                            </Link>
-                        </Button>
-                         <Button variant="ghost" className="flex-1 h-9 bg-background/50 hover:bg-accent hover:text-accent-foreground group" onClick={() => handleTestWidget(widget)}>
-                            <Eye className="mr-2 h-4 w-4 text-muted-foreground group-hover:text-accent-foreground" /> Test
-                        </Button>
-                        <Button variant="ghost" className="flex-1 h-9 bg-background/50 hover:bg-destructive hover:text-destructive-foreground group" onClick={() => handleDeleteClick(widget)}>
-                            <Trash2 className="mr-2 h-4 w-4 text-muted-foreground group-hover:text-destructive-foreground" /> Delete
-                        </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
+          <div className="space-y-8">
+            {projectId ? (
+              <div className="space-y-4">
+                {widgets && widgets.length > 0 ? (
+                  widgets.map(renderWidgetCard)
+                ) : (
+                  <p className="text-center text-muted-foreground pt-8">No widgets found in this project.</p>
+                )}
+              </div>
             ) : (
-              <Card className="border-0 shadow-sm">
-                <CardContent className="flex flex-col items-center justify-center py-10 text-center">
-                   <div className="rounded-full bg-muted p-4 mb-4">
-                      <Palette className="h-8 w-8 text-muted-foreground" />
-                   </div>
-                   <h3 className="text-lg font-medium">No widgets created yet</h3>
-                   <p className="text-sm text-muted-foreground mt-1 mb-4">Create your first widget to get started.</p>
-                </CardContent>
-              </Card>
+              <>
+                {projects && projects.map((project) => (
+                  <div key={project.id}>
+                    <h4 className="text-lg font-semibold flex items-center gap-2 mb-4">
+                      <Folder className="h-5 w-5 text-primary" />
+                      {project.name}
+                    </h4>
+                    <div className="space-y-4">
+                      {widgetsByProject[project.id]?.map(renderWidgetCard)}
+                      {(!widgetsByProject[project.id] || widgetsByProject[project.id].length === 0) && (
+                        <p className="text-sm text-muted-foreground pl-2">No widgets in this project yet.</p>
+                      )}
+                    </div>
+                  </div>
+                ))}
+                {(!projects || projects.length === 0) && (
+                     <Card className="border-0 shadow-sm">
+                       <CardContent className="flex flex-col items-center justify-center py-10 text-center">
+                          <div className="rounded-full bg-muted p-4 mb-4">
+                             <Folder className="h-8 w-8 text-muted-foreground" />
+                          </div>
+                          <h3 className="text-lg font-medium">No projects created yet</h3>
+                          <p className="text-sm text-muted-foreground mt-1 mb-4">Create your first project to get started.</p>
+                           <Button asChild>
+                              <Link href="/admin/projects">Create Project</Link>
+                           </Button>
+                       </CardContent>
+                     </Card>
+                )}
+              </>
             )}
           </div>
         )}
