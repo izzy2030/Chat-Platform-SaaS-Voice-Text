@@ -3,7 +3,7 @@
 
 import { useMemo, useState } from 'react';
 import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
-import { collection, query } from 'firebase/firestore';
+import { collection, query, deleteDoc, doc } from 'firebase/firestore';
 import Link from 'next/link';
 import {
   Card,
@@ -12,7 +12,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import { Loader2, Edit, Code, Eye, Copy, Palette, MessageSquare, Mic } from 'lucide-react';
+import { Loader2, Edit, Code, Eye, Copy, Palette, MessageSquare, Mic, Trash2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { Button } from '../ui/button';
 import {
@@ -23,6 +23,16 @@ import {
   DialogDescription,
   DialogFooter,
 } from '../ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { toast } from '@/hooks/use-toast';
 import { ChatWidgetComponent } from '../widget/chat-widget';
 import type { WidgetTheme } from '@/app/admin/theming/[widgetId]/page';
@@ -104,6 +114,8 @@ export function WidgetList() {
   const [selectedWidget, setSelectedWidget] = useState<ChatWidget | null>(null);
   const [isScriptModalOpen, setScriptModalOpen] = useState(false);
   const [isTestModalOpen, setTestModalOpen] = useState(false);
+  const [widgetToDelete, setWidgetToDelete] = useState<ChatWidget | null>(null);
+  const [isDeleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   const chatWidgetsQuery = useMemoFirebase(() => {
     if (!user) return null;
@@ -124,6 +136,26 @@ export function WidgetList() {
   const handleTestWidget = (widget: ChatWidget) => {
     setSelectedWidget(widget);
     setTestModalOpen(true);
+  };
+
+  const handleDeleteClick = (widget: ChatWidget) => {
+    setWidgetToDelete(widget);
+    setDeleteConfirmOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!widgetToDelete || !user) return;
+    
+    try {
+      await deleteDoc(doc(firestore, `users/${user.uid}/chatWidgets/${widgetToDelete.id}`));
+      toast({ title: 'Widget deleted successfully' });
+    } catch (error) {
+      console.error('Error deleting widget:', error);
+      toast({ variant: 'destructive', title: 'Error deleting widget', description: 'Please try again.' });
+    } finally {
+      setDeleteConfirmOpen(false);
+      setWidgetToDelete(null);
+    }
   };
 
   return (
@@ -174,7 +206,7 @@ export function WidgetList() {
                         </div>
                       </div>
                     </div>
-                    <div className="bg-muted/30 p-2 flex gap-2 border-t border-border/50">
+                    <div className="bg-muted/30 p-2 flex flex-wrap gap-2 border-t border-border/50">
                         <Button variant="ghost" className="flex-1 h-9 bg-background/50 hover:bg-accent hover:text-accent-foreground group" onClick={() => handleViewScript(widget)}>
                             <Code className="mr-2 h-4 w-4 text-muted-foreground group-hover:text-accent-foreground" /> Script
                         </Button>
@@ -190,6 +222,9 @@ export function WidgetList() {
                         </Button>
                          <Button variant="ghost" className="flex-1 h-9 bg-background/50 hover:bg-accent hover:text-accent-foreground group" onClick={() => handleTestWidget(widget)}>
                             <Eye className="mr-2 h-4 w-4 text-muted-foreground group-hover:text-accent-foreground" /> Test
+                        </Button>
+                        <Button variant="ghost" className="flex-1 h-9 bg-background/50 hover:bg-destructive hover:text-destructive-foreground group" onClick={() => handleDeleteClick(widget)}>
+                            <Trash2 className="mr-2 h-4 w-4 text-muted-foreground group-hover:text-destructive-foreground" /> Delete
                         </Button>
                     </div>
                   </CardContent>
@@ -227,6 +262,25 @@ export function WidgetList() {
           </div>
         </DialogContent>
       </Dialog>
+
+      <AlertDialog open={isDeleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This action cannot be undone. This will permanently delete the widget 
+              <span className="font-bold text-foreground"> {widgetToDelete?.name} </span>
+              and remove its data from our servers. Any websites using this widget will stop working immediately.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
