@@ -12,14 +12,6 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import { Loader2, Edit, Code, Eye, Copy, Palette } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { Button } from '../ui/button';
@@ -135,80 +127,81 @@ export function WidgetList() {
 
   return (
     <>
-      <Card>
-        <CardHeader>
-          <CardTitle>Chat Widgets</CardTitle>
-          <CardDescription>
-            A list of your created chat widgets.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          {isLoading && (
-            <div className="flex justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin" />
-            </div>
+      <div className="space-y-6">
+        <div className="bg-card text-card-foreground shadow-sm rounded-lg border p-6">
+           <h3 className="text-2xl font-semibold leading-none tracking-tight">Chat Widgets</h3>
+           <p className="text-sm text-muted-foreground mt-2">A list of your created chat widgets.</p>
+        </div>
 
-          )}
-          {error && (
-              <Alert variant="destructive">
-                  <AlertTitle>Error loading widgets</AlertTitle>
-                  <AlertDescription>
-                  {error.message}
-                  </AlertDescription>
-              </Alert>
-          )}
-          {!isLoading && !error && (
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Widget ID</TableHead>
-                  <TableHead className="text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {widgets && widgets.length > 0 ? (
-                  widgets.map((widget) => (
-                    <TableRow key={widget.id}>
-                      <TableCell className="font-medium">{widget.name}</TableCell>
-                      <TableCell>
-                        <code>{widget.id}</code>
-                      </TableCell>
-                      <TableCell className="text-right space-x-2">
-                        <Button variant="outline" size="sm" onClick={() => handleViewScript(widget)}>
-                           <Code className="mr-2 h-4 w-4" /> View Script
+        {isLoading && (
+          <div className="flex justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin" />
+          </div>
+        )}
+
+        {error && (
+            <Alert variant="destructive">
+                <AlertTitle>Error loading widgets</AlertTitle>
+                <AlertDescription>
+                {error.message}
+                </AlertDescription>
+            </Alert>
+        )}
+
+        {!isLoading && !error && (
+          <div className="space-y-4">
+            {widgets && widgets.length > 0 ? (
+              widgets.map((widget) => (
+                <Card key={widget.id} className="overflow-hidden">
+                  <CardContent className="p-0">
+                    <div className="p-6">
+                      <div className="space-y-4">
+                        <div>
+                           <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Name</h3>
+                           <div className="text-lg font-bold text-foreground">{widget.name}</div>
+                        </div>
+                         <div>
+                           <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Widget ID</h3>
+                           <code className="text-sm font-mono text-foreground">{widget.id}</code>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="bg-muted/30 p-2 flex gap-2 border-t">
+                        <Button variant="ghost" className="flex-1 h-9 bg-background/50 hover:bg-accent hover:text-accent-foreground group" onClick={() => handleViewScript(widget)}>
+                            <Code className="mr-2 h-4 w-4 text-muted-foreground group-hover:text-accent-foreground" /> Script
                         </Button>
-                         <Button asChild variant="outline" size="sm">
+                        <Button asChild variant="ghost" className="flex-1 h-9 bg-background/50 hover:bg-accent hover:text-accent-foreground group">
                             <Link href={`/admin/widget/${widget.id}`}>
-                               <Edit className="mr-2 h-4 w-4" /> Edit
+                                <Edit className="mr-2 h-4 w-4 text-muted-foreground group-hover:text-accent-foreground" /> Edit
                             </Link>
                         </Button>
-                        <Button asChild variant="outline" size="sm">
-                           <Link href={`/admin/theming/${widget.id}`}>
-                              <Palette className="mr-2 h-4 w-4" /> Customize
-                           </Link>
+                        <Button asChild variant="ghost" className="flex-1 h-9 bg-background/50 hover:bg-accent hover:text-accent-foreground group">
+                            <Link href={`/admin/theming/${widget.id}`}>
+                                <Palette className="mr-2 h-4 w-4 text-muted-foreground group-hover:text-accent-foreground" /> Customize
+                            </Link>
                         </Button>
-                        <Button variant="outline" size="sm" onClick={() => handleTestWidget(widget)}>
-                           <Eye className="mr-2 h-4 w-4" /> Test
+                         <Button variant="ghost" className="flex-1 h-9 bg-background/50 hover:bg-accent hover:text-accent-foreground group" onClick={() => handleTestWidget(widget)}>
+                            <Eye className="mr-2 h-4 w-4 text-muted-foreground group-hover:text-accent-foreground" /> Test
                         </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))
-                ) : (
-                  <TableRow>
-                    <TableCell
-                      colSpan={3}
-                      className="h-24 text-center"
-                    >
-                      No widgets found. Create one to get started!
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              <Card>
+                <CardContent className="flex flex-col items-center justify-center py-10 text-center">
+                   <div className="rounded-full bg-muted p-4 mb-4">
+                      <Palette className="h-8 w-8 text-muted-foreground" />
+                   </div>
+                   <h3 className="text-lg font-medium">No widgets created yet</h3>
+                   <p className="text-sm text-muted-foreground mt-1 mb-4">Create your first widget to get started.</p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        )}
+      </div>
+
       <ScriptTagDialog widget={selectedWidget} open={isScriptModalOpen} onOpenChange={setScriptModalOpen} />
       <Dialog open={isTestModalOpen} onOpenChange={setTestModalOpen}>
         <DialogContent className="sm:max-w-[425px] p-0 border-0 bg-transparent shadow-none">
