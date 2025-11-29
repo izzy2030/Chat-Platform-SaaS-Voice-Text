@@ -43,6 +43,7 @@ import {
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 
 const widgetSchema = z.object({
@@ -192,8 +193,38 @@ export default function EditWidgetPage({
 
   if (isWidgetLoading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
+      <div className="flex justify-center p-4 md:p-8">
+        <div className="w-full max-w-4xl">
+           <Skeleton className="h-10 w-40 mb-4" />
+           <Card>
+             <CardHeader>
+               <Skeleton className="h-8 w-48 mb-2" />
+               <Skeleton className="h-4 w-64" />
+             </CardHeader>
+             <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                       <Skeleton className="h-6 w-32 mb-2" />
+                       <Skeleton className="h-10 w-full" />
+                       <Skeleton className="h-10 w-full" />
+                       <Skeleton className="h-10 w-full" />
+                       <Skeleton className="h-10 w-full" />
+                    </div>
+                    <div className="space-y-4">
+                       <Skeleton className="h-6 w-32 mb-2" />
+                       <Skeleton className="h-10 w-full" />
+                       <Skeleton className="h-10 w-full" />
+                       <Skeleton className="h-10 w-full" />
+                       <Skeleton className="h-24 w-full" />
+                    </div>
+                </div>
+                <div className="flex justify-end space-x-2 mt-6">
+                    <Skeleton className="h-10 w-24" />
+                    <Skeleton className="h-10 w-32" />
+                </div>
+             </CardContent>
+           </Card>
+        </div>
       </div>
     );
   }

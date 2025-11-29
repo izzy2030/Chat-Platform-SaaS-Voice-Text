@@ -145,23 +145,16 @@ export default function ThemingPage({ params }: { params: { widgetId: string } }
       setIsSaving(false);
     }
   };
-  
-  if (isWidgetLoading) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    );
-  }
 
   return (
-    <div className="flex h-screen w-full flex-col bg-muted/40">
+    <div className="flex h-full w-full flex-col bg-muted/40">
        <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 py-2">
          <Button asChild variant="outline" size="sm">
             <Link href="/admin">
               &larr; Back to Dashboard
             </Link>
           </Button>
+         {isWidgetLoading && <Loader2 className="ml-2 h-4 w-4 animate-spin text-muted-foreground" />}
         <div className="ml-auto flex items-center gap-2">
             <Button variant="outline" onClick={resetTheme}>Reset to Defaults</Button>
             <Button onClick={saveTheme} disabled={isSaving}>

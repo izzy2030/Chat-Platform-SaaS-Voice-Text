@@ -97,14 +97,14 @@ export function CreateWidget() {
       const newWidget = {
         name: data.name,
         webhookUrl: data.webhookUrl,
-        webhookSecret: data.webhookSecret,
+        webhookSecret: data.webhookSecret || '',
         allowedDomains: data.allowedDomains.split(',').map(d => d.trim()),
         brand: {
-          bubbleColor: data.bubbleColor,
-          bubbleIcon: data.bubbleIcon,
-          panelColor: data.panelColor,
-          headerTitle: data.headerTitle,
-          welcomeMessage: data.welcomeMessage,
+          bubbleColor: data.bubbleColor || '#000000',
+          bubbleIcon: data.bubbleIcon || '',
+          panelColor: data.panelColor || '#FFFFFF',
+          headerTitle: data.headerTitle || '',
+          welcomeMessage: data.welcomeMessage || '',
           position: data.position,
         },
         behavior: {
