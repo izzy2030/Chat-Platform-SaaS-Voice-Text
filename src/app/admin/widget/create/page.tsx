@@ -153,24 +153,24 @@ export default function CreateWidgetPage() {
   return (
      <div className="flex justify-center p-4 md:p-8">
       <div className="w-full max-w-4xl">
-        <Button asChild variant="outline" className="mb-4">
+        <Button asChild variant="ghost" className="mb-4 text-muted-foreground hover:text-foreground">
            <Link href="/admin">
             &larr; Back to Dashboard
           </Link>
         </Button>
-        <Card>
+        <Card className="bg-white shadow-sm border border-indigo-100 rounded-2xl">
           <CardHeader>
-            <CardTitle>Create New Chat Widget</CardTitle>
+            <CardTitle className="text-2xl font-bold text-gray-900">Create New Chat Widget</CardTitle>
             <CardDescription>
               Fill in the details to configure your new chat widget.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Identity</h3>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                  <div className="space-y-6">
+                    <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Identity</h3>
                     <FormField
                       control={form.control}
                       name="projectId"
@@ -179,11 +179,11 @@ export default function CreateWidgetPage() {
                           <FormLabel>Project</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select a project for this widget" />
+                              <SelectTrigger className="rounded-lg">
+                                <SelectValue placeholder="Select a project" />
                               </SelectTrigger>
                             </FormControl>
-                            <SelectContent>
+                            <SelectContent className="rounded-lg">
                               {isLoadingProjects ? (
                                 <SelectItem value="loading" disabled>Loading...</SelectItem>
                               ) : (
@@ -206,7 +206,7 @@ export default function CreateWidgetPage() {
                         <FormItem>
                           <FormLabel>Widget Name</FormLabel>
                           <FormControl>
-                            <Input placeholder="Queens Auto" {...field} />
+                            <Input placeholder="Queens Auto" {...field} className="rounded-lg" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -228,7 +228,7 @@ export default function CreateWidgetPage() {
                                 <RadioGroupItem value="text" id="text" className="peer sr-only" />
                                 <Label
                                   htmlFor="text"
-                                  className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                                  className="flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer transition-all"
                                 >
                                   <MessageSquare className="mb-3 h-6 w-6" />
                                   Text Chat
@@ -238,7 +238,7 @@ export default function CreateWidgetPage() {
                                 <RadioGroupItem value="voice" id="voice" className="peer sr-only" />
                                 <Label
                                   htmlFor="voice"
-                                  className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                                  className="flex flex-col items-center justify-between rounded-xl border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer transition-all"
                                 >
                                   <Mic className="mb-3 h-6 w-6" />
                                   Voice Agent
@@ -257,7 +257,7 @@ export default function CreateWidgetPage() {
                         <FormItem>
                           <FormLabel>Webhook URL</FormLabel>
                           <FormControl>
-                            <Input placeholder="https://api.example.com/webhook" {...field} />
+                            <Input placeholder="https://api.example.com/webhook" {...field} className="rounded-lg" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -270,7 +270,7 @@ export default function CreateWidgetPage() {
                         <FormItem>
                           <FormLabel>Webhook Secret</FormLabel>
                           <FormControl>
-                            <Input type="password" placeholder="••••••••••••••" {...field} />
+                            <Input type="password" placeholder="••••••••••••••" {...field} className="rounded-lg" />
                           </FormControl>
                            <FormDescription>
                             Optional, but recommended for verifying webhook authenticity.
@@ -286,7 +286,7 @@ export default function CreateWidgetPage() {
                         <FormItem>
                           <FormLabel>Allowed Domains</FormLabel>
                           <FormControl>
-                            <Input placeholder="example.com, my-site.com" {...field} />
+                            <Input placeholder="example.com, my-site.com" {...field} className="rounded-lg" />
                           </FormControl>
                           <FormDescription>
                             Comma-separated list of domains where this widget can be embedded.
@@ -296,8 +296,8 @@ export default function CreateWidgetPage() {
                       )}
                     />
                   </div>
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Branding</h3>
+                  <div className="space-y-6">
+                    <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Branding</h3>
                      <FormField
                       control={form.control}
                       name="bubbleColor"
@@ -305,7 +305,7 @@ export default function CreateWidgetPage() {
                         <FormItem>
                           <FormLabel>Bubble Color</FormLabel>
                           <FormControl>
-                            <Input type="color" {...field} />
+                            <Input type="color" {...field} className="h-10 w-20 rounded-lg cursor-pointer p-1" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -318,7 +318,7 @@ export default function CreateWidgetPage() {
                         <FormItem>
                           <FormLabel>Bubble Icon (Emoji or URL)</FormLabel>
                           <FormControl>
-                            <Input placeholder="💬 or https://example.com/icon.png" {...field} />
+                            <Input placeholder="💬 or https://example.com/icon.png" {...field} className="rounded-lg" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -331,7 +331,7 @@ export default function CreateWidgetPage() {
                         <FormItem>
                           <FormLabel>Panel Color</FormLabel>
                           <FormControl>
-                            <Input type="color" {...field} />
+                            <Input type="color" {...field} className="h-10 w-20 rounded-lg cursor-pointer p-1" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -344,7 +344,7 @@ export default function CreateWidgetPage() {
                         <FormItem>
                           <FormLabel>Header Title</FormLabel>
                           <FormControl>
-                            <Input placeholder="Chat with Queens Auto" {...field} />
+                            <Input placeholder="Chat with Queens Auto" {...field} className="rounded-lg" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -357,7 +357,7 @@ export default function CreateWidgetPage() {
                         <FormItem>
                           <FormLabel>Welcome Message</FormLabel>
                           <FormControl>
-                            <Textarea placeholder="Hello! How can we help you today?" {...field} />
+                            <Textarea placeholder="Hello! How can we help you today?" {...field} className="rounded-lg min-h-[100px]" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -393,7 +393,7 @@ export default function CreateWidgetPage() {
                         </FormItem>
                       )}
                     />
-                    <h3 className="text-lg font-medium pt-4">Behavior</h3>
+                    <h3 className="text-lg font-semibold text-gray-900 border-b pb-2 pt-2">Behavior</h3>
                      <FormField
                       control={form.control}
                       name="defaultLanguage"
@@ -402,11 +402,11 @@ export default function CreateWidgetPage() {
                           <FormLabel>Default Language</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
-                              <SelectTrigger>
+                              <SelectTrigger className="rounded-lg">
                                 <SelectValue placeholder="Select a language" />
                               </SelectTrigger>
                             </FormControl>
-                            <SelectContent>
+                            <SelectContent className="rounded-lg">
                               <SelectItem value="EN">English</SelectItem>
                               <SelectItem value="ES">Spanish</SelectItem>
                             </SelectContent>
@@ -418,9 +418,9 @@ export default function CreateWidgetPage() {
                   </div>
                 </div>
 
-                <div className="flex justify-end space-x-2 pt-4">
-                  <Button type="button" variant="ghost" onClick={() => router.push('/admin')}>Cancel</Button>
-                  <Button type="submit" disabled={isLoading}>
+                <div className="flex justify-end space-x-4 pt-6 border-t border-gray-100">
+                  <Button type="button" variant="ghost" onClick={() => router.push('/admin')} className="rounded-lg">Cancel</Button>
+                  <Button type="submit" disabled={isLoading} className="rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white min-w-[140px]">
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Create Widget
                   </Button>

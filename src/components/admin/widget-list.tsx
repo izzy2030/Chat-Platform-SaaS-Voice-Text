@@ -8,11 +8,8 @@ import Link from 'next/link';
 import {
   Card,
   CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
 } from '@/components/ui/card';
-import { Loader2, Edit, Code, Eye, Copy, Palette, MessageSquare, Mic, Trash2, Folder } from 'lucide-react';
+import { Loader2, Edit, Code, Eye, Palette, MessageSquare, Mic, Trash2, Folder, Calendar } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { Button } from '../ui/button';
 import {
@@ -36,6 +33,7 @@ import {
 import { toast } from '@/hooks/use-toast';
 import { ChatWidgetComponent } from '../widget/chat-widget';
 import type { WidgetTheme } from '@/app/admin/theming/[widgetId]/page';
+import { Badge } from '@/components/ui/badge';
 
 
 interface ChatWidget {
@@ -185,47 +183,68 @@ export function WidgetList({ projectId }: { projectId?: string }) {
   };
   
   const renderWidgetCard = (widget: ChatWidget) => (
-      <Card key={widget.id} className="overflow-hidden shadow-sm border-0">
-        <CardContent className="p-0">
-          <div className="p-6">
-            <div className="space-y-4">
-              <div>
-                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Name</h3>
-                <div className="flex items-center gap-2">
-                  {widget.type === 'voice' ? (
-                    <Mic className="h-5 w-5 text-primary" />
-                  ) : (
-                    <MessageSquare className="h-5 w-5 text-primary" />
-                  )}
-                  <div className="text-lg font-bold text-foreground">{widget.name}</div>
-                </div>
-              </div>
-              <div>
-                <h3 className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1">Widget ID</h3>
-                <code className="text-sm font-mono text-foreground">{widget.id}</code>
-              </div>
+      <Card key={widget.id} className="overflow-hidden bg-white shadow-sm border border-indigo-100 rounded-2xl hover:shadow-md transition-all duration-200 group">
+        <CardContent className="p-6 flex flex-col h-full justify-between">
+          <div className="space-y-4">
+            <div className="flex justify-between items-start">
+               <div>
+                  <h3 className="text-xl font-bold text-gray-900">{widget.name}</h3>
+                  <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground font-medium uppercase tracking-wide">
+                    <Calendar className="w-3 h-3" />
+                    <span>Created recently</span>
+                  </div>
+               </div>
+               <div className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1 ${
+                   widget.type === 'voice' 
+                   ? 'bg-purple-100 text-purple-700' 
+                   : 'bg-blue-100 text-blue-700'
+               }`}>
+                   {widget.type === 'voice' ? <Mic className="w-3 h-3" /> : <MessageSquare className="w-3 h-3" />}
+                   {widget.type === 'voice' ? 'Voice Agent' : 'Text Chat'}
+               </div>
+            </div>
+            
+            <div className="flex items-center gap-2">
+               <div className="bg-gray-100 px-2 py-1 rounded text-xs font-mono text-gray-600 truncate max-w-[200px]">
+                 ID: {widget.id}
+               </div>
             </div>
           </div>
-          <div className="bg-muted/30 p-2 flex flex-wrap gap-2 border-t border-border/50">
-              <Button variant="ghost" className="flex-1 h-9 bg-background/50 hover:bg-accent hover:text-accent-foreground group" onClick={() => handleViewScript(widget)}>
-                  <Code className="mr-2 h-4 w-4 text-muted-foreground group-hover:text-accent-foreground" /> Script
-              </Button>
-              <Button asChild variant="ghost" className="flex-1 h-9 bg-background/50 hover:bg-accent hover:text-accent-foreground group">
-                  <Link href={`/admin/widget/${widget.id}`}>
-                      <Edit className="mr-2 h-4 w-4 text-muted-foreground group-hover:text-accent-foreground" /> Edit
-                  </Link>
-              </Button>
-              <Button asChild variant="ghost" className="flex-1 h-9 bg-background/50 hover:bg-accent hover:text-accent-foreground group">
-                  <Link href={`/admin/theming/${widget.id}`}>
-                      <Palette className="mr-2 h-4 w-4 text-muted-foreground group-hover:text-accent-foreground" /> Customize
-                  </Link>
-              </Button>
-              <Button variant="ghost" className="flex-1 h-9 bg-background/50 hover:bg-accent hover:text-accent-foreground group" onClick={() => handleTestWidget(widget)}>
-                  <Eye className="mr-2 h-4 w-4 text-muted-foreground group-hover:text-accent-foreground" /> Test
-              </Button>
-              <Button variant="ghost" className="flex-1 h-9 bg-background/50 text-destructive hover:bg-destructive hover:text-destructive-foreground group" onClick={() => handleDeleteClick(widget)}>
-                  <Trash2 className="mr-2 h-4 w-4 group-hover:text-destructive-foreground" /> Delete
-              </Button>
+
+          <div className="mt-8 pt-4 border-t border-indigo-50 flex items-center justify-between gap-2">
+             <div className="flex gap-2">
+                <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="h-8 px-2 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 hover:text-indigo-700 rounded-lg font-medium transition-colors"
+                    onClick={() => handleViewScript(widget)}
+                >
+                    <Code className="mr-1.5 h-3.5 w-3.5" /> Script
+                </Button>
+                <Link href={`/admin/widget/${widget.id}`} passHref>
+                    <Button 
+                        variant="ghost" 
+                        size="sm" 
+                        className="h-8 px-2 text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-lg font-medium transition-colors"
+                    >
+                        <Edit className="mr-1.5 h-3.5 w-3.5" /> Edit
+                    </Button>
+                </Link>
+             </div>
+             
+             <div className="flex gap-1">
+                <Link href={`/admin/theming/${widget.id}`} passHref>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full" title="Customize">
+                        <Palette className="h-4 w-4" />
+                    </Button>
+                </Link>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full" title="Test" onClick={() => handleTestWidget(widget)}>
+                    <Eye className="h-4 w-4" />
+                </Button>
+                <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full" title="Delete" onClick={() => handleDeleteClick(widget)}>
+                    <Trash2 className="h-4 w-4" />
+                </Button>
+             </div>
           </div>
         </CardContent>
       </Card>
@@ -235,16 +254,23 @@ export function WidgetList({ projectId }: { projectId?: string }) {
 
   return (
     <>
-      <div className="space-y-6">
+      <div className="space-y-8">
+        {!projectId && (
+          <div className="flex flex-col gap-1">
+             <h3 className="text-3xl font-bold tracking-tight text-gray-900">Dashboard</h3>
+             <p className="text-md text-muted-foreground">Manage your AI agents and chat widgets.</p>
+          </div>
+        )}
+
         {isLoading && (
-          <div className="flex justify-center py-8">
-            <Loader2 className="h-8 w-8 animate-spin" />
+          <div className="flex justify-center py-12">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
           </div>
         )}
 
         {error && (
             <Alert variant="destructive">
-                <AlertTitle>Error loading data</AlertTitle>
+                <AlertTitle>Error</AlertTitle>
                 <AlertDescription>
                 {error.message}
                 </AlertDescription>
@@ -252,40 +278,45 @@ export function WidgetList({ projectId }: { projectId?: string }) {
         )}
 
         {!isLoading && !error && (
-          <div className="space-y-8">
+          <div className="space-y-10">
             {projectId ? (
-              <div className="space-y-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                 {widgets && widgets.length > 0 ? (
                   widgets.map(renderWidgetCard)
                 ) : (
-                  <p className="text-center text-muted-foreground pt-8">No widgets found in this project.</p>
+                  <p className="col-span-full text-center text-muted-foreground pt-8">No widgets found in this project.</p>
                 )}
               </div>
             ) : (
               <>
                 {projects && projects.map((project) => (
-                  <div key={project.id}>
-                    <h4 className="text-lg font-semibold flex items-center gap-2 mb-4">
-                      <Folder className="h-5 w-5 text-primary" />
-                      {project.name}
-                    </h4>
-                    <div className="space-y-4">
+                  <div key={project.id} className="space-y-4">
+                    <div className="flex items-center gap-2 pb-2 border-b border-gray-100">
+                      <Folder className="h-5 w-5 text-indigo-500 fill-indigo-100" />
+                      <h4 className="text-xl font-bold text-gray-800">{project.name}</h4>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
                       {widgetsByProject[project.id]?.map(renderWidgetCard)}
                       {(!widgetsByProject[project.id] || widgetsByProject[project.id].length === 0) && (
-                        <p className="text-sm text-muted-foreground pl-2">No widgets in this project yet.</p>
+                        <div className="col-span-full py-8 border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center text-gray-400">
+                            <p className="text-sm">No widgets in this project yet.</p>
+                            <Button asChild variant="link" className="text-indigo-600">
+                                <Link href="/admin/widget/create">Create one now</Link>
+                            </Button>
+                        </div>
                       )}
                     </div>
                   </div>
                 ))}
                 {(!projects || projects.length === 0) && (
-                     <Card className="border-0 shadow-sm">
-                       <CardContent className="flex flex-col items-center justify-center py-10 text-center">
-                          <div className="rounded-full bg-muted p-4 mb-4">
-                             <Folder className="h-8 w-8 text-muted-foreground" />
+                     <Card className="border-0 shadow-sm bg-white rounded-2xl">
+                       <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+                          <div className="rounded-full bg-indigo-50 p-6 mb-6">
+                             <Folder className="h-12 w-12 text-indigo-500" />
                           </div>
-                          <h3 className="text-lg font-medium">No projects created yet</h3>
-                          <p className="text-sm text-muted-foreground mt-1 mb-4">Create your first project to get started.</p>
-                           <Button asChild>
+                          <h3 className="text-2xl font-bold text-gray-900 mb-2">No projects created yet</h3>
+                          <p className="text-gray-500 mb-8 max-w-sm mx-auto">Projects allow you to organize your widgets efficiently. Create your first project to get started.</p>
+                           <Button asChild size="lg" className="rounded-full px-8 bg-indigo-600 hover:bg-indigo-700 text-white">
                               <Link href="/admin/projects">Create Project</Link>
                            </Button>
                        </CardContent>

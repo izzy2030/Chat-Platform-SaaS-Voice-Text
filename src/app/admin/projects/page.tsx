@@ -8,12 +8,11 @@ import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebas
 import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
 import { collection, query, serverTimestamp } from 'firebase/firestore';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, Folder, Plus } from 'lucide-react';
+import { Loader2, Folder, Plus, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import {
   Card,
   CardContent,
-  CardDescription,
   CardHeader,
   CardTitle,
 } from '@/components/ui/card';
@@ -92,30 +91,30 @@ export default function ProjectsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-2xl font-semibold leading-none tracking-tight">Projects</h3>
-          <p className="text-sm text-muted-foreground mt-2">
-            A list of your projects for grouping widgets.
+          <h3 className="text-3xl font-bold tracking-tight text-gray-900">Projects</h3>
+          <p className="text-md text-muted-foreground mt-1">
+            Organize your widgets into projects.
           </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger asChild>
-            <Button>
+            <Button className="rounded-full bg-indigo-600 hover:bg-indigo-700 text-white">
               <Plus className="mr-2 h-4 w-4" />
               New Project
             </Button>
           </DialogTrigger>
-          <DialogContent>
+          <DialogContent className="sm:max-w-[425px] rounded-2xl">
             <DialogHeader>
-              <DialogTitle>Create a New Project</DialogTitle>
+              <DialogTitle>Create Project</DialogTitle>
               <DialogDescription>
-                Projects help you organize widgets for different businesses or purposes.
+                Name your new project to start grouping widgets.
               </DialogDescription>
             </DialogHeader>
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
                 <FormField
                   control={form.control}
                   name="name"
@@ -123,15 +122,15 @@ export default function ProjectsPage() {
                     <FormItem>
                       <FormLabel>Project Name</FormLabel>
                       <FormControl>
-                        <Input placeholder="e.g., Queens Auto" {...field} />
+                        <Input placeholder="e.g., Marketing Campaign" {...field} className="rounded-lg" />
                       </FormControl>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
                 <DialogFooter>
-                  <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)}>Cancel</Button>
-                  <Button type="submit" disabled={isLoading}>
+                  <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="rounded-lg">Cancel</Button>
+                  <Button type="submit" disabled={isLoading} className="rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white">
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Create Project
                   </Button>
@@ -143,30 +142,43 @@ export default function ProjectsPage() {
       </div>
 
       {isLoadingProjects ? (
-        <div className="flex justify-center py-8">
-          <Loader2 className="h-8 w-8 animate-spin" />
+        <div className="flex justify-center py-12">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       ) : (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {projects && projects.length > 0 ? (
             projects.map((project) => (
-              <Link key={project.id} href={`/admin/projects/${project.id}`} className="block hover:bg-accent/50 rounded-lg">
-                <Card className="h-full">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">{project.name}</CardTitle>
-                    <Folder className="h-4 w-4 text-muted-foreground" />
+              <Link key={project.id} href={`/admin/projects/${project.id}`} className="block group">
+                <Card className="h-full overflow-hidden bg-white shadow-sm border border-indigo-100 rounded-2xl hover:shadow-md transition-all duration-200">
+                  <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
+                    <div className="rounded-full bg-indigo-50 p-2.5 group-hover:bg-indigo-100 transition-colors">
+                        <Folder className="h-5 w-5 text-indigo-600" />
+                    </div>
+                    <div className="rounded-full p-2 text-gray-400 group-hover:text-indigo-500 transition-colors">
+                        <ArrowRight className="h-4 w-4" />
+                    </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold">...</div>
-                    <p className="text-xs text-muted-foreground">widgets in this project</p>
+                    <CardTitle className="text-xl font-bold text-gray-900 group-hover:text-indigo-700 transition-colors">{project.name}</CardTitle>
+                    <p className="text-sm text-muted-foreground mt-2">View project widgets</p>
                   </CardContent>
                 </Card>
               </Link>
             ))
           ) : (
-            <p className="col-span-full text-center text-muted-foreground">
-              No projects created yet. Click "New Project" to start.
-            </p>
+            <Card className="col-span-full border-0 shadow-sm bg-white rounded-2xl">
+                <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+                <div className="rounded-full bg-indigo-50 p-6 mb-6">
+                    <Folder className="h-12 w-12 text-indigo-500" />
+                </div>
+                <h3 className="text-2xl font-bold text-gray-900 mb-2">No projects created yet</h3>
+                <p className="text-gray-500 mb-8 max-w-sm mx-auto">Get started by creating your first project.</p>
+                <Button onClick={() => setIsDialogOpen(true)} size="lg" className="rounded-full px-8 bg-indigo-600 hover:bg-indigo-700 text-white">
+                    Create Project
+                </Button>
+                </CardContent>
+            </Card>
           )}
         </div>
       )}
