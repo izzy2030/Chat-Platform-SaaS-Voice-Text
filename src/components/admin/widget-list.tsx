@@ -9,7 +9,7 @@ import {
   Card,
   CardContent,
 } from '@/components/ui/card';
-import { Loader2, Edit, Code, Eye, Palette, MessageSquare, Mic, Trash2, Folder, Calendar } from 'lucide-react';
+import { Loader2, Edit, Code, Eye, Palette, MessageSquare, Mic, Trash2, Folder, Calendar, Copy } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '../ui/alert';
 import { Button } from '../ui/button';
 import {
@@ -183,71 +183,66 @@ export function WidgetList({ projectId }: { projectId?: string }) {
   };
   
   const renderWidgetCard = (widget: ChatWidget) => (
-      <Card key={widget.id} className="overflow-hidden bg-white shadow-sm border border-indigo-100 rounded-2xl hover:shadow-md transition-all duration-200 group">
-        <CardContent className="p-6 flex flex-col h-full justify-between">
-          <div className="space-y-4">
-            <div className="flex justify-between items-start">
-               <div>
-                  <h3 className="text-xl font-bold text-gray-900">{widget.name}</h3>
-                  <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground font-medium uppercase tracking-wide">
-                    <Calendar className="w-3 h-3" />
-                    <span>Created recently</span>
-                  </div>
-               </div>
-               <div className={`px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider flex items-center gap-1 ${
-                   widget.type === 'voice' 
-                   ? 'bg-purple-100 text-purple-700' 
-                   : 'bg-blue-100 text-blue-700'
-               }`}>
-                   {widget.type === 'voice' ? <Mic className="w-3 h-3" /> : <MessageSquare className="w-3 h-3" />}
-                   {widget.type === 'voice' ? 'Voice Agent' : 'Text Chat'}
-               </div>
+    <Card key={widget.id} className="bg-white shadow-lg border-0 rounded-2xl overflow-hidden">
+      <CardContent className="p-5 text-center">
+        <div className="space-y-4">
+          <h3 className="text-xl font-bold text-gray-800">{widget.name}</h3>
+          
+          <Badge variant="secondary" className={`w-full justify-center py-2.5 text-sm font-bold border-0 rounded-lg ${
+              widget.type === 'voice' 
+              ? 'bg-purple-100 text-purple-700 hover:bg-purple-200' 
+              : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
+          }`}>
+              {widget.type === 'voice' ? <Mic className="w-4 h-4 mr-2" /> : <MessageSquare className="w-4 h-4 mr-2" />}
+              {widget.type === 'voice' ? 'Voice Agent' : 'Text Chat'}
+          </Badge>
+
+          <div className="grid grid-cols-2 gap-3 text-xs">
+            <div className="bg-gray-50/80 p-3 rounded-lg border border-gray-200/60 flex flex-col items-center justify-center space-y-1.5">
+              <Calendar className="w-4 h-4 text-gray-400" />
+              <span className="text-gray-500 font-medium uppercase tracking-wider">Created Recently</span>
             </div>
-            
-            <div className="flex items-center gap-2">
-               <div className="bg-gray-100 px-2 py-1 rounded text-xs font-mono text-gray-600 truncate max-w-[200px]">
-                 ID: {widget.id}
-               </div>
+            <div className="bg-gray-50/80 p-3 rounded-lg border border-gray-200/60 flex flex-col items-center justify-center space-y-1.5">
+               <span className="text-gray-400 font-semibold uppercase tracking-wider">ID</span>
+               <code className="font-mono text-gray-700 truncate w-full">{widget.id}</code>
             </div>
           </div>
 
-          <div className="mt-8 pt-4 border-t border-indigo-50 flex items-center justify-between gap-2">
-             <div className="flex gap-2">
-                <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="h-8 px-2 text-indigo-600 bg-indigo-50 hover:bg-indigo-100 hover:text-indigo-700 rounded-lg font-medium transition-colors"
-                    onClick={() => handleViewScript(widget)}
-                >
-                    <Code className="mr-1.5 h-3.5 w-3.5" /> Script
-                </Button>
-                <Link href={`/admin/widget/${widget.id}`} passHref>
-                    <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="h-8 px-2 text-gray-600 hover:bg-gray-100 hover:text-gray-900 rounded-lg font-medium transition-colors"
-                    >
-                        <Edit className="mr-1.5 h-3.5 w-3.5" /> Edit
-                    </Button>
-                </Link>
-             </div>
-             
-             <div className="flex gap-1">
-                <Link href={`/admin/theming/${widget.id}`} passHref>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full" title="Customize">
-                        <Palette className="h-4 w-4" />
-                    </Button>
-                </Link>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-indigo-600 hover:bg-indigo-50 rounded-full" title="Test" onClick={() => handleTestWidget(widget)}>
-                    <Eye className="h-4 w-4" />
-                </Button>
-                <Button variant="ghost" size="icon" className="h-8 w-8 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-full" title="Delete" onClick={() => handleDeleteClick(widget)}>
-                    <Trash2 className="h-4 w-4" />
-                </Button>
-             </div>
+          <div className="grid grid-cols-2 gap-3 pt-2">
+            <div
+              className="bg-indigo-50 text-indigo-700 p-4 rounded-lg flex flex-col items-center justify-center space-y-2 cursor-pointer hover:bg-indigo-100 transition-colors"
+              onClick={() => handleViewScript(widget)}
+            >
+              <Code className="h-6 w-6" />
+              <span className="text-sm font-semibold">Script</span>
+            </div>
+            
+            <Link href={`/admin/widget/${widget.id}`} passHref>
+              <div className="bg-gray-50/80 p-4 rounded-lg flex flex-col items-center justify-center space-y-2 cursor-pointer hover:bg-gray-100 transition-colors h-full">
+                <Edit className="h-6 w-6 text-gray-500" />
+                <span className="text-sm font-semibold text-gray-600">Edit</span>
+              </div>
+            </Link>
+
+            <div
+              className="bg-gray-50/80 p-4 rounded-lg flex flex-col items-center justify-center space-y-2 cursor-pointer hover:bg-gray-100 transition-colors"
+              onClick={() => handleTestWidget(widget)}
+            >
+              <Eye className="h-6 w-6 text-gray-500" />
+              <span className="text-sm font-semibold text-gray-600">Preview</span>
+            </div>
+
+            <div
+              className="bg-gray-50/80 p-4 rounded-lg flex flex-col items-center justify-center space-y-2 cursor-pointer hover:bg-red-50 transition-colors"
+              onClick={() => handleDeleteClick(widget)}
+            >
+              <Trash2 className="h-6 w-6 text-red-500" />
+              <span className="text-sm font-semibold text-red-500">Delete</span>
+            </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </CardContent>
+    </Card>
   );
 
   const isLoading = isLoadingProjects || isLoadingWidgets;
