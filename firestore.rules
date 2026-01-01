@@ -105,6 +105,16 @@ service cloud.firestore {
     }
 
     /**
+     * @description Security rules for projects under a user's profile.
+     * @path /users/{userId}/projects/{projectId}
+     */
+    match /users/{userId}/projects/{projectId} {
+      allow get, list: if isOwner(userId) || isAdmin();
+      allow create: if isOwner(userId);
+      allow update, delete: if isOwner(userId) || isAdmin();
+    }
+
+    /**
      * @description Security rules for admin role assignment.
      * @path /roles_admin/{userId}
      * @allow (create) Only a privileged process (e.g., a Cloud Function with admin privileges) can create admin roles.  This rule is a placeholder and should be adjusted based on the actual admin provisioning mechanism.
