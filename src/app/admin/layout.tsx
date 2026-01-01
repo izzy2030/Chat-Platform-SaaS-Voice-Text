@@ -2,7 +2,7 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUser } from '@/firebase';
+import { useUser } from '@/supabase';
 import { Loader2 } from 'lucide-react';
 import { SidebarNav } from '@/components/admin/sidebar-nav';
 import { SidebarInset, SidebarProvider } from '@/components/ui/sidebar';

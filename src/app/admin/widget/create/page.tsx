@@ -1,5 +1,5 @@
 'use client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import {
@@ -23,9 +23,8 @@ import { Button } from '@/components/ui/button';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
-import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { collection, query } from 'firebase/firestore';
+import { supabase } from '@/lib/supabase';
+import { useUser } from '@/supabase';
 import { toast } from '@/hooks/use-toast';
 import { Loader2, MessageSquare, Mic } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
@@ -64,16 +63,32 @@ interface Project {
 
 export default function CreateWidgetPage() {
   const [isLoading, setIsLoading] = useState(false);
-  const firestore = useFirestore();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [isLoadingProjects, setIsLoadingProjects] = useState(true);
   const { user } = useUser();
   const router = useRouter();
 
-  const projectsQuery = useMemoFirebase(() => {
-    if (!user) return null;
-    return query(collection(firestore, `users/${user.uid}/projects`));
-  }, [firestore, user]);
+  useEffect(() => {
+    const fetchProjects = async () => {
+      if (!user) return;
+      setIsLoadingProjects(true);
+      try {
+        const { data, error } = await supabase
+          .from('projects')
+          .select('*')
+          .eq('user_id', user.id);
 
-  const { data: projects, isLoading: isLoadingProjects } = useCollection<Project>(projectsQuery);
+        if (error) throw error;
+        setProjects(data || []);
+      } catch (error: any) {
+        toast({ variant: 'destructive', title: 'Error loading projects', description: error.message });
+      } finally {
+        setIsLoadingProjects(false);
+      }
+    };
+
+    fetchProjects();
+  }, [user]);
 
   const form = useForm<WidgetFormData>({
     resolver: zodResolver(widgetSchema),
@@ -106,33 +121,32 @@ export default function CreateWidgetPage() {
     setIsLoading(true);
 
     try {
-      const chatWidgetsCollection = collection(
-        firestore,
-        `users/${user.uid}/chatWidgets`
-      );
-      
-      const newWidget = {
-        name: data.name,
-        projectId: data.projectId,
-        type: data.type,
-        webhookUrl: data.webhookUrl,
-        webhookSecret: data.webhookSecret || '',
-        allowedDomains: data.allowedDomains.split(',').map(d => d.trim()),
-        brand: {
-          bubbleColor: data.bubbleColor || '#000000',
-          bubbleIcon: data.bubbleIcon || '',
-          panelColor: data.panelColor || '#FFFFFF',
-          headerTitle: data.headerTitle || '',
-          welcomeMessage: data.welcomeMessage || '',
-          position: data.position,
-        },
-        behavior: {
-          defaultLanguage: data.defaultLanguage,
-        },
-        userId: user.uid,
-      };
+      const { error } = await supabase
+        .from('widgets')
+        .insert([{
+          name: data.name,
+          project_id: data.projectId,
+          type: data.type,
+          webhook_url: data.webhookUrl,
+          allowed_domains: data.allowedDomains.split(',').map(d => d.trim()),
+          brand: {
+            bubbleColor: data.bubbleColor || '#000000',
+            bubbleIcon: data.bubbleIcon || '',
+            panelColor: data.panelColor || '#FFFFFF',
+            headerTitle: data.headerTitle || '',
+            welcomeMessage: data.welcomeMessage || '',
+            position: data.position,
+          },
+          behavior: {
+            defaultLanguage: data.defaultLanguage,
+          },
+          user_id: user.id,
+          config: {
+            webhookSecret: data.webhookSecret || '',
+          }
+        }]);
 
-      await addDocumentNonBlocking(chatWidgetsCollection, newWidget);
+      if (error) throw error;
 
       toast({
         title: 'Widget Created!',
@@ -151,10 +165,10 @@ export default function CreateWidgetPage() {
   };
 
   return (
-     <div className="flex justify-center p-4 md:p-8">
+    <div className="flex justify-center p-4 md:p-8">
       <div className="w-full max-w-4xl">
         <Button asChild variant="ghost" className="mb-4 text-muted-foreground hover:text-foreground">
-           <Link href="/admin">
+          <Link href="/admin">
             &larr; Back to Dashboard
           </Link>
         </Button>
@@ -272,7 +286,7 @@ export default function CreateWidgetPage() {
                           <FormControl>
                             <Input type="password" placeholder="••••••••••••••" {...field} className="rounded-lg" />
                           </FormControl>
-                           <FormDescription>
+                          <FormDescription>
                             Optional, but recommended for verifying webhook authenticity.
                           </FormDescription>
                           <FormMessage />
@@ -298,7 +312,7 @@ export default function CreateWidgetPage() {
                   </div>
                   <div className="space-y-6">
                     <h3 className="text-lg font-semibold text-gray-900 border-b pb-2">Branding</h3>
-                     <FormField
+                    <FormField
                       control={form.control}
                       name="bubbleColor"
                       render={({ field }) => (
@@ -337,7 +351,7 @@ export default function CreateWidgetPage() {
                         </FormItem>
                       )}
                     />
-                     <FormField
+                    <FormField
                       control={form.control}
                       name="headerTitle"
                       render={({ field }) => (
@@ -363,7 +377,7 @@ export default function CreateWidgetPage() {
                         </FormItem>
                       )}
                     />
-                     <FormField
+                    <FormField
                       control={form.control}
                       name="position"
                       render={({ field }) => (
@@ -394,7 +408,7 @@ export default function CreateWidgetPage() {
                       )}
                     />
                     <h3 className="text-lg font-semibold text-gray-900 border-b pb-2 pt-2">Behavior</h3>
-                     <FormField
+                    <FormField
                       control={form.control}
                       name="defaultLanguage"
                       render={({ field }) => (

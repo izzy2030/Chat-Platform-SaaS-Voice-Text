@@ -26,7 +26,8 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { useAuth, useUser } from '@/firebase';
+import { supabase } from '@/lib/supabase';
+import { useUser } from '@/supabase';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -39,12 +40,11 @@ import { Separator } from '@/components/ui/separator';
 export function SidebarNav() {
   const pathname = usePathname();
   const router = useRouter();
-  const auth = useAuth();
   const { user } = useUser();
   const { toggleSidebar, state } = useSidebar();
 
   const handleSignOut = async () => {
-    await auth.signOut();
+    await supabase.auth.signOut();
     router.push('/login');
   };
 
@@ -134,8 +134,8 @@ export function SidebarNav() {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton onClick={toggleSidebar} tooltip={state === 'expanded' ? 'Collapse' : 'Expand'}>
-                {state === 'expanded' ? <PanelLeftClose /> : <PanelRightClose />}
-                <span>{state === 'expanded' ? 'Collapse' : 'Expand'}</span>
+              {state === 'expanded' ? <PanelLeftClose /> : <PanelRightClose />}
+              <span>{state === 'expanded' ? 'Collapse' : 'Expand'}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -150,8 +150,8 @@ export function SidebarNav() {
                 >
                   <Avatar className="h-8 w-8 rounded-lg">
                     <AvatarImage
-                      src={user?.photoURL || ''}
-                      alt={user?.displayName || ''}
+                      src={user?.user_metadata?.avatar_url || ''}
+                      alt={user?.user_metadata?.full_name || ''}
                     />
                     <AvatarFallback className="rounded-lg">
                       {getInitials(user?.email)}
@@ -159,7 +159,7 @@ export function SidebarNav() {
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-semibold">
-                      {user?.displayName || 'User'}
+                      {user?.user_metadata?.full_name || 'User'}
                     </span>
                     <span className="truncate text-xs">
                       {user?.email || ''}

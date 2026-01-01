@@ -10,14 +10,8 @@ import { buttonVariants, Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { toast } from '@/hooks/use-toast';
-import {
-  Auth,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  GoogleAuthProvider,
-  signInWithPopup,
-} from 'firebase/auth';
-import { useAuth, useUser } from '@/firebase';
+import { supabase } from '@/lib/supabase';
+import { useUser } from '@/supabase';
 import { useRouter } from 'next/navigation';
 import { Loader2, BotMessageSquare } from 'lucide-react';
 
@@ -31,7 +25,6 @@ type FormData = z.infer<typeof formSchema>;
 export default function LoginPage() {
   const [isLoading, setIsLoading] = React.useState(false);
   const [isSignUp, setIsSignUp] = React.useState(false);
-  const auth = useAuth();
   const router = useRouter();
   const { user, isUserLoading } = useUser();
 
@@ -55,19 +48,27 @@ export default function LoginPage() {
 
     try {
       if (isSignUp) {
-        await createUserWithEmailAndPassword(auth, data.email, data.password);
+        const { error } = await supabase.auth.signUp({
+          email: data.email,
+          password: data.password,
+        });
+        if (error) throw error;
         toast({
-          title: 'Account created!',
-          description: 'You have been signed in.',
+          title: 'Check your email!',
+          description: 'A confirmation link has been sent to your email.',
         });
       } else {
-        await signInWithEmailAndPassword(auth, data.email, data.password);
+        const { error } = await supabase.auth.signInWithPassword({
+          email: data.email,
+          password: data.password,
+        });
+        if (error) throw error;
         toast({
           title: 'Signed in!',
           description: 'Welcome back.',
         });
+        router.push('/admin');
       }
-      router.push('/admin');
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -82,30 +83,29 @@ export default function LoginPage() {
   async function handleGoogleSignIn() {
     setIsLoading(true);
     try {
-      const provider = new GoogleAuthProvider();
-      await signInWithPopup(auth, provider);
-      toast({
-        title: 'Signed in with Google!',
-        description: 'Welcome back.',
+      const { error } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: `${window.location.origin}/auth/callback`,
+        },
       });
-      router.push('/admin');
+      if (error) throw error;
     } catch (error: any) {
       toast({
         variant: 'destructive',
         title: 'Uh oh! Something went wrong.',
         description: error.message || 'There was a problem with your request.',
       });
-    } finally {
       setIsLoading(false);
     }
   }
 
   if (isUserLoading || user) {
-      return (
-        <div className="flex h-screen w-screen items-center justify-center">
-          <Loader2 className="animate-spin" />
-        </div>
-      );
+    return (
+      <div className="flex h-screen w-screen items-center justify-center">
+        <Loader2 className="animate-spin" />
+      </div>
+    );
   }
 
   return (

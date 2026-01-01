@@ -1,8 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { useUser } from '@/firebase';
-import { updatePassword, updateProfile } from 'firebase/auth';
+import { supabase } from '@/lib/supabase';
+import { useUser } from '@/supabase';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
@@ -64,13 +64,13 @@ export default function ProfilePage() {
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileFormSchema),
   });
-  
+
   const currentPhotoURL = watch('photoURL');
 
   useEffect(() => {
     if (user) {
-      setProfileValue('displayName', user.displayName || '');
-      setProfileValue('photoURL', user.photoURL || '');
+      setProfileValue('displayName', user.user_metadata?.full_name || '');
+      setProfileValue('photoURL', user.user_metadata?.avatar_url || '');
     }
   }, [user, setProfileValue]);
 
@@ -78,7 +78,11 @@ export default function ProfilePage() {
     if (!user) return;
     setIsPasswordLoading(true);
     try {
-      await updatePassword(user, data.newPassword);
+      const { error } = await supabase.auth.updateUser({
+        password: data.newPassword
+      });
+      if (error) throw error;
+
       toast({
         title: 'Password updated',
         description: 'Your password has been successfully changed.',
@@ -99,10 +103,13 @@ export default function ProfilePage() {
     if (!user) return;
     setIsProfileLoading(true);
     try {
-      await updateProfile(user, {
-        displayName: data.displayName,
-        photoURL: data.photoURL,
+      const { error } = await supabase.auth.updateUser({
+        data: {
+          full_name: data.displayName,
+          avatar_url: data.photoURL,
+        }
       });
+      if (error) throw error;
 
       toast({
         title: 'Profile updated',
@@ -137,7 +144,7 @@ export default function ProfilePage() {
   return (
     <div className="container mx-auto max-w-2xl py-10">
       <h1 className="mb-8 text-3xl font-bold">Profile Settings</h1>
-      
+
       <div className="grid gap-6">
         <Card>
           <CardHeader>
@@ -150,29 +157,29 @@ export default function ProfilePage() {
             <form onSubmit={handleSubmitProfile(onProfileSubmit)} className="space-y-6">
               <div className="flex items-center gap-6">
                 <div className="rounded-full p-1 bg-gradient-to-r from-[#94B4E4] to-[#B19CD9]">
-                   <Avatar className="h-24 w-24 border-2 border-background">
-                    {/* Prioritize currentPhotoURL from form state for preview, else fallback to user.photoURL */}
-                    <AvatarImage src={currentPhotoURL || user?.photoURL || undefined} alt={user?.displayName || 'Avatar'} />
+                  <Avatar className="h-24 w-24 border-2 border-background">
+                    {/* Prioritize currentPhotoURL from form state for preview, else fallback to user.user_metadata?.avatar_url */}
+                    <AvatarImage src={currentPhotoURL || user?.user_metadata?.avatar_url || undefined} alt={user?.user_metadata?.full_name || 'Avatar'} />
                     <AvatarFallback className="text-xl">
-                      {getInitials(user?.displayName, user?.email)}
+                      {getInitials(user?.user_metadata?.full_name, user?.email)}
                     </AvatarFallback>
                   </Avatar>
                 </div>
                 <div className="flex-1 space-y-4">
-                   <div className="grid gap-2">
-                       <Label htmlFor="photoURL">Profile Picture URL</Label>
-                       <Input
-                        id="photoURL"
-                        placeholder="https://example.com/avatar.png"
-                        {...registerProfile('photoURL')}
-                       />
-                        {profileErrors.photoURL && (
-                            <p className="text-sm text-red-500">{profileErrors.photoURL.message}</p>
-                        )}
-                        <p className="text-xs text-muted-foreground">
-                            Enter a URL for your profile picture. The preview will update automatically.
-                        </p>
-                   </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="photoURL">Profile Picture URL</Label>
+                    <Input
+                      id="photoURL"
+                      placeholder="https://example.com/avatar.png"
+                      {...registerProfile('photoURL')}
+                    />
+                    {profileErrors.photoURL && (
+                      <p className="text-sm text-red-500">{profileErrors.photoURL.message}</p>
+                    )}
+                    <p className="text-xs text-muted-foreground">
+                      Enter a URL for your profile picture. The preview will update automatically.
+                    </p>
+                  </div>
                 </div>
               </div>
 
@@ -210,7 +217,7 @@ export default function ProfilePage() {
             </div>
             <div className="grid gap-2">
               <Label>User ID</Label>
-              <Input value={user?.uid || ''} disabled readOnly />
+              <Input value={user?.id || ''} disabled readOnly />
             </div>
           </CardContent>
         </Card>

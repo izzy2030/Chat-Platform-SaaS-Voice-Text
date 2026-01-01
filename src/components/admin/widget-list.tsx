@@ -1,9 +1,9 @@
 
 'use client';
 
-import { useMemo, useState } from 'react';
-import { useCollection, useFirestore, useUser, useMemoFirebase } from '@/firebase';
-import { collection, query, deleteDoc, doc, where } from 'firebase/firestore';
+import { useMemo, useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabase';
+import { useUser } from '@/supabase';
 import Link from 'next/link';
 import {
   Card,
@@ -39,11 +39,11 @@ import { Badge } from '@/components/ui/badge';
 interface ChatWidget {
   id: string;
   name: string;
-  projectId: string;
+  project_id: string; // Updated from projectId
   type?: 'text' | 'voice';
-  userId: string;
-  webhookUrl: string;
-  allowedDomains: string[];
+  user_id: string;    // Updated from userId
+  webhook_url: string;
+  allowed_domains: string[];
   theme?: Partial<WidgetTheme>;
   brand?: {
     bubbleColor?: string;
@@ -103,8 +103,8 @@ function ScriptTagDialog({ widget, open, onOpenChange }: { widget: ChatWidget | 
           </pre>
         </div>
         <DialogFooter>
-            <Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
-            <Button onClick={handleCopy}><Copy className="mr-2 h-4 w-4" /> Copy Script</Button>
+          <Button variant="outline" onClick={() => onOpenChange(false)}>Close</Button>
+          <Button onClick={handleCopy}><Copy className="mr-2 h-4 w-4" /> Copy Script</Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>
@@ -113,7 +113,6 @@ function ScriptTagDialog({ widget, open, onOpenChange }: { widget: ChatWidget | 
 
 
 export function WidgetList({ projectId }: { projectId?: string }) {
-  const firestore = useFirestore();
   const { user } = useUser();
   const [selectedWidget, setSelectedWidget] = useState<ChatWidget | null>(null);
   const [isScriptModalOpen, setScriptModalOpen] = useState(false);
@@ -121,28 +120,55 @@ export function WidgetList({ projectId }: { projectId?: string }) {
   const [widgetToDelete, setWidgetToDelete] = useState<ChatWidget | null>(null);
   const [isDeleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
-  const projectsQuery = useMemoFirebase(() => {
-    if (!user) return null;
-    return query(collection(firestore, `users/${user.uid}/projects`));
-  }, [firestore, user]);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [widgets, setWidgets] = useState<ChatWidget[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<any>(null);
 
-  const widgetsQuery = useMemoFirebase(() => {
-    if (!user) return null;
-    const baseQuery = query(collection(firestore, `users/${user.uid}/chatWidgets`));
-    if (projectId) {
-      return query(baseQuery, where('projectId', '==', projectId));
+  const fetchData = async () => {
+    if (!user) return;
+    setIsLoading(true);
+    try {
+      // Fetch projects
+      const { data: projectsData, error: projectsError } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (projectsError) throw projectsError;
+      setProjects(projectsData || []);
+
+      // Fetch widgets
+      let widgetsQuery = supabase
+        .from('widgets')
+        .select('*')
+        .eq('user_id', user.id);
+
+      if (projectId) {
+        widgetsQuery = widgetsQuery.eq('project_id', projectId);
+      }
+
+      const { data: widgetsData, error: widgetsError } = await widgetsQuery;
+      if (widgetsError) throw widgetsError;
+      setWidgets(widgetsData || []);
+
+    } catch (err: any) {
+      setError(err);
+      toast({ variant: 'destructive', title: 'Error loading data', description: err.message });
+    } finally {
+      setIsLoading(false);
     }
-    return baseQuery;
-  }, [firestore, user, projectId]);
+  };
 
-  const { data: projects, isLoading: isLoadingProjects } = useCollection<Project>(projectsQuery);
-  const { data: widgets, isLoading: isLoadingWidgets, error } = useCollection<ChatWidget>(widgetsQuery);
+  useEffect(() => {
+    fetchData();
+  }, [user, projectId]);
 
   const widgetsByProject = useMemo(() => {
     if (!widgets || !projects) return {};
     const grouped: { [key: string]: ChatWidget[] } = {};
     widgets.forEach((widget) => {
-      const pId = widget.projectId || 'unassigned';
+      const pId = widget.project_id || 'unassigned';
       if (!grouped[pId]) {
         grouped[pId] = [];
       }
@@ -156,12 +182,12 @@ export function WidgetList({ projectId }: { projectId?: string }) {
     setWidgetToDelete(widget);
     setDeleteConfirmOpen(true);
   };
-  
+
   const handleViewScript = (widget: ChatWidget) => {
     setSelectedWidget(widget);
     setScriptModalOpen(true);
   };
-  
+
   const handleTestWidget = (widget: ChatWidget) => {
     setSelectedWidget(widget);
     setTestModalOpen(true);
@@ -169,32 +195,38 @@ export function WidgetList({ projectId }: { projectId?: string }) {
 
   const handleConfirmDelete = async () => {
     if (!widgetToDelete || !user) return;
-    
+
     try {
-      await deleteDoc(doc(firestore, `users/${user.uid}/chatWidgets/${widgetToDelete.id}`));
+      const { error } = await supabase
+        .from('widgets')
+        .delete()
+        .eq('id', widgetToDelete.id)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
       toast({ title: 'Widget deleted successfully' });
-    } catch (error) {
+      fetchData();
+    } catch (error: any) {
       console.error('Error deleting widget:', error);
-      toast({ variant: 'destructive', title: 'Error deleting widget', description: 'Please try again.' });
+      toast({ variant: 'destructive', title: 'Error deleting widget', description: error.message });
     } finally {
       setDeleteConfirmOpen(false);
       setWidgetToDelete(null);
     }
   };
-  
+
   const renderWidgetCard = (widget: ChatWidget) => (
     <Card key={widget.id} className="bg-white shadow-lg border-0 rounded-2xl overflow-hidden">
       <CardContent className="p-5 text-center">
         <div className="space-y-4">
           <h3 className="text-xl font-bold text-gray-800">{widget.name}</h3>
-          
-          <Badge variant="secondary" className={`w-full justify-center py-2.5 text-sm font-bold border-0 rounded-lg ${
-              widget.type === 'voice' 
-              ? 'bg-purple-100 text-purple-700 hover:bg-purple-200' 
-              : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
-          }`}>
-              {widget.type === 'voice' ? <Mic className="w-4 h-4 mr-2" /> : <MessageSquare className="w-4 h-4 mr-2" />}
-              {widget.type === 'voice' ? 'Voice Agent' : 'Text Chat'}
+
+          <Badge variant="secondary" className={`w-full justify-center py-2.5 text-sm font-bold border-0 rounded-lg ${widget.type === 'voice'
+            ? 'bg-purple-100 text-purple-700 hover:bg-purple-200'
+            : 'bg-indigo-100 text-indigo-700 hover:bg-indigo-200'
+            }`}>
+            {widget.type === 'voice' ? <Mic className="w-4 h-4 mr-2" /> : <MessageSquare className="w-4 h-4 mr-2" />}
+            {widget.type === 'voice' ? 'Voice Agent' : 'Text Chat'}
           </Badge>
 
           <div className="grid grid-cols-2 gap-3 text-xs">
@@ -203,8 +235,8 @@ export function WidgetList({ projectId }: { projectId?: string }) {
               <span className="text-gray-500 font-medium uppercase tracking-wider">Created Recently</span>
             </div>
             <div className="bg-gray-50/80 p-3 rounded-lg border border-gray-200/60 flex flex-col items-center justify-center space-y-1.5">
-               <span className="text-gray-400 font-semibold uppercase tracking-wider">ID</span>
-               <code className="font-mono text-gray-700 truncate w-full">{widget.id}</code>
+              <span className="text-gray-400 font-semibold uppercase tracking-wider">ID</span>
+              <code className="font-mono text-gray-700 truncate w-full">{widget.id}</code>
             </div>
           </div>
 
@@ -216,7 +248,7 @@ export function WidgetList({ projectId }: { projectId?: string }) {
               <Code className="h-6 w-6" />
               <span className="text-sm font-semibold">Script</span>
             </div>
-            
+
             <Link href={`/admin/widget/${widget.id}`} passHref>
               <div className="bg-gray-50/80 p-4 rounded-lg flex flex-col items-center justify-center space-y-2 cursor-pointer hover:bg-gray-100 transition-colors h-full">
                 <Edit className="h-6 w-6 text-gray-500" />
@@ -245,15 +277,15 @@ export function WidgetList({ projectId }: { projectId?: string }) {
     </Card>
   );
 
-  const isLoading = isLoadingProjects || isLoadingWidgets;
+  const isLoadingLocal = isLoading; // No redeclaration
 
   return (
     <>
       <div className="space-y-8">
         {!projectId && (
           <div className="flex flex-col gap-1">
-             <h3 className="text-3xl font-bold tracking-tight text-gray-900">Dashboard</h3>
-             <p className="text-md text-muted-foreground">Manage your AI agents and chat widgets.</p>
+            <h3 className="text-3xl font-bold tracking-tight text-gray-900">Dashboard</h3>
+            <p className="text-md text-muted-foreground">Manage your AI agents and chat widgets.</p>
           </div>
         )}
 
@@ -264,12 +296,12 @@ export function WidgetList({ projectId }: { projectId?: string }) {
         )}
 
         {error && (
-            <Alert variant="destructive">
-                <AlertTitle>Error</AlertTitle>
-                <AlertDescription>
-                {error.message}
-                </AlertDescription>
-            </Alert>
+          <Alert variant="destructive">
+            <AlertTitle>Error</AlertTitle>
+            <AlertDescription>
+              {error.message}
+            </AlertDescription>
+          </Alert>
         )}
 
         {!isLoading && !error && (
@@ -294,28 +326,28 @@ export function WidgetList({ projectId }: { projectId?: string }) {
                       {widgetsByProject[project.id]?.map(renderWidgetCard)}
                       {(!widgetsByProject[project.id] || widgetsByProject[project.id].length === 0) && (
                         <div className="col-span-full py-8 border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center text-gray-400">
-                            <p className="text-sm">No widgets in this project yet.</p>
-                            <Button asChild variant="link" className="text-indigo-600">
-                                <Link href="/admin/widget/create">Create one now</Link>
-                            </Button>
+                          <p className="text-sm">No widgets in this project yet.</p>
+                          <Button asChild variant="link" className="text-indigo-600">
+                            <Link href="/admin/widget/create">Create one now</Link>
+                          </Button>
                         </div>
                       )}
                     </div>
                   </div>
                 ))}
                 {(!projects || projects.length === 0) && (
-                     <Card className="border-0 shadow-sm bg-white rounded-2xl">
-                       <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-                          <div className="rounded-full bg-indigo-50 p-6 mb-6">
-                             <Folder className="h-12 w-12 text-indigo-500" />
-                          </div>
-                          <h3 className="text-2xl font-bold text-gray-900 mb-2">No projects created yet</h3>
-                          <p className="text-gray-500 mb-8 max-w-sm mx-auto">Projects allow you to organize your widgets efficiently. Create your first project to get started.</p>
-                           <Button asChild size="lg" className="rounded-full px-8 bg-indigo-600 hover:bg-indigo-700 text-white">
-                              <Link href="/admin/projects">Create Project</Link>
-                           </Button>
-                       </CardContent>
-                     </Card>
+                  <Card className="border-0 shadow-sm bg-white rounded-2xl">
+                    <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+                      <div className="rounded-full bg-indigo-50 p-6 mb-6">
+                        <Folder className="h-12 w-12 text-indigo-500" />
+                      </div>
+                      <h3 className="text-2xl font-bold text-gray-900 mb-2">No projects created yet</h3>
+                      <p className="text-gray-500 mb-8 max-w-sm mx-auto">Projects allow you to organize your widgets efficiently. Create your first project to get started.</p>
+                      <Button asChild size="lg" className="rounded-full px-8 bg-indigo-600 hover:bg-indigo-700 text-white">
+                        <Link href="/admin/projects">Create Project</Link>
+                      </Button>
+                    </CardContent>
+                  </Card>
                 )}
               </>
             )}
@@ -326,7 +358,7 @@ export function WidgetList({ projectId }: { projectId?: string }) {
       <ScriptTagDialog widget={selectedWidget} open={isScriptModalOpen} onOpenChange={setScriptModalOpen} />
       <Dialog open={isTestModalOpen} onOpenChange={setTestModalOpen}>
         <DialogContent className="sm:max-w-[425px] p-0 border-0 bg-transparent shadow-none">
-           <DialogHeader className="sr-only">
+          <DialogHeader className="sr-only">
             <DialogTitle>Test Widget</DialogTitle>
             <DialogDescription>A preview of your configured chat widget.</DialogDescription>
           </DialogHeader>
@@ -346,7 +378,7 @@ export function WidgetList({ projectId }: { projectId?: string }) {
           <AlertDialogHeader>
             <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the widget 
+              This action cannot be undone. This will permanently delete the widget
               <span className="font-bold text-foreground"> {widgetToDelete?.name} </span>
               and remove its data from our servers. Any websites using this widget will stop working immediately.
             </AlertDialogDescription>

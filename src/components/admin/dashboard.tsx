@@ -1,7 +1,8 @@
 
 'use client';
 
-import { useAuth, useUser } from '@/firebase';
+import { supabase } from '@/lib/supabase';
+import { useUser } from '@/supabase';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -13,17 +14,15 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '../ui/button';
 import { useRouter } from 'next/navigation';
-import { CreateWidget } from './create-widget';
 import { WidgetList } from './widget-list';
 import Link from 'next/link';
 
 export function Dashboard() {
-  const auth = useAuth();
   const { user } = useUser();
   const router = useRouter();
 
   const handleSignOut = async () => {
-    await auth.signOut();
+    await supabase.auth.signOut();
     router.push('/login');
   };
 
@@ -51,15 +50,17 @@ export function Dashboard() {
         </nav>
         <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
           <div className="ml-auto flex-1 sm:flex-initial">
-            <CreateWidget />
+            <Button asChild className="rounded-full bg-indigo-600 hover:bg-indigo-700 text-white">
+              <Link href="/admin/widget/create">Create Widget</Link>
+            </Button>
           </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="secondary" size="icon" className="rounded-full">
                 <Avatar>
                   <AvatarImage
-                    src={user?.photoURL || undefined}
-                    alt={user?.displayName || 'user avatar'}
+                    src={user?.user_metadata?.avatar_url || undefined}
+                    alt={user?.user_metadata?.full_name || 'user avatar'}
                   />
                   <AvatarFallback>
                     {getInitials(user?.email)}
@@ -89,22 +90,22 @@ export function Dashboard() {
 }
 
 function BotMessageSquareIcon(props: React.SVGProps<SVGSVGElement>) {
-    return (
-      <svg
-        {...props}
-        xmlns="http://www.w3.org/2000/svg"
-        width="24"
-        height="24"
-        viewBox="0 0 24 24"
-        fill="none"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      >
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-        <path d="M13 8H7" />
-        <path d="M17 12H7" />
-      </svg>
-    )
-  }
+  return (
+    <svg
+      {...props}
+      xmlns="http://www.w3.org/2000/svg"
+      width="24"
+      height="24"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="2"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+    >
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+      <path d="M13 8H7" />
+      <path d="M17 12H7" />
+    </svg>
+  )
+}

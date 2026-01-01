@@ -1,15 +1,12 @@
 'use client';
-import * as React from 'react';
-import { doc, getDoc } from 'firebase/firestore';
-import { useFirestore } from '@/firebase';
+
 import { Loader2 } from 'lucide-react';
 import { ChatWidgetComponent } from '@/components/widget/chat-widget';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, use } from 'react';
 
 // This page will be rendered inside the iframe on the external website
-export default function WidgetPage({ params }: { params: { widgetId: string } }) {
-  const { widgetId } = params;
-  const firestore = useFirestore();
+export default function WidgetPage({ params }: { params: Promise<{ widgetId: string }> }) {
+  const { widgetId } = use(params);
   const [widgetConfig, setWidgetConfig] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -28,8 +25,8 @@ export default function WidgetPage({ params }: { params: { widgetId: string } })
         // without compromising security or indexing, we use a dedicated API route.
         const res = await fetch(`/api/widget-config?id=${widgetId}`);
         if (!res.ok) {
-            const errorData = await res.json();
-            throw new Error(errorData.message || 'Failed to fetch widget configuration');
+          const errorData = await res.json();
+          throw new Error(errorData.message || 'Failed to fetch widget configuration');
         }
         const { widget } = await res.json();
         setWidgetConfig(widget);
@@ -65,7 +62,7 @@ export default function WidgetPage({ params }: { params: { widgetId: string } })
 
   return (
     <div className="h-screen bg-transparent">
-        {widgetConfig && <ChatWidgetComponent widgetConfig={widgetConfig} sessionId={sessionId} />}
+      {widgetConfig && <ChatWidgetComponent widgetConfig={widgetConfig} sessionId={sessionId} />}
     </div>
   );
 }

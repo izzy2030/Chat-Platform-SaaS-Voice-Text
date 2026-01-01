@@ -1,12 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { useFirestore, useUser, useCollection, useMemoFirebase } from '@/firebase';
-import { addDocumentNonBlocking } from '@/firebase/non-blocking-updates';
-import { collection, query, serverTimestamp } from 'firebase/firestore';
+import { supabase } from '@/lib/supabase';
+import { useUser } from '@/supabase';
 import { toast } from '@/hooks/use-toast';
 import { Loader2, Folder, Plus, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
@@ -50,15 +49,36 @@ interface Project {
 export default function ProjectsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const firestore = useFirestore();
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [isLoadingProjects, setIsLoadingProjects] = useState(true);
   const { user } = useUser();
 
-  const projectsQuery = useMemoFirebase(() => {
-    if (!user) return null;
-    return query(collection(firestore, `users/${user.uid}/projects`));
-  }, [firestore, user]);
+  const fetchProjects = async () => {
+    if (!user) return;
+    setIsLoadingProjects(true);
+    try {
+      const { data, error } = await supabase
+        .from('projects')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
 
-  const { data: projects, isLoading: isLoadingProjects } = useCollection<Project>(projectsQuery);
+      if (error) throw error;
+      setProjects(data || []);
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Error loading projects',
+        description: error.message,
+      });
+    } finally {
+      setIsLoadingProjects(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProjects();
+  }, [user]);
 
   const form = useForm<ProjectFormData>({
     resolver: zodResolver(projectSchema),
@@ -70,15 +90,16 @@ export default function ProjectsPage() {
     setIsLoading(true);
 
     try {
-      const projectsCollection = collection(firestore, `users/${user.uid}/projects`);
-      await addDocumentNonBlocking(projectsCollection, {
-        name: data.name,
-        createdAt: serverTimestamp(),
-      });
+      const { error } = await supabase
+        .from('projects')
+        .insert([{ name: data.name, user_id: user.id }]);
+
+      if (error) throw error;
 
       toast({ title: 'Project Created!', description: `The "${data.name}" project has been created.` });
       form.reset();
       setIsDialogOpen(false);
+      fetchProjects();
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -153,10 +174,10 @@ export default function ProjectsPage() {
                 <Card className="h-full overflow-hidden bg-white shadow-sm border border-indigo-100 rounded-2xl hover:shadow-md transition-all duration-200">
                   <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
                     <div className="rounded-full bg-indigo-50 p-2.5 group-hover:bg-indigo-100 transition-colors">
-                        <Folder className="h-5 w-5 text-indigo-600" />
+                      <Folder className="h-5 w-5 text-indigo-600" />
                     </div>
                     <div className="rounded-full p-2 text-gray-400 group-hover:text-indigo-500 transition-colors">
-                        <ArrowRight className="h-4 w-4" />
+                      <ArrowRight className="h-4 w-4" />
                     </div>
                   </CardHeader>
                   <CardContent>
@@ -168,16 +189,16 @@ export default function ProjectsPage() {
             ))
           ) : (
             <Card className="col-span-full border-0 shadow-sm bg-white rounded-2xl">
-                <CardContent className="flex flex-col items-center justify-center py-16 text-center">
+              <CardContent className="flex flex-col items-center justify-center py-16 text-center">
                 <div className="rounded-full bg-indigo-50 p-6 mb-6">
-                    <Folder className="h-12 w-12 text-indigo-500" />
+                  <Folder className="h-12 w-12 text-indigo-500" />
                 </div>
                 <h3 className="text-2xl font-bold text-gray-900 mb-2">No projects created yet</h3>
                 <p className="text-gray-500 mb-8 max-w-sm mx-auto">Get started by creating your first project.</p>
                 <Button onClick={() => setIsDialogOpen(true)} size="lg" className="rounded-full px-8 bg-indigo-600 hover:bg-indigo-700 text-white">
-                    Create Project
+                  Create Project
                 </Button>
-                </CardContent>
+              </CardContent>
             </Card>
           )}
         </div>

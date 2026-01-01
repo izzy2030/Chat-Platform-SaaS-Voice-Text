@@ -5,15 +5,9 @@ import * as React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
-import {
-  useFirestore,
-  useUser,
-  useDoc,
-  useCollection,
-  useMemoFirebase,
-  updateDocumentNonBlocking,
-} from '@/firebase';
-import { collection, doc, query } from 'firebase/firestore';
+import { useEffect, useState, use } from 'react';
+import { supabase } from '@/lib/supabase';
+import { useUser } from '@/supabase';
 import { useRouter } from 'next/navigation';
 import { Loader2, MessageSquare, Mic } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -69,11 +63,10 @@ type WidgetFormData = z.infer<typeof widgetSchema>;
 interface ChatWidget {
   id: string;
   name: string;
-  projectId: string;
+  project_id: string;
   type?: 'text' | 'voice';
-  webhookUrl: string;
-  webhookSecret?: string;
-  allowedDomains: string[];
+  webhook_url: string;
+  allowed_domains: string[];
   brand: {
     bubbleColor?: string;
     bubbleIcon?: string;
@@ -85,7 +78,10 @@ interface ChatWidget {
   behavior: {
     defaultLanguage?: 'EN' | 'ES';
   };
-  userId: string;
+  user_id: string;
+  config?: {
+    webhookSecret?: string;
+  }
 }
 
 interface Project {
@@ -96,28 +92,60 @@ interface Project {
 export default function EditWidgetPage({
   params,
 }: {
-  params: { widgetId: string };
+  params: Promise<{ widgetId: string }>;
 }) {
-  const { widgetId } = React.use(params);
-  const [isLoading, setIsLoading] = React.useState(false);
-  const firestore = useFirestore();
+  const { widgetId } = use(params);
+  const [isLoading, setIsLoading] = useState(false);
   const { user } = useUser();
   const router = useRouter();
 
-  const widgetDocRef = useMemoFirebase(() => {
-    if (!user || !widgetId) return null;
-    return doc(firestore, `users/${user.uid}/chatWidgets/${widgetId}`);
-  }, [firestore, user, widgetId]);
+  const [widget, setWidget] = useState<ChatWidget | null>(null);
+  const [isWidgetLoading, setIsWidgetLoading] = useState(true);
+  const [projects, setProjects] = useState<Project[]>([]);
+  const [isLoadingProjects, setIsLoadingProjects] = useState(true);
 
-  const projectsQuery = useMemoFirebase(() => {
-    if (!user) return null;
-    return query(collection(firestore, `users/${user.uid}/projects`));
-  }, [firestore, user]);
+  useEffect(() => {
+    const fetchWidget = async () => {
+      if (!user || !widgetId) return;
+      setIsWidgetLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('widgets')
+          .select('*')
+          .eq('id', widgetId)
+          .eq('user_id', user.id)
+          .single();
 
-  const { data: widget, isLoading: isWidgetLoading } =
-    useDoc<ChatWidget>(widgetDocRef);
-  
-  const { data: projects, isLoading: isLoadingProjects } = useCollection<Project>(projectsQuery);
+        if (error) throw error;
+        setWidget(data);
+      } catch (error: any) {
+        console.error('Error fetching widget:', error);
+      } finally {
+        setIsWidgetLoading(false);
+      }
+    };
+
+    const fetchProjects = async () => {
+      if (!user) return;
+      setIsLoadingProjects(true);
+      try {
+        const { data, error } = await supabase
+          .from('projects')
+          .select('*')
+          .eq('user_id', user.id);
+
+        if (error) throw error;
+        setProjects(data || []);
+      } catch (error: any) {
+        toast({ variant: 'destructive', title: 'Error loading projects', description: error.message });
+      } finally {
+        setIsLoadingProjects(false);
+      }
+    };
+
+    fetchWidget();
+    fetchProjects();
+  }, [user, widgetId]);
 
   const form = useForm<WidgetFormData>({
     resolver: zodResolver(widgetSchema),
@@ -137,15 +165,15 @@ export default function EditWidgetPage({
     },
   });
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (widget) {
       form.reset({
         name: widget.name || '',
-        projectId: widget.projectId || '',
+        projectId: widget.project_id || '',
         type: widget.type || 'text',
-        webhookUrl: widget.webhookUrl || '',
-        webhookSecret: widget.webhookSecret || '',
-        allowedDomains: Array.isArray(widget.allowedDomains) ? widget.allowedDomains.join(', ') : '',
+        webhookUrl: widget.webhook_url || '',
+        webhookSecret: widget.config?.webhookSecret || '',
+        allowedDomains: Array.isArray(widget.allowed_domains) ? widget.allowed_domains.join(', ') : '',
         bubbleColor: widget.brand?.bubbleColor || '#000000',
         bubbleIcon: widget.brand?.bubbleIcon || '',
         panelColor: widget.brand?.panelColor || '#FFFFFF',
@@ -158,10 +186,10 @@ export default function EditWidgetPage({
   }, [widget, form]);
 
   const onSubmit = async (data: WidgetFormData) => {
-    if (!user || !widgetDocRef) {
+    if (!user || !widgetId) {
       toast({
         variant: 'destructive',
-        title: 'Authentication Error',
+        title: 'Error',
         description: 'You must be logged in to update a widget.',
       });
       return;
@@ -170,34 +198,33 @@ export default function EditWidgetPage({
     setIsLoading(true);
 
     try {
-      const updatedWidgetData: any = {
-        name: data.name,
-        projectId: data.projectId,
-        type: data.type,
-        webhookUrl: data.webhookUrl,
-        allowedDomains: data.allowedDomains.split(',').map(d => d.trim()),
-        brand: {
-          bubbleColor: data.bubbleColor || '',
-          bubbleIcon: data.bubbleIcon || '',
-          panelColor: data.panelColor || '',
-          headerTitle: data.headerTitle || '',
-          welcomeMessage: data.welcomeMessage || '',
-          position: data.position,
-        },
-        behavior: {
-          defaultLanguage: data.defaultLanguage,
-        },
-        userId: user.uid,
-      };
+      const { error } = await supabase
+        .from('widgets')
+        .update({
+          name: data.name,
+          project_id: data.projectId,
+          type: data.type,
+          webhook_url: data.webhookUrl,
+          allowed_domains: data.allowedDomains.split(',').map(d => d.trim()),
+          brand: {
+            bubbleColor: data.bubbleColor || '',
+            bubbleIcon: data.bubbleIcon || '',
+            panelColor: data.panelColor || '',
+            headerTitle: data.headerTitle || '',
+            welcomeMessage: data.welcomeMessage || '',
+            position: data.position,
+          },
+          behavior: {
+            defaultLanguage: data.defaultLanguage,
+          },
+          config: {
+            webhookSecret: data.webhookSecret || '',
+          }
+        })
+        .eq('id', widgetId)
+        .eq('user_id', user.id);
 
-      // Only include webhookSecret if it has a value
-      if (data.webhookSecret) {
-        updatedWidgetData.webhookSecret = data.webhookSecret;
-      } else {
-        updatedWidgetData.webhookSecret = '';
-      }
-
-      await updateDocumentNonBlocking(widgetDocRef, updatedWidgetData);
+      if (error) throw error;
 
       toast({
         title: 'Widget Updated!',
@@ -219,35 +246,35 @@ export default function EditWidgetPage({
     return (
       <div className="flex justify-center p-4 md:p-8">
         <div className="w-full max-w-4xl">
-           <Skeleton className="h-10 w-40 mb-4" />
-           <Card>
-             <CardHeader>
-               <Skeleton className="h-8 w-48 mb-2" />
-               <Skeleton className="h-4 w-64" />
-             </CardHeader>
-             <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div className="space-y-4">
-                       <Skeleton className="h-6 w-32 mb-2" />
-                       <Skeleton className="h-10 w-full" />
-                       <Skeleton className="h-10 w-full" />
-                       <Skeleton className="h-10 w-full" />
-                       <Skeleton className="h-10 w-full" />
-                    </div>
-                    <div className="space-y-4">
-                       <Skeleton className="h-6 w-32 mb-2" />
-                       <Skeleton className="h-10 w-full" />
-                       <Skeleton className="h-10 w-full" />
-                       <Skeleton className="h-10 w-full" />
-                       <Skeleton className="h-24 w-full" />
-                    </div>
+          <Skeleton className="h-10 w-40 mb-4" />
+          <Card>
+            <CardHeader>
+              <Skeleton className="h-8 w-48 mb-2" />
+              <Skeleton className="h-4 w-64" />
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-4">
+                  <Skeleton className="h-6 w-32 mb-2" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
                 </div>
-                <div className="flex justify-end space-x-2 mt-6">
-                    <Skeleton className="h-10 w-24" />
-                    <Skeleton className="h-10 w-32" />
+                <div className="space-y-4">
+                  <Skeleton className="h-6 w-32 mb-2" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-10 w-full" />
+                  <Skeleton className="h-24 w-full" />
                 </div>
-             </CardContent>
-           </Card>
+              </div>
+              <div className="flex justify-end space-x-2 mt-6">
+                <Skeleton className="h-10 w-24" />
+                <Skeleton className="h-10 w-32" />
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
@@ -277,7 +304,7 @@ export default function EditWidgetPage({
     <div className="flex justify-center p-4 md:p-8">
       <div className="w-full max-w-4xl">
         <Button asChild variant="outline" className="mb-4">
-           <Link href="/admin">
+          <Link href="/admin">
             &larr; Back to Dashboard
           </Link>
         </Button>
@@ -405,7 +432,7 @@ export default function EditWidgetPage({
                               {...field}
                             />
                           </FormControl>
-                           <FormDescription>
+                          <FormDescription>
                             Optional, but recommended for verifying webhook authenticity.
                           </FormDescription>
                           <FormMessage />

@@ -12,7 +12,7 @@ import { defaultTheme } from '@/lib/themes';
 interface ChatWidgetProps {
   widgetConfig: {
     id: string;
-    webhookUrl: string;
+    webhook_url: string;
     theme?: Partial<WidgetTheme>;
     // Legacy support
     brand?: {
@@ -77,7 +77,7 @@ export function ChatWidgetComponent({
     setIsLoading(true);
 
     try {
-      const response = await fetch(widgetConfig.webhookUrl, {
+      const response = await fetch(widgetConfig.webhook_url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -90,15 +90,15 @@ export function ChatWidgetComponent({
       if (!response.ok) {
         throw new Error(`Webhook failed with status ${response.status}`);
       }
-      
+
       const responseData = await response.json();
-      
+
       const botMessage: Message = {
         id: 'bot-' + Date.now().toString(),
         text: responseData.output || "Sorry, I didn't understand that.",
         sender: 'bot',
       };
-      
+
       setTimeout(() => {
         setMessages((prev) => [...prev, botMessage]);
       }, 500);
@@ -142,10 +142,10 @@ export function ChatWidgetComponent({
   const userMessageStyle: React.CSSProperties = {
     backgroundColor: theme.primaryColor,
     // A simple brightness check to determine text color
-    color: parseInt(theme.primaryColor.substring(1, 3), 16) * 0.299 + 
-           parseInt(theme.primaryColor.substring(3, 5), 16) * 0.587 +
-           parseInt(theme.primaryColor.substring(5, 7), 16) * 0.114 > 186
-           ? '#000000' : '#FFFFFF',
+    color: parseInt(theme.primaryColor.substring(1, 3), 16) * 0.299 +
+      parseInt(theme.primaryColor.substring(3, 5), 16) * 0.587 +
+      parseInt(theme.primaryColor.substring(5, 7), 16) * 0.114 > 186
+      ? '#000000' : '#FFFFFF',
   };
 
   return (
@@ -156,41 +156,39 @@ export function ChatWidgetComponent({
       >
         <CardHeader className="flex-shrink-0 flex flex-row items-center gap-3 p-4" style={headerStyle}>
           {theme.logoUrl && (
-            <Image 
-              src={theme.logoUrl} 
-              alt="Logo" 
-              width={40} 
-              height={40} 
+            <Image
+              src={theme.logoUrl}
+              alt="Logo"
+              width={40}
+              height={40}
               className="h-10 w-10 object-cover"
               style={avatarStyle}
             />
           )}
           <div>
-              <h3 className="font-bold text-lg leading-tight">{theme.headerTitle}</h3>
-              {theme.headerSubtext && <p className="text-sm text-muted-foreground">{theme.headerSubtext}</p>}
+            <h3 className="font-bold text-lg leading-tight">{theme.headerTitle}</h3>
+            {theme.headerSubtext && <p className="text-sm text-muted-foreground">{theme.headerSubtext}</p>}
           </div>
         </CardHeader>
         <CardContent className="flex-grow overflow-y-auto p-4 space-y-4" style={messageStyle}>
           {messages.map((msg) => (
             <div
               key={msg.id}
-              className={`flex items-start gap-2 ${
-                msg.sender === 'user' ? 'justify-end' : 'justify-start'
-              }`}
+              className={`flex items-start gap-2 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'
+                }`}
             >
               {msg.sender === 'bot' && (
                 <div style={avatarStyle} className="h-8 w-8 bg-muted flex-shrink-0 flex items-center justify-center overflow-hidden">
-                    {theme.logoUrl ? (
-                        <Image src={theme.logoUrl} alt="Bot Avatar" width={32} height={32} className="h-full w-full object-cover" />
-                    ) : (
-                        <Bot size={20} className="text-muted-foreground" />
-                    )}
+                  {theme.logoUrl ? (
+                    <Image src={theme.logoUrl} alt="Bot Avatar" width={32} height={32} className="h-full w-full object-cover" />
+                  ) : (
+                    <Bot size={20} className="text-muted-foreground" />
+                  )}
                 </div>
               )}
               <div
-                className={`max-w-xs rounded-lg px-3 py-2 text-sm md:max-w-md ${
-                  msg.sender === 'user' ? '' : 'bg-muted text-foreground'
-                }`}
+                className={`max-w-xs rounded-lg px-3 py-2 text-sm md:max-w-md ${msg.sender === 'user' ? '' : 'bg-muted text-foreground'
+                  }`}
                 style={msg.sender === 'user' ? userMessageStyle : {}}
               >
                 {msg.sender === 'bot' ? (
@@ -202,21 +200,21 @@ export function ChatWidgetComponent({
             </div>
           ))}
           {isLoading && (
-             <div className="flex items-start gap-2 justify-start">
-                <div style={avatarStyle} className="h-8 w-8 bg-muted flex-shrink-0 flex items-center justify-center overflow-hidden">
-                     {theme.logoUrl ? (
-                        <Image src={theme.logoUrl} alt="Bot Avatar" width={32} height={32} className="h-full w-full object-cover" />
-                    ) : (
-                        <Bot size={20} className="text-muted-foreground"/>
-                    )}
+            <div className="flex items-start gap-2 justify-start">
+              <div style={avatarStyle} className="h-8 w-8 bg-muted flex-shrink-0 flex items-center justify-center overflow-hidden">
+                {theme.logoUrl ? (
+                  <Image src={theme.logoUrl} alt="Bot Avatar" width={32} height={32} className="h-full w-full object-cover" />
+                ) : (
+                  <Bot size={20} className="text-muted-foreground" />
+                )}
+              </div>
+              <div className="max-w-xs rounded-lg px-3 py-2 text-sm md:max-w-md bg-muted text-muted-foreground">
+                <div className="flex items-center gap-2">
+                  <div className="h-2 w-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                  <div className="h-2 w-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                  <div className="h-2 w-2 bg-gray-400 rounded-full animate-bounce"></div>
                 </div>
-                <div className="max-w-xs rounded-lg px-3 py-2 text-sm md:max-w-md bg-muted text-muted-foreground">
-                    <div className="flex items-center gap-2">
-                        <div className="h-2 w-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                        <div className="h-2 w-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                        <div className="h-2 w-2 bg-gray-400 rounded-full animate-bounce"></div>
-                    </div>
-                </div>
+              </div>
             </div>
           )}
           <div ref={messagesEndRef} />
@@ -238,7 +236,7 @@ export function ChatWidgetComponent({
               className="flex-1 bg-transparent focus:ring-0 focus:ring-offset-0 border-0"
               disabled={isLoading}
             />
-            <Button type="submit" size="icon" disabled={isLoading} style={{backgroundColor: theme.primaryColor, color: userMessageStyle.color}}>
+            <Button type="submit" size="icon" disabled={isLoading} style={{ backgroundColor: theme.primaryColor, color: userMessageStyle.color }}>
               <SendHorizonal className="h-5 w-5" />
               <span className="sr-only">Send</span>
             </Button>

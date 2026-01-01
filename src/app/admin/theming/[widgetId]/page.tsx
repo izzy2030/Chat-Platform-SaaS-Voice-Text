@@ -12,8 +12,8 @@ import { ThemeControls } from '@/components/admin/theming/theme-controls';
 import { ThemePreview } from '@/components/admin/theming/theme-preview';
 import { Button } from '@/components/ui/button';
 import Link from 'next/link';
-import { useDoc, useFirestore, useMemoFirebase, useUser, updateDocumentNonBlocking } from '@/firebase';
-import { doc } from 'firebase/firestore';
+import { supabase } from '@/lib/supabase';
+import { useUser } from '@/supabase';
 import { Loader2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { defaultTheme } from '@/lib/themes';
@@ -86,57 +86,73 @@ interface ChatWidgetDoc {
 }
 
 
-export default function ThemingPage({ params }: { params: { widgetId: string } }) {
+export default function ThemingPage({ params }: { params: Promise<{ widgetId: string }> }) {
   const { widgetId } = React.use(params);
   const [theme, setTheme] = React.useState<WidgetTheme>(defaultTheme);
   const [isSaving, setIsSaving] = React.useState(false);
-  const firestore = useFirestore();
   const { user } = useUser();
+  const [isWidgetLoading, setIsWidgetLoading] = React.useState(true);
 
-  const widgetDocRef = useMemoFirebase(() => {
-    if (!user || !widgetId) return null;
-    return doc(firestore, `users/${user.uid}/chatWidgets/${widgetId}`);
-  }, [firestore, user, widgetId]);
-  
-  const { data: widgetData, isLoading: isWidgetLoading } = useDoc<ChatWidgetDoc>(widgetDocRef);
-  
   React.useEffect(() => {
-    if (widgetData?.theme) {
-      // Merge saved theme with defaults to ensure all keys are present
-      setTheme(prevTheme => ({ ...prevTheme, ...widgetData.theme }));
-    } else if (widgetData) {
-      // If there's widget data but no theme, start with the default
-      setTheme(defaultTheme);
-    }
-  }, [widgetData]);
+    const fetchWidget = async () => {
+      if (!user || !widgetId) return;
+      setIsWidgetLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('widgets')
+          .select('theme')
+          .eq('id', widgetId)
+          .eq('user_id', user.id)
+          .single();
+
+        if (error) throw error;
+        if (data?.theme) {
+          setTheme(prevTheme => ({ ...prevTheme, ...data.theme }));
+        }
+      } catch (error: any) {
+        console.error('Error fetching widget theme:', error);
+      } finally {
+        setIsWidgetLoading(false);
+      }
+    };
+
+    fetchWidget();
+  }, [user, widgetId]);
 
 
   const updateTheme = (newValues: Partial<WidgetTheme>) => {
     setTheme((prevTheme) => ({ ...prevTheme, ...newValues }));
   };
-  
+
   const resetTheme = () => {
     setTheme(defaultTheme);
   };
-  
+
   const saveTheme = async () => {
-    if (!widgetDocRef) {
+    if (!user || !widgetId) {
       toast({
         variant: 'destructive',
         title: 'Error',
-        description: 'Cannot save theme. Widget reference not found.',
+        description: 'Cannot save theme. Authentication or reference missing.',
       });
       return;
     }
     setIsSaving(true);
     try {
-      await updateDocumentNonBlocking(widgetDocRef, { theme: theme });
+      const { error } = await supabase
+        .from('widgets')
+        .update({ theme: theme })
+        .eq('id', widgetId)
+        .eq('user_id', user.id);
+
+      if (error) throw error;
+
       toast({
         title: 'Theme Saved!',
         description: 'Your changes have been saved successfully.',
       });
     } catch (error: any) {
-       toast({
+      toast({
         variant: 'destructive',
         title: 'Error Saving Theme',
         description: error.message,
@@ -148,19 +164,19 @@ export default function ThemingPage({ params }: { params: { widgetId: string } }
 
   return (
     <div className="flex h-full w-full flex-col bg-muted/40">
-       <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 py-2">
-         <Button asChild variant="outline" size="sm">
-            <Link href="/admin">
-              &larr; Back to Dashboard
-            </Link>
-          </Button>
-         {isWidgetLoading && <Loader2 className="ml-2 h-4 w-4 animate-spin text-muted-foreground" />}
+      <header className="sticky top-0 z-30 flex h-14 items-center gap-4 border-b bg-background px-4 sm:static sm:h-auto sm:border-0 sm:bg-transparent sm:px-6 py-2">
+        <Button asChild variant="outline" size="sm">
+          <Link href="/admin">
+            &larr; Back to Dashboard
+          </Link>
+        </Button>
+        {isWidgetLoading && <Loader2 className="ml-2 h-4 w-4 animate-spin text-muted-foreground" />}
         <div className="ml-auto flex items-center gap-2">
-            <Button variant="outline" onClick={resetTheme}>Reset to Defaults</Button>
-            <Button onClick={saveTheme} disabled={isSaving}>
-              {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-              Save Theme
-            </Button>
+          <Button variant="outline" onClick={resetTheme}>Reset to Defaults</Button>
+          <Button onClick={saveTheme} disabled={isSaving}>
+            {isSaving && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+            Save Theme
+          </Button>
         </div>
       </header>
       <ResizablePanelGroup
@@ -172,7 +188,7 @@ export default function ThemingPage({ params }: { params: { widgetId: string } }
         </ResizablePanel>
         <ResizableHandle withHandle />
         <ResizablePanel defaultSize={50}>
-            <ThemePreview theme={theme} />
+          <ThemePreview theme={theme} />
         </ResizablePanel>
         <ResizableHandle withHandle />
         <ResizablePanel defaultSize={30} minSize={20} maxSize={35}>

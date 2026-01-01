@@ -4,7 +4,7 @@
 // It is used to mock the response of the widget configuration.
 
 import { NextResponse } from 'next/server';
-import { db } from '@/firebase/admin-config';
+import { supabase } from '@/lib/supabase';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -15,30 +15,21 @@ export async function GET(request: Request) {
   }
 
   try {
-    // This is not a secure way to fetch data.
-    // In a real application, you would perform a query across all users' subcollections.
-    // This requires a more complex data structure or a different approach for multi-tenant apps.
-    // For this prototype, we'll iterate through users to find the widget. This is highly inefficient.
-    const usersSnapshot = await db.collection('users').get();
-    let widgetData = null;
-    let found = false;
+    const { data, error } = await supabase
+      .from('widgets')
+      .select('*')
+      .eq('id', widgetId)
+      .single();
 
-    for (const userDoc of usersSnapshot.docs) {
-      const widgetRef = db.doc(`users/${userDoc.id}/chatWidgets/${widgetId}`);
-      const widgetSnapshot = await widgetRef.get();
-      if (widgetSnapshot.exists) {
-        widgetData = widgetSnapshot.data();
-        found = true;
-        break;
+    if (error) {
+      if (error.code === 'PGRST116') { // No rows found
+        return NextResponse.json({ message: 'Widget not found' }, { status: 404 });
       }
+      throw error;
     }
 
-    if (!found) {
-      return NextResponse.json({ message: 'Widget not found' }, { status: 404 });
-    }
-
-    return NextResponse.json({ widget: widgetData });
-  } catch (error) {
+    return NextResponse.json({ widget: data });
+  } catch (error: any) {
     console.error("Error fetching widget config:", error);
     return NextResponse.json({ message: 'Internal Server Error' }, { status: 500 });
   }
