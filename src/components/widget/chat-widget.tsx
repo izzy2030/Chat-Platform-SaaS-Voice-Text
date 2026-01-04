@@ -37,12 +37,70 @@ export function ChatWidgetComponent({
   const [messages, setMessages] = React.useState<Message[]>([]);
   const [inputValue, setInputValue] = React.useState('');
   const [isLoading, setIsLoading] = React.useState(false);
+  const [activeMode, setActiveMode] = React.useState<'light' | 'dark'>(
+    widgetConfig.theme?.colorMode === 'dark' ? 'dark' : 'light'
+  );
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
 
-  const theme = React.useMemo(() => ({
-    ...defaultTheme,
-    ...widgetConfig.theme
-  }), [widgetConfig.theme]);
+  // Sync activeMode with config and system preferences
+  React.useEffect(() => {
+    const configMode = widgetConfig.theme?.colorMode || 'light';
+
+    if (configMode === 'auto') {
+      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+      setActiveMode(mediaQuery.matches ? 'dark' : 'light');
+
+      const handler = (e: MediaQueryListEvent) => setActiveMode(e.matches ? 'dark' : 'light');
+      mediaQuery.addEventListener('change', handler);
+      return () => mediaQuery.removeEventListener('change', handler);
+    } else {
+      setActiveMode(configMode as 'light' | 'dark');
+    }
+  }, [widgetConfig.theme?.colorMode]);
+
+  // Listen for manual overrides from the host page
+  React.useEffect(() => {
+    const handleMessage = (event: MessageEvent) => {
+      // Basic security check (optional, but good practice if you know the host origin)
+      // if (event.origin !== hostOrigin) return;
+
+      if (event.data?.type === 'THEME_CHANGE' && (event.data.mode === 'light' || event.data.mode === 'dark')) {
+        setActiveMode(event.data.mode);
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+    return () => window.removeEventListener('message', handleMessage);
+  }, []);
+
+  const theme = React.useMemo(() => {
+    const baseTheme = {
+      ...defaultTheme,
+      ...widgetConfig.theme
+    };
+
+    // If we're in dark mode, we apply the dark mode overrides
+    if (activeMode === 'dark') {
+      return {
+        ...baseTheme,
+        primaryColor: widgetConfig.theme?.darkPrimaryColor || baseTheme.darkPrimaryColor || baseTheme.primaryColor,
+        secondaryColor: widgetConfig.theme?.darkSecondaryColor || baseTheme.darkSecondaryColor || '#1F2937',
+        accentColor: widgetConfig.theme?.darkAccentColor || baseTheme.darkAccentColor || baseTheme.accentColor,
+        borderColor: widgetConfig.theme?.darkBorderColor || baseTheme.darkBorderColor || '#374151',
+        colorMode: 'dark' as const,
+      };
+    }
+
+    return {
+      ...baseTheme,
+      colorMode: 'light' as const,
+    };
+  }, [widgetConfig.theme, activeMode]);
+
+  // Signal to the host that we are ready
+  React.useEffect(() => {
+    window.parent.postMessage('WIDGET_READY', '*');
+  }, []);
 
   // Handle initial message (from new theme or legacy field)
   React.useEffect(() => {
@@ -115,6 +173,8 @@ export function ChatWidgetComponent({
       setIsLoading(false);
     }
   };
+
+  const [isTyping, setIsTyping] = React.useState(false); // Map to existing isLoading if needed
 
   // Inline styles from theme
   const widgetStyle: React.CSSProperties = {

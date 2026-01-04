@@ -32,6 +32,12 @@ export interface WidgetTheme {
   primaryColor: string;
   secondaryColor: string;
   accentColor: string;
+  borderColor: string;
+  // Dark Mode Overrides
+  darkPrimaryColor?: string;
+  darkSecondaryColor?: string;
+  darkAccentColor?: string;
+  darkBorderColor?: string;
   backgroundBlur: number;
   colorMode: 'light' | 'dark' | 'auto';
   // Bubble
@@ -69,7 +75,6 @@ export interface WidgetTheme {
   roundedCorners: number;
   shadowIntensity: number;
   borderThickness: number;
-  borderColor: string;
   windowSize: 'small' | 'medium' | 'large';
   // Sound & Haptics
   soundEffects: boolean;

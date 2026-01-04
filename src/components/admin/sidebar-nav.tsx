@@ -18,11 +18,11 @@ import {
   PlusCircle,
   User,
   LogOut,
-  BotMessageSquare,
   Settings,
   PanelLeftClose,
   PanelRightClose,
   Folder,
+  Zap,
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
@@ -53,21 +53,21 @@ export function SidebarNav() {
   };
 
   return (
-    <Sidebar collapsible="icon">
+    <Sidebar collapsible="icon" className="border-r border-white/5">
       <SidebarHeader>
-        <div className="flex items-center gap-2 px-2 py-2">
-          <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <BotMessageSquare className="size-4" />
+        <div className="flex items-center gap-3 px-2 py-4">
+          <div className="flex aspect-square size-9 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/20">
+            <Zap className="size-5 text-white fill-white" />
           </div>
           <div className="grid flex-1 text-left text-sm leading-tight">
-            <span className="truncate font-semibold">Chat Factory</span>
-            <span className="truncate text-xs">Enterprise</span>
+            <span className="truncate font-display font-bold text-lg tracking-tight">Antigravity</span>
+            <span className="truncate text-[10px] uppercase font-bold tracking-widest text-primary">Core Node</span>
           </div>
         </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel>Platform</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Platform</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
@@ -75,10 +75,11 @@ export function SidebarNav() {
                   asChild
                   tooltip="Dashboard"
                   isActive={pathname === '/admin'}
+                  className="h-10 transition-all duration-200"
                 >
                   <Link href="/admin">
-                    <LayoutDashboard />
-                    <span>Dashboard</span>
+                    <LayoutDashboard size={18} />
+                    <span className="font-medium">Dashboard</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -87,22 +88,24 @@ export function SidebarNav() {
                   asChild
                   tooltip="Projects"
                   isActive={pathname === '/admin/projects'}
+                  className="h-10 transition-all duration-200"
                 >
                   <Link href="/admin/projects">
-                    <Folder />
-                    <span>Projects</span>
+                    <Folder size={18} />
+                    <span className="font-medium">Projects</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
                   asChild
-                  tooltip="Create Widget"
+                  tooltip="Create Agent"
                   isActive={pathname === '/admin/widget/create'}
+                  className="h-10 transition-all duration-200"
                 >
                   <Link href="/admin/widget/create">
-                    <PlusCircle />
-                    <span>Create Widget</span>
+                    <PlusCircle size={18} />
+                    <span className="font-medium">Create Agent</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -111,7 +114,7 @@ export function SidebarNav() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Settings</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Settings</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
               <SidebarMenuItem>
@@ -119,10 +122,11 @@ export function SidebarNav() {
                   asChild
                   tooltip="Profile"
                   isActive={pathname === '/admin/profile'}
+                  className="h-10 transition-all duration-200"
                 >
                   <Link href="/admin/profile">
-                    <User />
-                    <span>Profile</span>
+                    <User size={18} />
+                    <span className="font-medium">Profile</span>
                   </Link>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -130,53 +134,59 @@ export function SidebarNav() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter>
+      <SidebarFooter className="p-4 gap-4">
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton onClick={toggleSidebar} tooltip={state === 'expanded' ? 'Collapse' : 'Expand'}>
-              {state === 'expanded' ? <PanelLeftClose /> : <PanelRightClose />}
-              <span>{state === 'expanded' ? 'Collapse' : 'Expand'}</span>
+            <SidebarMenuButton
+              onClick={toggleSidebar}
+              tooltip={state === 'expanded' ? 'Collapse' : 'Expand'}
+              className="bg-white/5 hover:bg-white/10 rounded-lg justify-center transition-colors"
+            >
+              {state === 'expanded' ? <PanelLeftClose size={18} /> : <PanelRightClose size={18} />}
+              <span>{state === 'expanded' ? 'Compact Mode' : ''}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
-        <Separator className="my-1" />
+
+        <Separator className="bg-white/5" />
+
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <SidebarMenuButton
                   size="lg"
-                  className="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
+                  className="data-[state=open]:bg-white/5 hover:bg-white/5 transition-colors rounded-xl"
                 >
-                  <Avatar className="h-8 w-8 rounded-lg">
+                  <Avatar className="h-9 w-9 rounded-lg border border-white/10">
                     <AvatarImage
                       src={user?.user_metadata?.avatar_url || ''}
                       alt={user?.user_metadata?.full_name || ''}
                     />
-                    <AvatarFallback className="rounded-lg">
+                    <AvatarFallback className="rounded-lg bg-primary/20 text-primary font-bold">
                       {getInitials(user?.email)}
                     </AvatarFallback>
                   </Avatar>
-                  <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-semibold">
-                      {user?.user_metadata?.full_name || 'User'}
+                  <div className="grid flex-1 text-left text-sm leading-tight ml-2">
+                    <span className="truncate font-bold">
+                      {user?.user_metadata?.full_name || 'Operator'}
                     </span>
-                    <span className="truncate text-xs">
+                    <span className="truncate text-[10px] text-gray-500 uppercase tracking-tighter">
                       {user?.email || ''}
                     </span>
                   </div>
-                  <Settings className="ml-auto size-4" />
+                  <Settings className="ml-auto size-4 text-gray-400" />
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent
-                className="w-[--radix-dropdown-menu-trigger-width] min-w-56 rounded-lg"
-                side="bottom"
-                align="end"
-                sideOffset={4}
+                className="w-[--radix-dropdown-menu-trigger-width] min-w-56 glass border-white/10 p-2"
+                side="top"
+                align="start"
+                sideOffset={12}
               >
-                <DropdownMenuItem onClick={handleSignOut}>
+                <DropdownMenuItem onClick={handleSignOut} className="rounded-lg text-red-400 focus:text-red-400 focus:bg-red-400/10 cursor-pointer">
                   <LogOut className="mr-2 h-4 w-4" />
-                  Log out
+                  Terminate Session
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

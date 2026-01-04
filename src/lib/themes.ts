@@ -14,6 +14,10 @@ export const defaultTheme: WidgetTheme = {
   accentColor: '#B19CD9',
   backgroundBlur: 10,
   colorMode: 'light',
+  darkPrimaryColor: '#6366F1',
+  darkSecondaryColor: '#1F2937',
+  darkAccentColor: '#EC4899',
+  darkBorderColor: '#374151',
   bubbleMessage: '👋 Hi! How can we help?',
   conversationStarters: [],
   idlePulse: true,
@@ -50,31 +54,31 @@ export const defaultTheme: WidgetTheme = {
 };
 
 export const darkTheme: WidgetTheme = {
-    ...defaultTheme,
-    headerTitle: 'Dark Mode Chat',
-    headerSubtext: 'Online 24/7',
-    primaryColor: '#6366F1', // Indigo 500
-    secondaryColor: '#1F2937', // Gray 800
-    accentColor: '#EC4899', // Pink 500
-    colorMode: 'dark',
-    borderColor: '#4B5563', // Gray 600
+  ...defaultTheme,
+  headerTitle: 'Dark Mode Chat',
+  headerSubtext: 'Online 24/7',
+  primaryColor: '#6366F1', // Indigo 500
+  secondaryColor: '#1F2937', // Gray 800
+  accentColor: '#EC4899', // Pink 500
+  colorMode: 'dark',
+  borderColor: '#4B5563', // Gray 600
 };
 
 export const playfulTheme: WidgetTheme = {
-    ...defaultTheme,
-    headerTitle: 'Let\'s have fun!',
-    headerSubtext: 'Ask me anything!',
-    fontFamily: 'Comic Sans MS',
-    primaryColor: '#FBBF24', // Amber 400
-    secondaryColor: '#F3F4F6', // Gray 100
-    accentColor: '#34D399', // Emerald 400
-    avatarStyle: 'square',
-    bubbleSize: 'large',
-    openAnimation: 'particle-burst',
-    messageEntryStyle: 'bounce',
-    sendButtonStyle: 'spark-burst',
-    successConfetti: 'firework',
-    closeAnimation: 'paper-plane',
-    roundedCorners: 24,
-    soundTheme: 'arcade-clicks',
+  ...defaultTheme,
+  headerTitle: 'Let\'s have fun!',
+  headerSubtext: 'Ask me anything!',
+  fontFamily: 'Comic Sans MS',
+  primaryColor: '#FBBF24', // Amber 400
+  secondaryColor: '#F3F4F6', // Gray 100
+  accentColor: '#34D399', // Emerald 400
+  avatarStyle: 'square',
+  bubbleSize: 'large',
+  openAnimation: 'particle-burst',
+  messageEntryStyle: 'bounce',
+  sendButtonStyle: 'spark-burst',
+  successConfetti: 'firework',
+  closeAnimation: 'paper-plane',
+  roundedCorners: 24,
+  soundTheme: 'arcade-clicks',
 };

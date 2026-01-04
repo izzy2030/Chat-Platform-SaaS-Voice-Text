@@ -46,10 +46,10 @@
     iframe.style.display = 'none'; // Initially hidden
     iframe.style.zIndex = '9999';
 
-     if (widgetConfig.brand?.position === 'left') {
-        iframe.style.left = '20px';
-        iframe.style.right = 'auto';
-     }
+    if (widgetConfig.brand?.position === 'left') {
+      iframe.style.left = '20px';
+      iframe.style.right = 'auto';
+    }
 
 
     return iframe;
@@ -73,26 +73,26 @@
     bubble.style.boxShadow = 'rgba(0, 0, 0, 0.1) 0px 4px 12px';
     bubble.style.transition = 'transform 0.2s ease-in-out';
     bubble.style.zIndex = '9998';
-    
+
     // Check if we have a custom bubble icon URL, otherwise use default SVG
     if (widgetConfig.brand?.bubbleIcon && (widgetConfig.brand.bubbleIcon.startsWith('http') || widgetConfig.brand.bubbleIcon.startsWith('data:'))) {
-        bubble.innerHTML = `<img src="${widgetConfig.brand.bubbleIcon}" alt="Chat" style="width: 32px; height: 32px; object-fit: contain;">`;
+      bubble.innerHTML = `<img src="${widgetConfig.brand.bubbleIcon}" alt="Chat" style="width: 32px; height: 32px; object-fit: contain;">`;
     } else {
-        // Default Message Icon
-        bubble.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-message-square"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`;
+      // Default Message Icon
+      bubble.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-message-square"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`;
     }
 
     if (widgetConfig.brand?.position === 'left') {
-        bubble.style.left = '20px';
-        bubble.style.right = 'auto';
+      bubble.style.left = '20px';
+      bubble.style.right = 'auto';
     }
 
 
     bubble.addEventListener('mouseenter', () => {
-        bubble.style.transform = 'scale(1.1)';
+      bubble.style.transform = 'scale(1.1)';
     });
     bubble.addEventListener('mouseleave', () => {
-        bubble.style.transform = 'scale(1)';
+      bubble.style.transform = 'scale(1)';
     });
 
     return bubble;
@@ -105,8 +105,8 @@
 
     // Lazy Load: Create iframe if it doesn't exist
     if (!iframe) {
-        iframe = createIframe(config, widgetConfig);
-        container.appendChild(iframe);
+      iframe = createIframe(config, widgetConfig);
+      container.appendChild(iframe);
     }
 
     if (iframe.style.display === 'none') {
@@ -118,9 +118,9 @@
       iframe.style.display = 'none';
       // Revert to Message Icon (or custom icon)
       if (widgetConfig.brand?.bubbleIcon && (widgetConfig.brand.bubbleIcon.startsWith('http') || widgetConfig.brand.bubbleIcon.startsWith('data:'))) {
-          bubble.innerHTML = `<img src="${widgetConfig.brand.bubbleIcon}" alt="Chat" style="width: 32px; height: 32px; object-fit: contain;">`;
+        bubble.innerHTML = `<img src="${widgetConfig.brand.bubbleIcon}" alt="Chat" style="width: 32px; height: 32px; object-fit: contain;">`;
       } else {
-          bubble.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-message-square"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`;
+        bubble.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-message-square"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>`;
       }
     }
   }
@@ -136,29 +136,68 @@
     // Fetch widget configuration from our backend
     const res = await fetch(`${config.origin}/api/widget-config?id=${config.key}`);
     if (!res.ok) {
-        console.error('Chat Widget: Could not fetch widget configuration.');
-        // const error = await res.json();
-        // console.error(error.message);
-        return;
+      console.error('Chat Widget: Could not fetch widget configuration.');
+      // const error = await res.json();
+      // console.error(error.message);
+      return;
     }
     const { widget: widgetConfig } = await res.json();
 
     if (widgetConfig.allowedDomains && widgetConfig.allowedDomains.length > 0 && !widgetConfig.allowedDomains.includes(window.location.hostname)) {
-        console.warn(`Chat Widget: Current domain (${window.location.hostname}) is not allowed for this widget.`);
-        // return; // Uncomment this for production enforcement
+      console.warn(`Chat Widget: Current domain (${window.location.hostname}) is not allowed for this widget.`);
+      // return; // Uncomment this for production enforcement
     }
 
     // Create a container for the widget
     const container = document.createElement('div');
     container.id = CONTAINER_ID;
     document.body.appendChild(container);
-    
+
     // Create and append the Bubble ONLY (Iframe is lazy loaded)
     const bubble = createBubble(widgetConfig);
     container.appendChild(bubble);
 
+
+    // --- Theme Synchronization ---
+    function syncThemeWithHost() {
+      const isDark = document.documentElement.classList.contains('dark') ||
+        document.body.classList.contains('dark') ||
+        (window.getComputedStyle(document.body).backgroundColor === 'rgb(0, 0, 0)'); // Basic fallback
+
+      const iframe = document.getElementById(IFRAME_ID);
+      if (iframe && iframe.contentWindow) {
+        iframe.contentWindow.postMessage({
+          type: 'THEME_CHANGE',
+          mode: isDark ? 'dark' : 'light'
+        }, '*');
+      }
+    }
+
+    // Observe theme changes on the host
+    const observer = new MutationObserver((mutations) => {
+      mutations.forEach((mutation) => {
+        if (mutation.type === 'attributes' && (mutation.attributeName === 'class' || mutation.attributeName === 'style')) {
+          syncThemeWithHost();
+        }
+      });
+    });
+
+    observer.observe(document.documentElement, { attributes: true });
+    observer.observe(document.body, { attributes: true });
+
+    // Initial sync after iframe loads
+    window.addEventListener('message', (event) => {
+      if (event.data === 'WIDGET_READY') {
+        syncThemeWithHost();
+      }
+    });
+
     // Add event listeners
-    bubble.addEventListener('click', () => toggleWidget(config, widgetConfig));
+    bubble.addEventListener('click', () => {
+      toggleWidget(config, widgetConfig);
+      // Sync immediately if just opened
+      setTimeout(syncThemeWithHost, 100);
+    });
 
   }
 
