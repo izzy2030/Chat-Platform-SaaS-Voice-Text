@@ -129,7 +129,7 @@ export default function CreateWidgetPage() {
           type: data.type,
           webhook_url: data.webhookUrl,
           allowed_domains: data.allowedDomains.split(',').map(d => d.trim()),
-          brand: {
+          theme: {
             bubbleColor: data.bubbleColor || '#000000',
             bubbleIcon: data.bubbleIcon || '',
             panelColor: data.panelColor || '#FFFFFF',
@@ -137,12 +137,10 @@ export default function CreateWidgetPage() {
             welcomeMessage: data.welcomeMessage || '',
             position: data.position,
           },
-          behavior: {
-            defaultLanguage: data.defaultLanguage,
-          },
           user_id: user.id,
           config: {
             webhookSecret: data.webhookSecret || '',
+            defaultLanguage: data.defaultLanguage,
           }
         }]);
 

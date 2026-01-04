@@ -1,4 +1,3 @@
-
 'use client';
 
 import * as React from 'react';
@@ -67,7 +66,7 @@ interface ChatWidget {
   type?: 'text' | 'voice';
   webhook_url: string;
   allowed_domains: string[];
-  brand: {
+  theme: {
     bubbleColor?: string;
     bubbleIcon?: string;
     panelColor?: string;
@@ -75,12 +74,10 @@ interface ChatWidget {
     welcomeMessage?: string;
     position?: 'left' | 'right';
   };
-  behavior: {
-    defaultLanguage?: 'EN' | 'ES';
-  };
   user_id: string;
   config?: {
     webhookSecret?: string;
+    defaultLanguage?: 'EN' | 'ES';
   }
 }
 
@@ -174,13 +171,13 @@ export default function EditWidgetPage({
         webhookUrl: widget.webhook_url || '',
         webhookSecret: widget.config?.webhookSecret || '',
         allowedDomains: Array.isArray(widget.allowed_domains) ? widget.allowed_domains.join(', ') : '',
-        bubbleColor: widget.brand?.bubbleColor || '#000000',
-        bubbleIcon: widget.brand?.bubbleIcon || '',
-        panelColor: widget.brand?.panelColor || '#FFFFFF',
-        headerTitle: widget.brand?.headerTitle || '',
-        welcomeMessage: widget.brand?.welcomeMessage || '',
-        defaultLanguage: widget.behavior?.defaultLanguage || 'EN',
-        position: widget.brand?.position || 'right',
+        bubbleColor: widget.theme?.bubbleColor || '#000000',
+        bubbleIcon: widget.theme?.bubbleIcon || '',
+        panelColor: widget.theme?.panelColor || '#FFFFFF',
+        headerTitle: widget.theme?.headerTitle || '',
+        welcomeMessage: widget.theme?.welcomeMessage || '',
+        defaultLanguage: widget.config?.defaultLanguage || 'EN',
+        position: widget.theme?.position || 'right',
       });
     }
   }, [widget, form]);
@@ -206,7 +203,7 @@ export default function EditWidgetPage({
           type: data.type,
           webhook_url: data.webhookUrl,
           allowed_domains: data.allowedDomains.split(',').map(d => d.trim()),
-          brand: {
+          theme: {
             bubbleColor: data.bubbleColor || '',
             bubbleIcon: data.bubbleIcon || '',
             panelColor: data.panelColor || '',
@@ -214,11 +211,9 @@ export default function EditWidgetPage({
             welcomeMessage: data.welcomeMessage || '',
             position: data.position,
           },
-          behavior: {
-            defaultLanguage: data.defaultLanguage,
-          },
           config: {
             webhookSecret: data.webhookSecret || '',
+            defaultLanguage: data.defaultLanguage,
           }
         })
         .eq('id', widgetId)
