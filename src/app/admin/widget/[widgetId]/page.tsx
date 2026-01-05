@@ -2,13 +2,13 @@
 
 import * as React from 'react';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import * as z from 'zod';
 import { useEffect, useState, use } from 'react';
 import { supabase } from '@/lib/supabase';
 import { useUser } from '@/supabase';
 import { useRouter } from 'next/navigation';
-import { Loader2, MessageSquare, Mic } from 'lucide-react';
+import { Loader2, MessageSquare, Mic, Save, Eye, Smartphone, Monitor } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -40,6 +40,10 @@ import {
 import { Skeleton } from '@/components/ui/skeleton';
 import Link from 'next/link';
 import { Label } from '@/components/ui/label';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { ChatWidgetComponent } from '@/components/widget/chat-widget';
 
 const widgetSchema = z.object({
   name: z.string().min(1, 'Widget Name is required'),
@@ -84,6 +88,76 @@ interface ChatWidget {
 interface Project {
   id: string;
   name: string;
+}
+
+const ColorPicker = ({ label, value, onChange }: { label: string, value: string, onChange: (val: string) => void }) => (
+  <div className="space-y-3">
+    <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</Label>
+    <div className="flex items-center gap-3">
+      <div className="relative h-12 w-12 rounded-xl overflow-hidden shadow-sm hover:scale-105 transition-all duration-200 border-2 border-white ring-1 ring-border cursor-pointer bg-[url('https://transparenttextures.com/patterns/checkerboard.png')]">
+        <div
+          style={{ backgroundColor: value }}
+          className="absolute inset-0 w-full h-full"
+        />
+        <input
+          type="color"
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="absolute -top-[50%] -left-[50%] h-[200%] w-[200%] p-0 opacity-0 cursor-pointer"
+        />
+      </div>
+      <div className="flex-1">
+        <Input
+          value={value}
+          onChange={(e) => onChange(e.target.value)}
+          className="font-mono text-sm h-9 uppercase"
+          placeholder="#000000"
+        />
+      </div>
+    </div>
+  </div>
+);
+
+function Preview({ widgetId, formValues }: { widgetId: string, formValues: WidgetFormData }) {
+  // Construct a preview config that matches what ChatWidgetComponent expects
+  const previewConfig = React.useMemo(() => {
+    return {
+      id: widgetId,
+      webhook_url: formValues.webhookUrl || '',
+      theme: {
+        primaryColor: formValues.bubbleColor,
+        secondaryColor: formValues.panelColor,
+        headerTitle: formValues.headerTitle,
+        bubbleMessage: formValues.welcomeMessage,
+      },
+      brand: { // Legacy fallback if needed
+        welcomeMessage: formValues.welcomeMessage
+      },
+    };
+  }, [widgetId, formValues]);
+
+  return (
+    <div className="w-full h-full flex items-center justify-center p-8 bg-gradient-to-br from-gray-50 to-gray-100/50 relative overflow-hidden rounded-2xl border border-border/40 shadow-inner">
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+
+      {/* Mock Window / Device Frame */}
+      <div className={`relative transition-all duration-500 ease-in-out w-[380px] h-[600px] shadow-2xl rounded-[3rem] border-[8px] border-white bg-white overflow-hidden ring-1 ring-black/5`}>
+        {/* Status Bar */}
+        <div className="h-6 w-full bg-white flex items-center justify-between px-6 z-10 relative">
+          <div className="text-[10px] font-bold">9:41</div>
+          <div className="flex gap-1.5">
+            <div className="w-3 h-3 bg-black/10 rounded-full" />
+            <div className="w-3 h-3 bg-black/10 rounded-full" />
+          </div>
+        </div>
+
+        <ChatWidgetComponent
+          widgetConfig={previewConfig}
+          sessionId="preview-session"
+        />
+      </div>
+    </div>
+  );
 }
 
 export default function EditWidgetPage({
@@ -153,8 +227,8 @@ export default function EditWidgetPage({
       webhookUrl: '',
       webhookSecret: '',
       allowedDomains: '',
-      bubbleColor: '#000000',
-      panelColor: '#FFFFFF',
+      bubbleColor: '#94B4E4',
+      panelColor: '#F0F4F8',
       headerTitle: 'Chat with us!',
       welcomeMessage: 'Hello! How can we help you today?',
       defaultLanguage: 'EN',
@@ -162,23 +236,27 @@ export default function EditWidgetPage({
     },
   });
 
+  // Watch all values for real-time preview
+  const formValues = useWatch({ control: form.control });
+
   useEffect(() => {
     if (widget) {
-      form.reset({
+      const defaults = {
         name: widget.name || '',
         projectId: widget.project_id || '',
         type: widget.type || 'text',
         webhookUrl: widget.webhook_url || '',
         webhookSecret: widget.config?.webhookSecret || '',
         allowedDomains: Array.isArray(widget.allowed_domains) ? widget.allowed_domains.join(', ') : '',
-        bubbleColor: widget.theme?.bubbleColor || '#000000',
+        bubbleColor: widget.theme?.bubbleColor || '#94B4E4',
         bubbleIcon: widget.theme?.bubbleIcon || '',
-        panelColor: widget.theme?.panelColor || '#FFFFFF',
-        headerTitle: widget.theme?.headerTitle || '',
-        welcomeMessage: widget.theme?.welcomeMessage || '',
+        panelColor: widget.theme?.panelColor || '#F0F4F8',
+        headerTitle: widget.theme?.headerTitle || 'Chat with us!',
+        welcomeMessage: widget.theme?.welcomeMessage || 'Hello! How can we help you today?',
         defaultLanguage: widget.config?.defaultLanguage || 'EN',
         position: widget.theme?.position || 'right',
-      });
+      };
+      form.reset(defaults);
     }
   }, [widget, form]);
 
@@ -225,7 +303,9 @@ export default function EditWidgetPage({
         title: 'Widget Updated!',
         description: 'Your chat widget has been updated successfully.',
       });
-      router.push('/admin');
+
+      // Optional: Refresh local state or router
+      // router.refresh(); 
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -239,375 +319,320 @@ export default function EditWidgetPage({
 
   if (isWidgetLoading) {
     return (
-      <div className="flex justify-center p-4 md:p-8">
-        <div className="w-full max-w-4xl">
-          <Skeleton className="h-10 w-40 mb-4" />
-          <Card>
-            <CardHeader>
-              <Skeleton className="h-8 w-48 mb-2" />
-              <Skeleton className="h-4 w-64" />
-            </CardHeader>
-            <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-4">
-                  <Skeleton className="h-6 w-32 mb-2" />
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                </div>
-                <div className="space-y-4">
-                  <Skeleton className="h-6 w-32 mb-2" />
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-10 w-full" />
-                  <Skeleton className="h-24 w-full" />
-                </div>
-              </div>
-              <div className="flex justify-end space-x-2 mt-6">
-                <Skeleton className="h-10 w-24" />
-                <Skeleton className="h-10 w-32" />
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+      <div className="flex justify-center p-12 w-full h-full align-middle">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
   }
 
-  if (!widget) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center">
-        <Card>
-          <CardHeader>
-            <CardTitle>Widget Not Found</CardTitle>
-            <CardDescription>
-              The widget you are looking for does not exist.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Button asChild>
-              <Link href="/admin">Go Back to Dashboard</Link>
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  if (!widget) return null;
+
+  // We type cast formValues to WidgetFormData because useWatch returns Partial<DeepPartial<T>>
+  // but we know it's seeded with default values.
+  const currentValues = formValues as WidgetFormData;
 
   return (
-    <div className="flex justify-center p-4 md:p-8">
-      <div className="w-full max-w-4xl">
-        <Button asChild variant="outline" className="mb-4">
-          <Link href="/admin">
-            &larr; Back to Dashboard
-          </Link>
-        </Button>
-        <Card>
-          <CardHeader>
-            <CardTitle>Edit Chat Widget</CardTitle>
-            <CardDescription>
-              Update the settings for your chat widget.
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <Form {...form}>
-              <form
-                onSubmit={form.handleSubmit(onSubmit)}
-                className="space-y-6"
-              >
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Identity</h3>
-                    <FormField
-                      control={form.control}
-                      name="projectId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Project</FormLabel>
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select a project for this widget" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {isLoadingProjects ? (
-                                <SelectItem value="loading" disabled>Loading...</SelectItem>
-                              ) : (
-                                projects?.map((project) => (
-                                  <SelectItem key={project.id} value={project.id}>
-                                    {project.name}
-                                  </SelectItem>
-                                ))
-                              )}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="name"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Widget Name</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Queens Auto" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="type"
-                      render={({ field }) => (
-                        <FormItem className="space-y-3">
-                          <FormLabel>Widget Type</FormLabel>
-                          <FormControl>
-                            <RadioGroup
-                              onValueChange={field.onChange}
-                              defaultValue={field.value}
-                              className="grid grid-cols-2 gap-4"
-                            >
-                              <div>
-                                <RadioGroupItem value="text" id="text" className="peer sr-only" />
-                                <Label
-                                  htmlFor="text"
-                                  className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
-                                >
-                                  <MessageSquare className="mb-3 h-6 w-6" />
-                                  Text Chat
-                                </Label>
-                              </div>
-                              <div>
-                                <RadioGroupItem value="voice" id="voice" className="peer sr-only" />
-                                <Label
-                                  htmlFor="voice"
-                                  className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
-                                >
-                                  <Mic className="mb-3 h-6 w-6" />
-                                  Voice Agent
-                                </Label>
-                              </div>
-                            </RadioGroup>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="webhookUrl"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Webhook URL</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="https://api.example.com/webhook"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="webhookSecret"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Webhook Secret</FormLabel>
-                          <FormControl>
-                            <Input
-                              type="password"
-                              placeholder="••••••••••••••"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Optional, but recommended for verifying webhook authenticity.
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="allowedDomains"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Allowed Domains</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="example.com, my-site.com"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormDescription>
-                            Comma-separated list of domains where this widget
-                            can be embedded.
-                          </FormDescription>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-medium">Branding</h3>
-                    <FormField
-                      control={form.control}
-                      name="bubbleColor"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Bubble Color</FormLabel>
-                          <FormControl>
-                            <Input type="color" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="bubbleIcon"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Bubble Icon (Emoji or URL)</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="💬 or https://example.com/icon.png"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="panelColor"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Panel Color</FormLabel>
-                          <FormControl>
-                            <Input type="color" {...field} />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="headerTitle"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Header Title</FormLabel>
-                          <FormControl>
-                            <Input
-                              placeholder="Chat with Queens Auto"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="welcomeMessage"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Welcome Message</FormLabel>
-                          <FormControl>
-                            <Textarea
-                              placeholder="Hello! How can we help you today?"
-                              {...field}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <FormField
-                      control={form.control}
-                      name="position"
-                      render={({ field }) => (
-                        <FormItem className="space-y-3">
-                          <FormLabel>Widget Position</FormLabel>
-                          <FormControl>
-                            <RadioGroup
-                              onValueChange={field.onChange}
-                              defaultValue={field.value}
-                              className="flex space-x-4"
-                            >
-                              <FormItem className="flex items-center space-x-2">
-                                <FormControl>
-                                  <RadioGroupItem value="left" />
-                                </FormControl>
-                                <FormLabel className="font-normal">Left</FormLabel>
-                              </FormItem>
-                              <FormItem className="flex items-center space-x-2">
-                                <FormControl>
-                                  <RadioGroupItem value="right" />
-                                </FormControl>
-                                <FormLabel className="font-normal">Right</FormLabel>
-                              </FormItem>
-                            </RadioGroup>
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    <h3 className="text-lg font-medium pt-4">Behavior</h3>
-                    <FormField
-                      control={form.control}
-                      name="defaultLanguage"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Default Language</FormLabel>
-                          <Select
-                            onValueChange={field.onChange}
-                            defaultValue={field.value}
-                          >
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select a language" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              <SelectItem value="EN">English</SelectItem>
-                              <SelectItem value="ES">Spanish</SelectItem>
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </div>
-                </div>
+    <div className="flex flex-col h-[calc(100vh-6rem)] -m-8 md:-m-12">
+      {/* Header */}
+      <div className="h-16 border-b bg-white/50 backdrop-blur-md px-6 flex items-center justify-between shrink-0 z-20">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" asChild>
+            <Link href="/admin"><span className="sr-only">Back</span>&larr;</Link>
+          </Button>
+          <div>
+            <h1 className="text-lg font-bold tracking-tight">Widget Studio</h1>
+            <div className="text-xs text-muted-foreground flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+              Live Preview
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button onClick={form.handleSubmit(onSubmit)} disabled={isLoading} className="gap-2">
+            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+            Save Changes
+          </Button>
+        </div>
+      </div>
 
-                <div className="flex justify-end space-x-2">
-                  <Button
-                    type="button"
-                    variant="ghost"
-                    onClick={() => router.push('/admin')}
-                  >
-                    Cancel
-                  </Button>
-                  <Button type="submit" disabled={isLoading}>
-                    {isLoading && (
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    )}
-                    Save Changes
-                  </Button>
-                </div>
-              </form>
-            </Form>
-          </CardContent>
-        </Card>
+      {/* Workspace */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left Sidebar - Controls */}
+        <div className="w-[400px] border-r bg-white flex flex-col shrink-0 z-10 shadow-xl shadow-black/5">
+          <Tabs defaultValue="visuals" className="w-full flex flex-col h-full">
+            <div className="px-6 py-4 border-b">
+              <TabsList className="w-full grid grid-cols-2">
+                <TabsTrigger value="visuals">Design</TabsTrigger>
+                <TabsTrigger value="settings">Settings</TabsTrigger>
+              </TabsList>
+            </div>
+
+            <ScrollArea className="flex-1">
+              <div className="p-6">
+                <Form {...form}>
+                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                    <TabsContent value="visuals" className="space-y-8 mt-0 data-[state=inactive]:hidden">
+                      {/* Color Section */}
+                      <section className="space-y-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Color Palette</h3>
+                          <div className="h-px bg-border flex-1"></div>
+                        </div>
+
+                        <FormField
+                          control={form.control}
+                          name="bubbleColor"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <ColorPicker label="Primary Brand Color" value={field.value || '#94B4E4'} onChange={field.onChange} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="panelColor"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormControl>
+                                <ColorPicker label="Background / Secondary" value={field.value || '#F0F4F8'} onChange={field.onChange} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </section>
+
+                      {/* Text Section */}
+                      <section className="space-y-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Messaging</h3>
+                          <div className="h-px bg-border flex-1"></div>
+                        </div>
+
+                        <FormField
+                          control={form.control}
+                          name="headerTitle"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Header Title</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Chat with us" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="welcomeMessage"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Welcome Message</FormLabel>
+                              <FormControl>
+                                <Textarea placeholder="Hi there!" className="min-h-[80px]" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </section>
+
+                      {/* Positioning */}
+                      <section className="space-y-4">
+                        <div className="flex items-center gap-2 mb-2">
+                          <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Position</h3>
+                          <div className="h-px bg-border flex-1"></div>
+                        </div>
+                        <FormField
+                          control={form.control}
+                          name="position"
+                          render={({ field }) => (
+                            <FormItem className="space-y-3">
+                              <FormControl>
+                                <RadioGroup
+                                  onValueChange={field.onChange}
+                                  defaultValue={field.value}
+                                  className="flex space-x-4"
+                                >
+                                  <FormItem className="flex items-center space-x-2">
+                                    <FormControl>
+                                      <RadioGroupItem value="left" />
+                                    </FormControl>
+                                    <FormLabel className="font-normal cursor-pointer">Bottom Left</FormLabel>
+                                  </FormItem>
+                                  <FormItem className="flex items-center space-x-2">
+                                    <FormControl>
+                                      <RadioGroupItem value="right" />
+                                    </FormControl>
+                                    <FormLabel className="font-normal cursor-pointer">Bottom Right</FormLabel>
+                                  </FormItem>
+                                </RadioGroup>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </section>
+                    </TabsContent>
+
+                    <TabsContent value="settings" className="space-y-8 mt-0 data-[state=inactive]:hidden">
+                      {/* Identity Section */}
+                      <section className="space-y-4">
+                        <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Identity</h3>
+                        <FormField
+                          control={form.control}
+                          name="name"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Widget Name</FormLabel>
+                              <FormControl>
+                                <Input {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="projectId"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Project</FormLabel>
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select a project" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  {isLoadingProjects ? (
+                                    <SelectItem value="loading" disabled>Loading...</SelectItem>
+                                  ) : (
+                                    projects?.map((project) => (
+                                      <SelectItem key={project.id} value={project.id}>
+                                        {project.name}
+                                      </SelectItem>
+                                    ))
+                                  )}
+                                </SelectContent>
+                              </Select>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </section>
+
+                      {/* Configuration */}
+                      <section className="space-y-4">
+                        <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Configuration</h3>
+                        <FormField
+                          control={form.control}
+                          name="type"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Interaction Type</FormLabel>
+                              <FormControl>
+                                <RadioGroup
+                                  onValueChange={field.onChange}
+                                  defaultValue={field.value}
+                                  className="grid grid-cols-2 gap-4"
+                                >
+                                  <div>
+                                    <RadioGroupItem value="text" id="text" className="peer sr-only" />
+                                    <Label
+                                      htmlFor="text"
+                                      className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                                    >
+                                      <MessageSquare className="mb-2 h-5 w-5" />
+                                      Text
+                                    </Label>
+                                  </div>
+                                  <div>
+                                    <RadioGroupItem value="voice" id="voice" className="peer sr-only" />
+                                    <Label
+                                      htmlFor="voice"
+                                      className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                                    >
+                                      <Mic className="mb-2 h-5 w-5" />
+                                      Voice
+                                    </Label>
+                                  </div>
+                                </RadioGroup>
+                              </FormControl>
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="allowedDomains"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Allowed Domains</FormLabel>
+                              <FormControl>
+                                <Input placeholder="example.com" {...field} />
+                              </FormControl>
+                              <FormDescription>Comma-separated list of allowed hostnames.</FormDescription>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="webhookUrl"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Webhook URL</FormLabel>
+                              <FormControl>
+                                <Input placeholder="https://..." {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+
+                        <FormField
+                          control={form.control}
+                          name="defaultLanguage"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Language</FormLabel>
+                              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Language" />
+                                  </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                  <SelectItem value="EN">English</SelectItem>
+                                  <SelectItem value="ES">Spanish</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </FormItem>
+                          )}
+                        />
+                      </section>
+                    </TabsContent>
+                  </form>
+                </Form>
+              </div>
+            </ScrollArea>
+          </Tabs>
+        </div>
+
+        {/* Right - Preview Area */}
+        <div className="flex-1 bg-gray-50/50 flex flex-col min-w-0">
+          <div className="flex-1 overflow-hidden relative">
+            <Preview widgetId={widgetId} formValues={currentValues} />
+          </div>
+        </div>
       </div>
     </div>
   );
