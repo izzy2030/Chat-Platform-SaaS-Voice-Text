@@ -165,7 +165,7 @@ export function WidgetList({ projectId }: { projectId?: string }) {
 
   useEffect(() => {
     fetchData();
-  }, [user, projectId]);
+  }, [user?.id, projectId]);
 
   const widgetsByProject = useMemo(() => {
     if (!widgets) return {};

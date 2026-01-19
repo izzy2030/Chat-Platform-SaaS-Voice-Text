@@ -216,7 +216,7 @@ export default function EditWidgetPage({
 
     fetchWidget();
     fetchProjects();
-  }, [user, widgetId]);
+  }, [user?.id, widgetId]);
 
   const form = useForm<WidgetFormData>({
     resolver: zodResolver(widgetSchema),
@@ -332,7 +332,7 @@ export default function EditWidgetPage({
   const currentValues = formValues as WidgetFormData;
 
   return (
-    <div className="flex flex-col h-[calc(100vh-6rem)] -m-8 md:-m-12">
+    <div className="flex flex-col flex-1 min-h-0 rounded-lg border bg-background shadow-sm overflow-hidden">
       {/* Header */}
       <div className="h-16 border-b bg-white/50 backdrop-blur-md px-6 flex items-center justify-between shrink-0 z-20">
         <div className="flex items-center gap-4">

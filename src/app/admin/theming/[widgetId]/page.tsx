@@ -22,7 +22,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { toast } from '@/hooks/use-toast';
-import { Loader2, RotateCcw, Save, Smartphone, Palette, Zap, LayoutTemplate, Volume2 } from 'lucide-react';
+import { Loader2, RotateCcw, Save, Smartphone, Palette, Zap, LayoutTemplate, Volume2, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 
 // Re-using the interfaces for consistency
@@ -30,7 +30,9 @@ export interface WidgetTheme {
   // Branding
   logoUrl?: string;
   headerTitle: string;
+  headerTitleColor?: string;
   headerSubtext: string;
+  headerSubtextColor?: string;
   fontFamily: string;
   fontSize: number;
   avatarStyle: 'round' | 'square';
@@ -89,11 +91,25 @@ export interface WidgetTheme {
   hapticFeedback: boolean;
 }
 
-const ColorPicker = ({ label, value, onChange }: { label: string, value: string, onChange: (val: string) => void }) => (
+const ColorPicker = ({ label, value, onChange, onReset }: { label: string, value: string, onChange: (val: string) => void, onReset?: () => void }) => (
   <div className="space-y-2">
     <div className="flex items-center justify-between">
       <Label className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">{label}</Label>
-      <span className="font-mono text-[10px] text-muted-foreground">{value}</span>
+      <div className="flex items-center gap-2">
+        <span className="font-mono text-[10px] text-muted-foreground">{value}</span>
+        {onReset && (
+          <Button
+            variant="ghost"
+            size="icon"
+            className="h-5 w-5 text-muted-foreground hover:text-destructive p-0 rounded-full"
+            onClick={onReset}
+            title="Reset to default"
+            nativeButton={true}
+          >
+            <Trash2 className="h-3 w-3" />
+          </Button>
+        )}
+      </div>
     </div>
     <div className="flex items-center gap-2">
       <div className="relative h-10 w-full rounded-md overflow-hidden shadow-sm border border-input ring-offset-background transition-all hover:ring-2 hover:ring-ring hover:ring-offset-2">
@@ -112,6 +128,36 @@ const ColorPicker = ({ label, value, onChange }: { label: string, value: string,
   </div>
 );
 
+const TinyColorPicker = ({ value, onChange, onReset }: { value: string, onChange: (val: string) => void, onReset?: () => void }) => (
+  <div className="flex items-center gap-1">
+    <div className="relative w-10 h-10 shrink-0 rounded-md overflow-hidden shadow-sm border border-input ring-offset-background transition-all hover:ring-2 hover:ring-ring hover:ring-offset-2">
+      <div
+        style={{ backgroundColor: value }}
+        className="absolute inset-0 w-full h-full"
+      />
+      <input
+        type="color"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+        title="Choose color"
+      />
+    </div>
+    {onReset && (
+      <Button
+        variant="ghost"
+        size="icon"
+        onClick={onReset}
+        className="h-8 w-8 text-muted-foreground hover:text-destructive rounded-full"
+        title="Reset to default"
+        nativeButton={true}
+      >
+        <Trash2 className="h-4 w-4" />
+      </Button>
+    )}
+  </div>
+);
+
 function Preview({ theme, configId }: { theme: WidgetTheme, configId: string }) {
   // Transform WidgetTheme to ChatWidgetComponent's expected structure
   const previewConfig = React.useMemo(() => {
@@ -127,11 +173,11 @@ function Preview({ theme, configId }: { theme: WidgetTheme, configId: string }) 
   }, [theme, configId]);
 
   return (
-    <div className="w-full h-full flex items-center justify-center p-8 bg-gradient-to-br from-indigo-50/50 to-blue-50/50 relative overflow-hidden mt-0">
+    <div className="w-full h-full flex items-center justify-center p-8 bg-gradient-to-br from-indigo-50/50 to-blue-50/50 dark:from-slate-950/50 dark:to-slate-900/50 relative overflow-hidden mt-0">
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808008_1px,transparent_1px),linear-gradient(to_bottom,#80808008_1px,transparent_1px)] bg-[size:24px_24px]"></div>
 
       {/* Device Frame */}
-      <div className="relative w-[380px] h-[700px] bg-white rounded-[3rem] shadow-2xl border-[8px] border-white ring-1 ring-black/5 overflow-hidden flex flex-col transition-all duration-300">
+      <div className="relative w-[380px] h-[700px] bg-white rounded-[3rem] shadow-2xl border-[8px] border-white ring-1 ring-black/5 dark:ring-white/10 overflow-hidden flex flex-col transition-all duration-300">
         {/* Status Bar */}
         <div className="h-7 w-full bg-white flex items-center justify-between px-6 z-10 relative shrink-0">
           <div className="text-[10px] font-bold text-gray-900">9:41</div>
@@ -161,6 +207,7 @@ export default function ThemingPage({ params }: { params: Promise<{ widgetId: st
   const [isSaving, setIsSaving] = React.useState(false);
   const { user } = useUser();
   const [isWidgetLoading, setIsWidgetLoading] = React.useState(true);
+  const [selectedFileName, setSelectedFileName] = React.useState<string | null>(null);
 
   React.useEffect(() => {
     const fetchWidget = async () => {
@@ -186,7 +233,7 @@ export default function ThemingPage({ params }: { params: Promise<{ widgetId: st
     };
 
     fetchWidget();
-  }, [user, widgetId]);
+  }, [user?.id, widgetId]);
 
   const updateTheme = (newValues: Partial<WidgetTheme>) => {
     setTheme((prevTheme) => ({ ...prevTheme, ...newValues }));
@@ -250,6 +297,9 @@ export default function ThemingPage({ params }: { params: Promise<{ widgetId: st
         });
         return;
       }
+
+      setSelectedFileName(file.name);
+
       const reader = new FileReader();
       reader.onload = (loadEvent) => {
         const result = loadEvent.target?.result;
@@ -270,18 +320,18 @@ export default function ThemingPage({ params }: { params: Promise<{ widgetId: st
   }
 
   return (
-    <div className="flex h-[calc(100vh)] -m-8 md:-m-12 bg-background overflow-hidden relative">
+    <div className="flex flex-1 min-h-0 bg-background overflow-hidden relative rounded-lg border shadow-sm">
 
       {/* Left Panel: Controls */}
-      <div className="w-[420px] max-w-full flex-col border-r bg-white/80 backdrop-blur-xl flex shrink-0 z-20 shadow-2xl shadow-black/5">
+      <div className="w-[420px] max-w-full h-full flex flex-col border-r bg-sidebar/80 backdrop-blur-xl shrink-0 z-20 shadow-2xl overflow-hidden">
         {/* Sidebar Header: Title & Navigation */}
-        <div className="px-6 py-5 border-b bg-white/50 backdrop-blur-sm shrink-0">
+        <div className="px-6 py-5 border-b bg-sidebar/50 backdrop-blur-sm shrink-0">
           <div className="flex items-center gap-3 mb-2">
             <Button variant="ghost" size="icon" nativeButton={false} className="-ml-2 hover:bg-black/5 rounded-full" render={<Link href="/admin" />}>
               <span className="sr-only">Back</span>&larr;
             </Button>
             <div>
-              <h1 className="text-xl font-bold tracking-tight text-gray-900">Theme Designer</h1>
+              <h1 className="text-xl font-bold tracking-tight text-foreground">Theme Designer</h1>
             </div>
           </div>
           <p className="text-xs text-muted-foreground ml-9">Customize the look and feel of your agent.</p>
@@ -298,7 +348,7 @@ export default function ThemingPage({ params }: { params: Promise<{ widgetId: st
             </TabsList>
           </div>
 
-          <ScrollArea className="flex-1">
+          <ScrollArea className="flex-1 min-h-0">
             <div className="p-6 space-y-8 pb-24">
               {/* PRESETS TAB */}
               <TabsContent value="presets" className="mt-0 space-y-6">
@@ -342,15 +392,52 @@ export default function ThemingPage({ params }: { params: Promise<{ widgetId: st
                   <div className="grid gap-4">
                     <div className="space-y-2">
                       <Label>Logo</Label>
-                      <Input type="file" className="text-xs" accept="image/*" onChange={handleLogoUpload} />
+                      <label
+                        className="flex h-10 w-full items-center rounded-lg border border-input bg-card text-sm shadow-sm cursor-pointer overflow-hidden group transition-all hover:border-primary/30"
+                      >
+                        <span className="bg-[#001f2d] text-white h-full px-5 flex items-center font-semibold text-xs tracking-wide transition-colors group-hover:bg-[#00111a]">
+                          Browse
+                        </span>
+                        <span className="px-4 text-muted-foreground text-xs truncate">
+                          {selectedFileName || "Choose file"}
+                        </span>
+                        <input
+                          type="file"
+                          className="hidden"
+                          accept="image/*"
+                          onChange={handleLogoUpload}
+                        />
+                      </label>
                     </div>
                     <div className="space-y-2">
                       <Label>Header Title</Label>
-                      <Input value={theme.headerTitle} onChange={(e) => updateTheme({ headerTitle: e.target.value })} />
+                      <div className="flex gap-2 items-center">
+                        <Input
+                          value={theme.headerTitle}
+                          onChange={(e) => updateTheme({ headerTitle: e.target.value })}
+                          className="flex-1"
+                        />
+                        <TinyColorPicker
+                          value={theme.headerTitleColor || '#000000'}
+                          onChange={(val) => updateTheme({ headerTitleColor: val })}
+                          onReset={() => updateTheme({ headerTitleColor: undefined })}
+                        />
+                      </div>
                     </div>
                     <div className="space-y-2">
                       <Label>Subtext</Label>
-                      <Input value={theme.headerSubtext} onChange={(e) => updateTheme({ headerSubtext: e.target.value })} />
+                      <div className="flex gap-2 items-center">
+                        <Input
+                          value={theme.headerSubtext}
+                          onChange={(e) => updateTheme({ headerSubtext: e.target.value })}
+                          className="flex-1"
+                        />
+                        <TinyColorPicker
+                          value={theme.headerSubtextColor || '#6b7280'}
+                          onChange={(val) => updateTheme({ headerSubtextColor: val })}
+                          onReset={() => updateTheme({ headerSubtextColor: undefined })}
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -364,10 +451,30 @@ export default function ThemingPage({ params }: { params: Promise<{ widgetId: st
                   </h3>
 
                   <div className="grid grid-cols-2 gap-4">
-                    <ColorPicker label="Primary" value={theme.primaryColor} onChange={handleColorChange('primaryColor')} />
-                    <ColorPicker label="Secondary" value={theme.secondaryColor} onChange={handleColorChange('secondaryColor')} />
-                    <ColorPicker label="Accent" value={theme.accentColor} onChange={handleColorChange('accentColor')} />
-                    <ColorPicker label="Border" value={theme.borderColor} onChange={handleColorChange('borderColor')} />
+                    <ColorPicker
+                      label="Primary"
+                      value={theme.primaryColor}
+                      onChange={handleColorChange('primaryColor')}
+                      onReset={() => handleColorChange('primaryColor')(defaultTheme.primaryColor)}
+                    />
+                    <ColorPicker
+                      label="Secondary"
+                      value={theme.secondaryColor}
+                      onChange={handleColorChange('secondaryColor')}
+                      onReset={() => handleColorChange('secondaryColor')(defaultTheme.secondaryColor)}
+                    />
+                    <ColorPicker
+                      label="Accent"
+                      value={theme.accentColor}
+                      onChange={handleColorChange('accentColor')}
+                      onReset={() => handleColorChange('accentColor')(defaultTheme.accentColor)}
+                    />
+                    <ColorPicker
+                      label="Border"
+                      value={theme.borderColor}
+                      onChange={handleColorChange('borderColor')}
+                      onReset={() => handleColorChange('borderColor')(defaultTheme.borderColor)}
+                    />
                   </div>
 
                   <div className="pt-2">
@@ -491,8 +598,8 @@ export default function ThemingPage({ params }: { params: Promise<{ widgetId: st
         </Tabs>
 
         {/* Sidebar Footer: Actions */}
-        <div className="p-4 border-t bg-white/50 backdrop-blur-md flex items-center gap-2 shrink-0">
-          <Button variant="outline" className="flex-1" onClick={() => setTheme(defaultTheme)} disabled={isSaving}>
+        <div className="p-4 border-t bg-sidebar/50 backdrop-blur-md flex items-center gap-2 shrink-0">
+          <Button variant="outline" className="flex-1" onClick={() => { setTheme(defaultTheme); setSelectedFileName(null); }} disabled={isSaving}>
             <RotateCcw className="mr-2 h-4 w-4" />
             Reset
           </Button>
@@ -504,7 +611,7 @@ export default function ThemingPage({ params }: { params: Promise<{ widgetId: st
       </div>
 
       {/* Right Panel: Preview */}
-      <div className="flex-1 bg-gray-50/50 flex flex-col min-w-0">
+      <div className="flex-1 bg-muted/30 flex flex-col min-w-0">
         <div className="flex-1 overflow-hidden relative">
           <Preview theme={theme} configId={widgetId} />
         </div>

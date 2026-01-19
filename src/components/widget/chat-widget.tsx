@@ -226,8 +226,12 @@ export function ChatWidgetComponent({
             />
           )}
           <div>
-            <h3 className="font-bold text-lg leading-tight">{theme.headerTitle}</h3>
-            {theme.headerSubtext && <p className="text-sm text-muted-foreground">{theme.headerSubtext}</p>}
+            <h3 className="font-bold text-lg leading-tight" style={{ color: theme.headerTitleColor }}>{theme.headerTitle}</h3>
+            {theme.headerSubtext && (
+              <p className="text-sm text-muted-foreground" style={{ color: theme.headerSubtextColor }}>
+                {theme.headerSubtext}
+              </p>
+            )}
           </div>
         </CardHeader>
         <CardContent className="flex-grow overflow-y-auto p-4 space-y-4" style={messageStyle}>

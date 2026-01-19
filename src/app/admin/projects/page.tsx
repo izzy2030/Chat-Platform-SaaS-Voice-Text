@@ -78,7 +78,7 @@ export default function ProjectsPage() {
 
   useEffect(() => {
     fetchProjects();
-  }, [user]);
+  }, [user?.id]);
 
   const form = useForm<ProjectFormData>({
     resolver: zodResolver(projectSchema),

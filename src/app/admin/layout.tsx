@@ -54,8 +54,8 @@ export default function AdminLayout({
   return (
     <SidebarProvider>
       <AdminSidebar user={user} handleSignOut={handleSignOut} setTheme={setTheme} theme={theme} />
-      <SidebarInset>
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">
+      <SidebarInset className="h-screen overflow-hidden">
+        <div className="flex flex-col h-full p-4 pt-0 overflow-y-auto">
           {children}
         </div>
       </SidebarInset>
@@ -176,9 +176,9 @@ function AdminSidebar({ user, handleSignOut, setTheme, theme }: { user: any, han
                 </div>
                 <Settings className="ml-auto size-4" />
               </DropdownMenuTrigger>
-              <DropdownMenuPositioner side="bottom" align="end" sideOffset={4}>
+              <DropdownMenuPositioner side="top" align="start" sideOffset={4}>
                 <DropdownMenuContent
-                  className="w-[--available-width] min-w-56 rounded-lg"
+                  className="w-56 rounded-lg"
                 >
                   <DropdownMenuItem
                     onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
