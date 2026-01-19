@@ -56,8 +56,8 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ projec
       <div className="text-center">
         <h2 className="text-xl font-semibold">Project not found</h2>
         <p className="text-muted-foreground">The project you are looking for does not exist.</p>
-        <Button asChild variant="link" className="mt-4">
-          <Link href="/admin/projects">Go back to Projects</Link>
+        <Button variant="link" className="mt-4" nativeButton={false} render={<Link href="/admin/projects" />}>
+          Go back to Projects
         </Button>
       </div>
     );

@@ -121,12 +121,14 @@ export default function ProjectsPage() {
           </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-          <DialogTrigger asChild>
-            <Button className="rounded-full bg-indigo-600 hover:bg-indigo-700 text-white">
-              <Plus className="mr-2 h-4 w-4" />
-              New Project
-            </Button>
-          </DialogTrigger>
+          <DialogTrigger
+            render={
+              <Button className="rounded-full bg-indigo-600 hover:bg-indigo-700 text-white">
+                <Plus className="mr-2 h-4 w-4" />
+                New Project
+              </Button>
+            }
+          />
           <DialogContent className="sm:max-w-[425px] rounded-2xl">
             <DialogHeader>
               <DialogTitle>Create Project</DialogTitle>

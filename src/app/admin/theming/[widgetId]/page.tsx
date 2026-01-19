@@ -200,8 +200,9 @@ export default function ThemingPage({ params }: { params: Promise<{ widgetId: st
     updateTheme({ [key]: value });
   };
 
-  const handleSliderChange = (key: keyof WidgetTheme) => (value: number[]) => {
-    updateTheme({ [key]: value[0] });
+  const handleSliderChange = (key: keyof WidgetTheme) => (value: number | readonly number[]) => {
+    const val = Array.isArray(value) ? value[0] : value;
+    updateTheme({ [key]: val });
   };
 
   const saveTheme = async () => {
@@ -276,8 +277,8 @@ export default function ThemingPage({ params }: { params: Promise<{ widgetId: st
         {/* Sidebar Header: Title & Navigation */}
         <div className="px-6 py-5 border-b bg-white/50 backdrop-blur-sm shrink-0">
           <div className="flex items-center gap-3 mb-2">
-            <Button variant="ghost" size="icon" className="-ml-2 hover:bg-black/5 rounded-full" asChild>
-              <Link href="/admin"><span className="sr-only">Back</span>&larr;</Link>
+            <Button variant="ghost" size="icon" nativeButton={false} className="-ml-2 hover:bg-black/5 rounded-full" render={<Link href="/admin" />}>
+              <span className="sr-only">Back</span>&larr;
             </Button>
             <div>
               <h1 className="text-xl font-bold tracking-tight text-gray-900">Theme Designer</h1>

@@ -1,4 +1,3 @@
-
 'use client';
 
 import { supabase } from '@/lib/supabase';
@@ -10,12 +9,14 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuPositioner,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '../ui/button';
 import { useRouter } from 'next/navigation';
 import { WidgetList } from './widget-list';
 import Link from 'next/link';
+import { getInitials } from '@/lib/utils';
 
 export function Dashboard() {
   const { user } = useUser();
@@ -24,10 +25,6 @@ export function Dashboard() {
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     router.push('/login');
-  };
-
-  const getInitials = (email?: string | null) => {
-    return email ? email.substring(0, 2).toUpperCase() : 'U';
   };
 
   return (
@@ -50,35 +47,39 @@ export function Dashboard() {
         </nav>
         <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
           <div className="ml-auto flex-1 sm:flex-initial">
-            <Button asChild className="rounded-full bg-indigo-600 hover:bg-indigo-700 text-white">
-              <Link href="/admin/widget/create">Create Widget</Link>
+            <Button className="rounded-full bg-indigo-600 hover:bg-indigo-700 text-white" nativeButton={false} render={<Link href="/admin/widget/create" />}>
+              Create Widget
             </Button>
           </div>
           <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="secondary" size="icon" className="rounded-full">
-                <Avatar>
-                  <AvatarImage
-                    src={user?.user_metadata?.avatar_url || undefined}
-                    alt={user?.user_metadata?.full_name || 'user avatar'}
-                  />
-                  <AvatarFallback>
-                    {getInitials(user?.email)}
-                  </AvatarFallback>
-                </Avatar>
-                <span className="sr-only">Toggle user menu</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuLabel>My Account</DropdownMenuLabel>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem asChild>
-                <Link href="/admin/profile">Profile</Link>
-              </DropdownMenuItem>
-              <DropdownMenuItem>Support</DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleSignOut}>Logout</DropdownMenuItem>
-            </DropdownMenuContent>
+            <DropdownMenuTrigger
+              render={
+                <Button variant="secondary" size="icon" className="rounded-full">
+                  <Avatar>
+                    <AvatarImage
+                      src={user?.user_metadata?.avatar_url || undefined}
+                      alt={user?.user_metadata?.full_name || 'user avatar'}
+                    />
+                    <AvatarFallback>
+                      {getInitials(user?.email)}
+                    </AvatarFallback>
+                  </Avatar>
+                  <span className="sr-only">Toggle user menu</span>
+                </Button>
+              }
+            />
+            <DropdownMenuPositioner align="end">
+              <DropdownMenuContent>
+                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem render={<Link href="/admin/profile" />}>
+                  Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem>Support</DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleSignOut}>Logout</DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenuPositioner>
           </DropdownMenu>
         </div>
       </header>

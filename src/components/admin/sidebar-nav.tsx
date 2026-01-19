@@ -34,8 +34,10 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuPositioner,
 } from '@/components/ui/dropdown-menu';
 import { Separator } from '@/components/ui/separator';
+import { getInitials } from '@/lib/utils';
 
 export function SidebarNav() {
   const pathname = usePathname();
@@ -46,10 +48,6 @@ export function SidebarNav() {
   const handleSignOut = async () => {
     await supabase.auth.signOut();
     router.push('/login');
-  };
-
-  const getInitials = (email?: string | null) => {
-    return email ? email.substring(0, 2).toUpperCase() : 'U';
   };
 
   return (
@@ -69,44 +67,38 @@ export function SidebarNav() {
         <SidebarGroup>
           <SidebarGroupLabel className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Platform</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="gap-2">
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  asChild
+                  render={<Link href="/admin" />}
                   tooltip="Dashboard"
                   isActive={pathname === '/admin'}
                   className="h-10 transition-all duration-200"
                 >
-                  <Link href="/admin">
-                    <LayoutDashboard size={18} />
-                    <span className="font-medium">Dashboard</span>
-                  </Link>
+                  <LayoutDashboard size={18} />
+                  <span className="font-medium">Dashboard</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  asChild
+                  render={<Link href="/admin/projects" />}
                   tooltip="Projects"
                   isActive={pathname === '/admin/projects'}
                   className="h-10 transition-all duration-200"
                 >
-                  <Link href="/admin/projects">
-                    <Folder size={18} />
-                    <span className="font-medium">Projects</span>
-                  </Link>
+                  <Folder size={18} />
+                  <span className="font-medium">Projects</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  asChild
+                  render={<Link href="/admin/widget/create" />}
                   tooltip="Create Agent"
                   isActive={pathname === '/admin/widget/create'}
                   className="h-10 transition-all duration-200"
                 >
-                  <Link href="/admin/widget/create">
-                    <PlusCircle size={18} />
-                    <span className="font-medium">Create Agent</span>
-                  </Link>
+                  <PlusCircle size={18} />
+                  <span className="font-medium">Create Agent</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -116,18 +108,16 @@ export function SidebarNav() {
         <SidebarGroup>
           <SidebarGroupLabel className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Settings</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu>
+            <SidebarMenu className="gap-2">
               <SidebarMenuItem>
                 <SidebarMenuButton
-                  asChild
+                  render={<Link href="/admin/profile" />}
                   tooltip="Profile"
                   isActive={pathname === '/admin/profile'}
                   className="h-10 transition-all duration-200"
                 >
-                  <Link href="/admin/profile">
-                    <User size={18} />
-                    <span className="font-medium">Profile</span>
-                  </Link>
+                  <User size={18} />
+                  <span className="font-medium">Profile</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
             </SidebarMenu>
@@ -153,42 +143,43 @@ export function SidebarNav() {
         <SidebarMenu>
           <SidebarMenuItem>
             <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <SidebarMenuButton
-                  size="lg"
-                  className="data-[state=open]:bg-white/5 hover:bg-white/5 transition-colors rounded-xl"
-                >
-                  <Avatar className="h-9 w-9 rounded-lg border border-white/10">
-                    <AvatarImage
-                      src={user?.user_metadata?.avatar_url || ''}
-                      alt={user?.user_metadata?.full_name || ''}
-                    />
-                    <AvatarFallback className="rounded-lg bg-primary/20 text-primary font-bold">
-                      {getInitials(user?.email)}
-                    </AvatarFallback>
-                  </Avatar>
-                  <div className="grid flex-1 text-left text-sm leading-tight ml-2">
-                    <span className="truncate font-bold">
-                      {user?.user_metadata?.full_name || 'Operator'}
-                    </span>
-                    <span className="truncate text-[10px] text-gray-500 uppercase tracking-tighter">
-                      {user?.email || ''}
-                    </span>
-                  </div>
-                  <Settings className="ml-auto size-4 text-gray-400" />
-                </SidebarMenuButton>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent
-                className="w-[--radix-dropdown-menu-trigger-width] min-w-56 glass border-white/10 p-2"
-                side="top"
-                align="start"
-                sideOffset={12}
+              <DropdownMenuTrigger
+                render={
+                  <SidebarMenuButton
+                    size="lg"
+                    className="data-[state=open]:bg-white/5 hover:bg-white/5 transition-colors rounded-xl"
+                  />
+                }
               >
-                <DropdownMenuItem onClick={handleSignOut} className="rounded-lg text-red-400 focus:text-red-400 focus:bg-red-400/10 cursor-pointer">
-                  <LogOut className="mr-2 h-4 w-4" />
-                  Terminate Session
-                </DropdownMenuItem>
-              </DropdownMenuContent>
+                <Avatar className="h-9 w-9 rounded-lg border border-white/10">
+                  <AvatarImage
+                    src={user?.user_metadata?.avatar_url || ''}
+                    alt={user?.user_metadata?.full_name || ''}
+                  />
+                  <AvatarFallback className="rounded-lg bg-primary/20 text-primary font-bold">
+                    {getInitials(user?.email)}
+                  </AvatarFallback>
+                </Avatar>
+                <div className="grid flex-1 text-left text-sm leading-tight ml-2">
+                  <span className="truncate font-bold">
+                    {user?.user_metadata?.full_name || 'Operator'}
+                  </span>
+                  <span className="truncate text-[10px] text-gray-500 uppercase tracking-tighter">
+                    {user?.email || ''}
+                  </span>
+                </div>
+                <Settings className="ml-auto size-4 text-gray-400" />
+              </DropdownMenuTrigger>
+              <DropdownMenuPositioner side="top" align="start" sideOffset={12}>
+                <DropdownMenuContent
+                  className="w-[--available-width] min-w-56 glass border-white/10 p-2"
+                >
+                  <DropdownMenuItem onClick={handleSignOut} className="rounded-lg text-red-400 focus:text-red-400 focus:bg-red-400/10 cursor-pointer">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Terminate Session
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenuPositioner>
             </DropdownMenu>
           </SidebarMenuItem>
         </SidebarMenu>

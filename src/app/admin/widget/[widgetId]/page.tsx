@@ -336,8 +336,8 @@ export default function EditWidgetPage({
       {/* Header */}
       <div className="h-16 border-b bg-white/50 backdrop-blur-md px-6 flex items-center justify-between shrink-0 z-20">
         <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" asChild>
-            <Link href="/admin"><span className="sr-only">Back</span>&larr;</Link>
+          <Button variant="ghost" size="icon" nativeButton={false} render={<Link href="/admin" />}>
+            <span className="sr-only">Back</span>&larr;
           </Button>
           <div>
             <h1 className="text-lg font-bold tracking-tight">Widget Studio</h1>

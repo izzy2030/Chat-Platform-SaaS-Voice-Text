@@ -35,13 +35,7 @@ import {
 } from '@/components/ui/select';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
-import {
-  Box,
-  Flex,
-  Heading,
-  Text,
-  Grid
-} from '@radix-ui/themes';
+import { cn } from '@/lib/utils';
 
 const widgetSchema = z.object({
   name: z.string().min(1, 'Widget Name is required'),
@@ -168,27 +162,25 @@ export default function CreateWidgetPage() {
   };
 
   return (
-    <Box className="w-full max-w-5xl mx-auto px-4 py-8">
-      <Button asChild variant="ghost" className="mb-8 glass-button-ghost">
-        <Link href="/admin">
-          &larr; Operations Console
-        </Link>
+    <div className="w-full max-w-5xl mx-auto px-4 py-8">
+      <Button variant="ghost" nativeButton={false} className="mb-8 glass-button-ghost" render={<Link href="/admin" />}>
+        &larr; Operations Console
       </Button>
 
-      <Box className="glass-card-premium">
-        <Box mb="8">
-          <Heading size="8" className="font-display font-bold text-premium text-vibrant mb-2">Deploy New Node</Heading>
-          <Text size="3" className="text-premium/40">Configure the parameters for your autonomous communication node.</Text>
-        </Box>
+      <div className="glass-card-premium p-8 rounded-[2.5rem] bg-black/20 border border-white/5 backdrop-blur-xl">
+        <div className="mb-8">
+          <h1 className="text-4xl font-display font-bold text-premium text-vibrant mb-2 tracking-tight">Deploy New Node</h1>
+          <p className="text-lg text-premium/40">Configure the parameters for your autonomous communication node.</p>
+        </div>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-12">
-            <Grid columns={{ initial: '1', md: '2' }} gap="8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               {/* Identity Section */}
-              <Flex direction="column" gap="6">
-                <Box>
-                  <Heading size="3" className="glass-label mb-4 border-b pb-2 glass-separator">System Identity</Heading>
-                  <Flex direction="column" gap="6">
+              <div className="flex flex-col gap-6">
+                <div>
+                  <h3 className="text-sm font-bold uppercase tracking-widest text-premium/50 mb-4 border-b border-white/5 pb-2">System Identity</h3>
+                  <div className="flex flex-col gap-6">
                     <FormField
                       control={form.control}
                       name="projectId"
@@ -244,38 +236,38 @@ export default function CreateWidgetPage() {
                               defaultValue={field.value}
                               className="grid grid-cols-2 gap-4"
                             >
-                              <Box>
+                              <div className="relative">
                                 <RadioGroupItem value="text" id="text" className="peer sr-only" />
                                 <Label
                                   htmlFor="text"
                                   className="flex flex-col items-center justify-center rounded-2xl border border-primary/5 bg-primary/5 p-6 hover:bg-primary/10 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10 cursor-pointer transition-all duration-300"
                                 >
                                   <MessageSquare className="mb-2 h-6 w-6 text-primary" />
-                                  <Text size="2" weight="bold" className="text-premium">Text Stream</Text>
+                                  <span className="text-sm font-bold text-premium">Text Stream</span>
                                 </Label>
-                              </Box>
-                              <Box>
+                              </div>
+                              <div className="relative">
                                 <RadioGroupItem value="voice" id="voice" className="peer sr-only" />
                                 <Label
                                   htmlFor="voice"
                                   className="flex flex-col items-center justify-center rounded-2xl border border-primary/5 bg-primary/5 p-6 hover:bg-primary/10 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10 cursor-pointer transition-all duration-300"
                                 >
                                   <Mic className="mb-2 h-6 w-6 text-accent" />
-                                  <Text size="2" weight="bold" className="text-premium">Voice Matrix</Text>
+                                  <span className="text-sm font-bold text-premium">Voice Matrix</span>
                                 </Label>
-                              </Box>
+                              </div>
                             </RadioGroup>
                           </FormControl>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
-                  </Flex>
-                </Box>
+                  </div>
+                </div>
 
-                <Box>
-                  <Heading size="3" className="glass-label mb-4 border-b pb-2 glass-separator">Security & Routing</Heading>
-                  <Flex direction="column" gap="5">
+                <div>
+                  <h3 className="text-sm font-bold uppercase tracking-widest text-premium/50 mb-4 border-b border-white/5 pb-2">Security & Routing</h3>
+                  <div className="flex flex-col gap-5">
                     <FormField
                       control={form.control}
                       name="webhookUrl"
@@ -303,118 +295,118 @@ export default function CreateWidgetPage() {
                         </FormItem>
                       )}
                     />
-                  </Flex>
-                </Box>
-              </Flex>
+                  </div>
+                </div>
 
-              {/* Branding Section */}
-              <Flex direction="column" gap="6">
-                <Box>
-                  <Heading size="3" className="glass-label mb-4 border-b pb-2 glass-separator">Visual Core</Heading>
-                  <Flex direction="column" gap="5">
-                    <Grid columns="2" gap="4">
+                {/* Branding Section */}
+                <div className="flex flex-col gap-6">
+                  <div>
+                    <h3 className="text-sm font-bold uppercase tracking-widest text-premium/50 mb-4 border-b border-white/5 pb-2">Visual Core</h3>
+                    <div className="flex flex-col gap-5">
+                      <div className="grid grid-cols-2 gap-4">
+                        <FormField
+                          control={form.control}
+                          name="bubbleColor"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="glass-label">Interface Accent</FormLabel>
+                              <FormControl>
+                                <div className="flex items-center gap-3 glass-input h-12 px-4 rounded-xl">
+                                  <Input type="color" {...field} className="w-8 h-8 rounded-lg bg-transparent border-none cursor-pointer p-0" />
+                                  <span className="text-xs text-premium/60 font-mono uppercase">{field.value}</span>
+                                </div>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={form.control}
+                          name="panelColor"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel className="glass-label">Base Surface</FormLabel>
+                              <FormControl>
+                                <div className="flex items-center gap-3 glass-input h-12 px-4 rounded-xl">
+                                  <Input type="color" {...field} className="w-8 h-8 rounded-lg bg-transparent border-none cursor-pointer p-0" />
+                                  <span className="text-xs text-premium/60 font-mono uppercase">{field.value}</span>
+                                </div>
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+
                       <FormField
                         control={form.control}
-                        name="bubbleColor"
+                        name="headerTitle"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="glass-label">Interface Accent</FormLabel>
+                            <FormLabel className="glass-label">Display Heading</FormLabel>
                             <FormControl>
-                              <Flex align="center" gap="3" className="glass-input">
-                                <Input type="color" {...field} className="w-8 h-8 rounded-lg bg-transparent border-none cursor-pointer" />
-                                <Text size="1" className="text-premium/60 font-mono uppercase">{field.value}</Text>
-                              </Flex>
+                              <Input placeholder="Autonomous Interface" {...field} className="glass-input" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
+
                       <FormField
                         control={form.control}
-                        name="panelColor"
+                        name="welcomeMessage"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="glass-label">Base Surface</FormLabel>
+                            <FormLabel className="glass-label">Initialization Message</FormLabel>
                             <FormControl>
-                              <Flex align="center" gap="3" className="glass-input">
-                                <Input type="color" {...field} className="w-8 h-8 rounded-lg bg-transparent border-none cursor-pointer" />
-                                <Text size="1" className="text-premium/60 font-mono uppercase">{field.value}</Text>
-                              </Flex>
+                              <Textarea placeholder="System ready for interaction..." {...field} className="glass-input min-h-[120px] py-4 resize-none" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
                         )}
                       />
-                    </Grid>
+                    </div>
+                  </div>
 
+                  <div>
+                    <h3 className="text-sm font-bold uppercase tracking-widest text-premium/50 mb-4 border-b border-white/5 pb-2">Localization</h3>
                     <FormField
                       control={form.control}
-                      name="headerTitle"
+                      name="defaultLanguage"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="glass-label">Display Heading</FormLabel>
-                          <FormControl>
-                            <Input placeholder="Autonomous Interface" {...field} className="glass-input" />
-                          </FormControl>
+                          <FormLabel className="glass-label">Core Language</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="glass-input h-12 w-full">
+                                <SelectValue placeholder="Select Base Matrix Language" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent className="glass border-primary/10 rounded-xl">
+                              <SelectItem value="EN" className="hover:bg-primary/20 focus:bg-primary/20 rounded-lg">English (EN)</SelectItem>
+                              <SelectItem value="ES" className="hover:bg-primary/20 focus:bg-primary/20 rounded-lg">Spanish (ES)</SelectItem>
+                            </SelectContent>
+                          </Select>
                           <FormMessage />
                         </FormItem>
                       )}
                     />
+                  </div>
+                </div>
+              </div>
+            </div>
 
-                    <FormField
-                      control={form.control}
-                      name="welcomeMessage"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="glass-label">Initialization Message</FormLabel>
-                          <FormControl>
-                            <Textarea placeholder="System ready for interaction..." {...field} className="glass-input min-h-[120px] py-4 resize-none" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                  </Flex>
-                </Box>
-
-                <Box>
-                  <Heading size="3" className="glass-label mb-4 border-b pb-2 glass-separator">Localization</Heading>
-                  <FormField
-                    control={form.control}
-                    name="defaultLanguage"
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel className="glass-label">Core Language</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger className="glass-input h-12 w-full">
-                              <SelectValue placeholder="Select Base Matrix Language" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent className="glass border-primary/10 rounded-xl">
-                            <SelectItem value="EN" className="hover:bg-primary/20 focus:bg-primary/20 rounded-lg">English (EN)</SelectItem>
-                            <SelectItem value="ES" className="hover:bg-primary/20 focus:bg-primary/20 rounded-lg">Spanish (ES)</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </Box>
-              </Flex>
-            </Grid>
-
-            <Flex justify="end" gap="4" pt="8" className="border-t glass-separator">
+            <div className="flex justify-end gap-4 pt-8 border-t border-white/5">
               <Button type="button" variant="ghost" onClick={() => router.push('/admin')} className="glass-button-ghost px-8 h-12 font-bold uppercase tracking-widest text-[11px]">
                 Abort Mission
               </Button>
               <Button type="submit" disabled={isLoading} className="bg-primary hover:bg-primary/90 text-white px-10 h-12 rounded-2xl font-bold uppercase tracking-widest text-[11px] shadow-2xl shadow-primary/30 transition-all hover:scale-105 active:scale-95">
                 {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Initialize Node'}
               </Button>
-            </Flex>
+            </div>
           </form>
         </Form>
-      </Box>
-    </Box>
+      </div>
+    </div>
   );
 }

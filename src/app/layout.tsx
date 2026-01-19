@@ -1,10 +1,8 @@
 import type { Metadata } from 'next';
 import { Inter, Outfit } from 'next/font/google';
 import './globals.css';
-import '@radix-ui/themes/styles.css';
 import { SupabaseProvider } from '@/supabase/provider';
-import { Toaster } from '@/components/ui/toaster';
-import { Theme } from '@radix-ui/themes';
+import { Toaster } from '@/components/ui/sonner';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const outfit = Outfit({ subsets: ['latin'], variable: '--font-outfit' });

@@ -12,7 +12,16 @@ import { supabase } from '@/lib/supabase';
 import { useUser } from '@/supabase';
 import { useRouter } from 'next/navigation';
 import { Loader2, Zap } from 'lucide-react';
-import { Card, Text, TextField, Box, Flex, Heading, Link, Separator } from '@radix-ui/themes';
+import {
+  Card,
+  CardHeader,
+  CardFooter,
+  CardTitle,
+  CardDescription,
+  CardContent
+} from '@/components/ui/card';
+import { Separator } from '@/components/ui/separator';
+import NextLink from 'next/link';
 
 const formSchema = z.object({
   email: z.string().email(),
@@ -100,109 +109,107 @@ export default function LoginPage() {
 
   if (isUserLoading || user) {
     return (
-      <Flex align="center" justify="center" style={{ height: '100vh', width: '100vw' }}>
+      <div className="flex items-center justify-center h-screen w-screen">
         <Loader2 className="animate-spin text-primary" size={32} />
-      </Flex>
+      </div>
     );
   }
 
   return (
-    <Box className="min-h-screen mesh-gradient flex items-center justify-center p-4">
-      <Card size="4" className="w-full max-w-[450px] glass-card-premium animate-float">
-        <Flex direction="column" gap="6">
-          <Flex direction="column" align="center" gap="2">
-            <Box style={{ width: '40px', height: '40px' }} className="bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-center mb-2 shadow-sm">
+    <div className="min-h-screen mesh-gradient flex items-center justify-center p-4">
+      <Card className="w-full max-w-[450px] glass-card-premium animate-float border-white/10">
+        <CardContent className="flex flex-col gap-6 pt-6">
+          <div className="flex flex-col items-center gap-2">
+            <div style={{ width: '40px', height: '40px' }} className="bg-primary/10 border border-primary/20 rounded-xl flex items-center justify-center mb-2 shadow-sm">
               <Zap className="text-primary fill-primary size-5" />
-            </Box>
-            <Heading size="8" align="center" className="font-display font-bold text-vibrant">
+            </div>
+            <h1 className="text-4xl font-display font-bold text-vibrant text-center">
               Antigravity
-            </Heading>
-            <Text size="3" className="text-premium/50" align="center">
+            </h1>
+            <p className="text-base text-premium/50 text-center">
               The next generation of AI communication.
-            </Text>
-          </Flex>
+            </p>
+          </div>
 
-          <Flex direction="column" gap="4">
-            <Heading size="5" weight="bold">
+          <div className="flex flex-col gap-4">
+            <h2 className="text-xl font-bold">
               {isSignUp ? 'Create your platform' : 'Welcome back'}
-            </Heading>
+            </h2>
 
             <form onSubmit={handleSubmit(onSubmit)}>
-              <Flex direction="column" gap="4">
-                <Box>
-                  <Text as="label" className="glass-label">Email address</Text>
-                  <TextField.Root
+              <div className="flex flex-col gap-4">
+                <div>
+                  <label className="text-sm font-medium glass-label block mb-1">Email address</label>
+                  <Input
                     placeholder="name@company.com"
-                    size="3"
+                    type="email"
                     {...register('email')}
                     disabled={isLoading}
                   />
                   {errors?.email && (
-                    <Text color="red" size="1" mt="1">{errors.email.message}</Text>
+                    <p className="text-red-500 text-xs mt-1">{errors.email.message}</p>
                   )}
-                </Box>
+                </div>
 
-                <Box>
-                  <Flex justify="between">
-                    <Text as="label" className="glass-label">Security Key</Text>
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <label className="text-sm font-medium glass-label">Security Key</label>
                     {!isSignUp && (
-                      <Link href="#" size="2" onClick={(e) => e.preventDefault()}>Forgot password?</Link>
+                      <NextLink href="#" onClick={(e) => e.preventDefault()} className="text-sm text-primary hover:underline">Forgot password?</NextLink>
                     )}
-                  </Flex>
-                  <TextField.Root
+                  </div>
+                  <Input
                     type="password"
                     placeholder="••••••••"
-                    size="3"
                     {...register('password')}
                     disabled={isLoading}
                   />
                   {errors?.password && (
-                    <Text color="red" size="1" mt="1">{errors.password.message}</Text>
+                    <p className="text-red-500 text-xs mt-1">{errors.password.message}</p>
                   )}
-                </Box>
+                </div>
 
-                <Button size="lg" className="h-12 text-md font-bold shadow-lg shadow-primary/20" disabled={isLoading}>
+                <Button size="lg" className="h-12 text-md font-bold shadow-lg shadow-primary/20 w-full" disabled={isLoading}>
                   {isLoading ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : null}
                   {isSignUp ? 'Initialize Platform' : 'Access Dashboard'}
                 </Button>
-              </Flex>
+              </div>
             </form>
 
-            <Flex align="center" gap="3" my="2">
-              <Separator size="4" className="glass-separator" />
-              <Text size="1" className="glass-label !mb-0 whitespace-nowrap">Or continue with</Text>
-              <Separator size="4" className="glass-separator" />
-            </Flex>
+            <div className="flex items-center gap-3 my-2">
+              <Separator className="flex-1 glass-separator" />
+              <span className="text-xs glass-label whitespace-nowrap">Or continue with</span>
+              <Separator className="flex-1 glass-separator" />
+            </div>
 
-            <Button variant="outline" size="lg" className="h-12 text-md font-semibold border-border/50 bg-transparent hover:bg-white/5" onClick={handleGoogleSignIn} disabled={isLoading}>
+            <Button variant="outline" size="lg" className="h-12 text-md font-semibold border-border/50 bg-transparent hover:bg-white/5 w-full" onClick={handleGoogleSignIn} disabled={isLoading}>
               <svg className="mr-2 h-5 w-5" viewBox="0 0 488 512">
                 <path fill="currentColor" d="M488 261.8C488 403.3 391.1 504 248 504 110.8 504 0 393.2 0 256S110.8 8 248 8c66.8 0 123 24.5 166.3 64.9l-67.5 64.9C258.5 52.6 94.3 116.6 94.3 256c0 86.5 69.1 156.6 153.7 156.6 98.2 0 135-70.4 140.8-106.9H248v-85.3h236.1c2.3 12.7 3.9 24.9 3.9 41.4z" />
               </svg>
               Google Cloud
             </Button>
-          </Flex>
+          </div>
 
-          <Flex direction="column" align="center" gap="2">
-            <Text size="2" className="text-premium/50">
+          <div className="flex flex-col items-center gap-2">
+            <p className="text-sm text-premium/50 text-center">
               {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
-              <Link
-                weight="bold"
-                href="#"
+              <button
+                type="button"
                 onClick={(e) => {
                   e.preventDefault();
                   setIsSignUp(!isSignUp);
                 }}
-                className="text-primary"
+                className="text-primary font-bold hover:underline"
               >
                 {isSignUp ? 'Sign in' : 'Create one now'}
-              </Link>
-            </Text>
-            <Text size="1" className="text-premium/30 max-w-[300px]" align="center">
-              By continuing, you agree to our <Link href="#" className="underline">Terms</Link> and <Link href="#" className="underline">Privacy Policy</Link>.
-            </Text>
-          </Flex>
-        </Flex>
+              </button>
+            </p>
+            <p className="text-[10px] text-premium/30 max-w-[300px] text-center">
+              By continuing, you agree to our <NextLink href="#" className="underline">Terms</NextLink> and <NextLink href="#" className="underline">Privacy Policy</NextLink>.
+            </p>
+          </div>
+        </CardContent>
       </Card>
-    </Box>
+    </div>
   );
 }
