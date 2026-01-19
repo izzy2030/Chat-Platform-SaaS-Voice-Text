@@ -320,300 +320,304 @@ export default function ThemingPage({ params }: { params: Promise<{ widgetId: st
   }
 
   return (
-    <div className="flex flex-1 min-h-0 bg-background overflow-hidden relative rounded-lg border shadow-sm">
-
-      {/* Left Panel: Controls */}
-      <div className="w-[420px] max-w-full h-full flex flex-col border-r bg-sidebar/80 backdrop-blur-xl shrink-0 z-20 shadow-2xl overflow-hidden">
-        {/* Sidebar Header: Title & Navigation */}
-        <div className="px-6 py-5 border-b bg-sidebar/50 backdrop-blur-sm shrink-0">
-          <div className="flex items-center gap-3 mb-2">
-            <Button variant="ghost" size="icon" nativeButton={false} className="-ml-2 hover:bg-black/5 rounded-full" render={<Link href="/admin" />}>
-              <span className="sr-only">Back</span>&larr;
-            </Button>
-            <div>
-              <h1 className="text-xl font-bold tracking-tight text-foreground">Theme Designer</h1>
-            </div>
-          </div>
-          <p className="text-xs text-muted-foreground ml-9">Customize the look and feel of your agent.</p>
-        </div>
-
-        {/* Tabs & Content */}
-        <Tabs defaultValue="visuals" className="flex flex-col flex-1 min-h-0 w-full">
-          <div className="px-2 py-2 border-b bg-muted/20">
-            <TabsList className="w-full grid grid-cols-4 p-1 h-9 bg-muted/50">
-              <TabsTrigger value="presets" className="text-[10px] sm:text-xs">Presets</TabsTrigger>
-              <TabsTrigger value="visuals" className="text-[10px] sm:text-xs">Visuals</TabsTrigger>
-              <TabsTrigger value="behavior" className="text-[10px] sm:text-xs">Content</TabsTrigger>
-              <TabsTrigger value="effects" className="text-[10px] sm:text-xs">Effects</TabsTrigger>
-            </TabsList>
-          </div>
-
-          <ScrollArea className="flex-1 min-h-0">
-            <div className="p-6 space-y-8 pb-24">
-              {/* PRESETS TAB */}
-              <TabsContent value="presets" className="mt-0 space-y-6">
-                <div className="space-y-4">
-                  <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                    <LayoutTemplate className="w-4 h-4" /> Ready-made Themes
-                  </h3>
-                  <div className="grid grid-cols-1 gap-3">
-                    <div
-                      onClick={() => setTheme(defaultTheme)}
-                      className="cursor-pointer group relative overflow-hidden rounded-lg border bg-gradient-to-br from-blue-50 to-indigo-50 p-4 hover:border-primary/50 transition-all hover:shadow-md"
-                    >
-                      <h4 className="font-bold text-primary">Standard Blue</h4>
-                      <p className="text-xs text-muted-foreground mt-1">Clean, professional default look.</p>
-                    </div>
-                    <div
-                      onClick={() => setTheme(darkTheme)}
-                      className="cursor-pointer group relative overflow-hidden rounded-lg border bg-gradient-to-br from-gray-900 to-slate-800 p-4 hover:border-primary/50 transition-all hover:shadow-md"
-                    >
-                      <h4 className="font-bold text-white">Dark Mode</h4>
-                      <p className="text-xs text-gray-400 mt-1">Sleek dark aesthetics for modern sites.</p>
-                    </div>
-                    <div
-                      onClick={() => setTheme(playfulTheme)}
-                      className="cursor-pointer group relative overflow-hidden rounded-lg border bg-gradient-to-br from-yellow-50 to-orange-50 p-4 hover:border-primary/50 transition-all hover:shadow-md"
-                    >
-                      <h4 className="font-bold text-orange-600">Playful & Fun</h4>
-                      <p className="text-xs text-muted-foreground mt-1">Bouncy animations and bright colors.</p>
-                    </div>
-                  </div>
-                </div>
-              </TabsContent>
-
-              {/* VISUALS TAB */}
-              <TabsContent value="visuals" className="mt-0 space-y-8">
-                {/* Branding Info */}
-                <div className="space-y-4">
-                  <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                    <Smartphone className="w-4 h-4" /> Branding
-                  </h3>
-                  <div className="grid gap-4">
-                    <div className="space-y-2">
-                      <Label>Logo</Label>
-                      <label
-                        className="flex h-10 w-full items-center rounded-lg border border-input bg-card text-sm shadow-sm cursor-pointer overflow-hidden group transition-all hover:border-primary/30"
-                      >
-                        <span className="bg-[#001f2d] text-white h-full px-5 flex items-center font-semibold text-xs tracking-wide transition-colors group-hover:bg-[#00111a]">
-                          Browse
-                        </span>
-                        <span className="px-4 text-muted-foreground text-xs truncate">
-                          {selectedFileName || "Choose file"}
-                        </span>
-                        <input
-                          type="file"
-                          className="hidden"
-                          accept="image/*"
-                          onChange={handleLogoUpload}
-                        />
-                      </label>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Header Title</Label>
-                      <div className="flex gap-2 items-center">
-                        <Input
-                          value={theme.headerTitle}
-                          onChange={(e) => updateTheme({ headerTitle: e.target.value })}
-                          className="flex-1"
-                        />
-                        <TinyColorPicker
-                          value={theme.headerTitleColor || '#000000'}
-                          onChange={(val) => updateTheme({ headerTitleColor: val })}
-                          onReset={() => updateTheme({ headerTitleColor: undefined })}
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Subtext</Label>
-                      <div className="flex gap-2 items-center">
-                        <Input
-                          value={theme.headerSubtext}
-                          onChange={(e) => updateTheme({ headerSubtext: e.target.value })}
-                          className="flex-1"
-                        />
-                        <TinyColorPicker
-                          value={theme.headerSubtextColor || '#6b7280'}
-                          onChange={(val) => updateTheme({ headerSubtextColor: val })}
-                          onReset={() => updateTheme({ headerSubtextColor: undefined })}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <Separator />
-
-                {/* Colors */}
-                <div className="space-y-4">
-                  <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                    <Palette className="w-4 h-4" /> Color Scheme
-                  </h3>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <ColorPicker
-                      label="Primary"
-                      value={theme.primaryColor}
-                      onChange={handleColorChange('primaryColor')}
-                      onReset={() => handleColorChange('primaryColor')(defaultTheme.primaryColor)}
-                    />
-                    <ColorPicker
-                      label="Secondary"
-                      value={theme.secondaryColor}
-                      onChange={handleColorChange('secondaryColor')}
-                      onReset={() => handleColorChange('secondaryColor')(defaultTheme.secondaryColor)}
-                    />
-                    <ColorPicker
-                      label="Accent"
-                      value={theme.accentColor}
-                      onChange={handleColorChange('accentColor')}
-                      onReset={() => handleColorChange('accentColor')(defaultTheme.accentColor)}
-                    />
-                    <ColorPicker
-                      label="Border"
-                      value={theme.borderColor}
-                      onChange={handleColorChange('borderColor')}
-                      onReset={() => handleColorChange('borderColor')(defaultTheme.borderColor)}
-                    />
-                  </div>
-
-                  <div className="pt-2">
-                    <Label className="mb-2 block">Theme Mode</Label>
-                    <Select value={theme.colorMode} onValueChange={handleValueChange('colorMode')}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="light">Light</SelectItem>
-                        <SelectItem value="dark">Dark</SelectItem>
-                        <SelectItem value="auto">Auto (System)</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                <Separator />
-
-                {/* Shape */}
-                <div className="space-y-4">
-                  <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Shape & Form</h3>
-                  <div className="space-y-4">
-                    <div className="space-y-3">
-                      <div className="flex justify-between"><Label>Roundness</Label> <span className="text-xs text-muted-foreground">{theme.roundedCorners}px</span></div>
-                      <Slider value={[theme.roundedCorners]} onValueChange={handleSliderChange('roundedCorners')} min={0} max={32} step={1} />
-                    </div>
-                    <div className="space-y-3">
-                      <div className="flex justify-between"><Label>Shadow</Label> <span className="text-xs text-muted-foreground">{theme.shadowIntensity}%</span></div>
-                      <Slider value={[theme.shadowIntensity]} onValueChange={handleSliderChange('shadowIntensity')} min={0} max={100} step={5} />
-                    </div>
-                  </div>
-                </div>
-              </TabsContent>
-
-              {/* BEHAVIOR TAB */}
-              <TabsContent value="behavior" className="mt-0 space-y-8">
-                <div className="space-y-4">
-                  <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Widget Content</h3>
-                  <div className="space-y-3">
-                    <Label>Greeting Bubble Message</Label>
-                    <Textarea
-                      value={theme.bubbleMessage}
-                      onChange={(e) => updateTheme({ bubbleMessage: e.target.value })}
-                      placeholder="👋 Hi there!"
-                      className="resize-none h-20"
-                    />
-                  </div>
-                  <div className="space-y-3">
-                    <Label>Launcher Size</Label>
-                    <Select value={theme.bubbleSize} onValueChange={handleValueChange('bubbleSize')}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="small">Compact</SelectItem>
-                        <SelectItem value="normal">Standard</SelectItem>
-                        <SelectItem value="large">Large</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className="space-y-3">
-                    <Label>Position</Label>
-                    <Select value={theme.bubblePosition} onValueChange={handleValueChange('bubblePosition')}>
-                      <SelectTrigger><SelectValue /></SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="bottom-left">Bottom Left</SelectItem>
-                        <SelectItem value="bottom-right">Bottom Right</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </TabsContent>
-
-              {/* EFFECTS TAB */}
-              <TabsContent value="effects" className="mt-0 space-y-8">
-                <div className="space-y-4">
-                  <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                    <Zap className="w-4 h-4" /> Motion
-                  </h3>
-                  <div className="grid gap-4">
-                    <div className="flex items-center justify-between">
-                      <Label>Idle Pulse</Label>
-                      <Switch checked={theme.idlePulse} onCheckedChange={handleValueChange('idlePulse')} />
-                    </div>
-                    <div className="flex items-center justify-between">
-                      <Label>Hover Ripple</Label>
-                      <Switch checked={theme.hoverRipple} onCheckedChange={handleValueChange('hoverRipple')} />
-                    </div>
-                    <div className="space-y-2 pt-2">
-                      <Label>Animation Style</Label>
-                      <Select value={theme.openAnimation} onValueChange={handleValueChange('openAnimation')}>
-                        <SelectTrigger><SelectValue /></SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="scale-fade">Scale & Fade</SelectItem>
-                          <SelectItem value="particle-burst">Particle Burst</SelectItem>
-                          <SelectItem value="slide-up">Slide Up</SelectItem>
-                          <SelectItem value="flip-open">Flip</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                </div>
-
-                <Separator />
-
-                <div className="space-y-4">
-                  <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-                    <Volume2 className="w-4 h-4" /> Sound
-                  </h3>
-                  <div className="grid gap-4">
-                    <div className="flex items-center justify-between">
-                      <Label>UI Sounds</Label>
-                      <Switch checked={theme.soundEffects} onCheckedChange={handleValueChange('soundEffects')} />
-                    </div>
-                    <div className="space-y-3">
-                      <div className="flex justify-between"><Label>Volume</Label> <span className="text-xs text-muted-foreground">{theme.soundVolume}%</span></div>
-                      <Slider value={[theme.soundVolume]} onValueChange={handleSliderChange('soundVolume')} min={0} max={100} step={10} />
-                    </div>
-                  </div>
-                </div>
-              </TabsContent>
-            </div>
-          </ScrollArea>
-        </Tabs>
-
-        {/* Sidebar Footer: Actions */}
-        <div className="p-4 border-t bg-sidebar/50 backdrop-blur-md flex items-center gap-2 shrink-0">
-          <Button variant="outline" className="flex-1" onClick={() => { setTheme(defaultTheme); setSelectedFileName(null); }} disabled={isSaving}>
-            <RotateCcw className="mr-2 h-4 w-4" />
-            Reset
+    <div className="flex flex-col flex-1 min-h-0 bg-background overflow-hidden">
+      {/* Studio Header */}
+      <div className="h-16 border-b bg-card px-6 flex items-center justify-between shrink-0 z-20">
+        <div className="flex items-center gap-4">
+          <Button variant="ghost" size="icon" nativeButton={false} render={<Link href="/admin" />}>
+            <span className="sr-only">Back</span>&larr;
           </Button>
-          <Button className="flex-[2] shadow-lg shadow-black/5" onClick={saveTheme} disabled={isSaving}>
-            {isSaving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-            Save Changes
+          <div>
+            <h1 className="text-lg font-bold tracking-tight">Theming Lab</h1>
+            <div className="text-xs text-muted-foreground flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse"></span>
+              Visual Identity
+            </div>
+          </div>
+        </div>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={() => { setTheme(defaultTheme); setSelectedFileName(null); }} className="rounded-lg">
+            <RotateCcw className="w-4 h-4 mr-2" /> Reset Lab
+          </Button>
+          <Button onClick={saveTheme} disabled={isSaving} className="rounded-lg shadow-lg shadow-primary/20">
+            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Save className="w-4 h-4 mr-2" />} Save Changes
           </Button>
         </div>
       </div>
 
-      {/* Right Panel: Preview */}
-      <div className="flex-1 bg-muted/30 flex flex-col min-w-0">
-        <div className="flex-1 overflow-hidden relative">
-          <Preview theme={theme} configId={widgetId} />
+      {/* Workspace */}
+      <div className="flex-1 flex overflow-hidden">
+        {/* Left Sidebar - Controls */}
+        <div className="w-[400px] border-r bg-card flex flex-col shrink-0 z-10 shadow-lg relative">
+
+
+          {/* Tabs & Content */}
+          <Tabs defaultValue="visuals" className="flex flex-col flex-1 min-h-0 w-full">
+            <div className="px-2 py-2 border-b bg-muted/20">
+              <TabsList className="w-full grid grid-cols-4 p-1 h-9 bg-muted/50">
+                <TabsTrigger value="presets" className="text-[10px] sm:text-xs">Presets</TabsTrigger>
+                <TabsTrigger value="visuals" className="text-[10px] sm:text-xs">Visuals</TabsTrigger>
+                <TabsTrigger value="behavior" className="text-[10px] sm:text-xs">Content</TabsTrigger>
+                <TabsTrigger value="effects" className="text-[10px] sm:text-xs">Effects</TabsTrigger>
+              </TabsList>
+            </div>
+
+            <ScrollArea className="flex-1 min-h-0">
+              <div className="p-6 space-y-8 pb-24">
+                {/* PRESETS TAB */}
+                <TabsContent value="presets" className="mt-0 space-y-6">
+                  <div className="space-y-4">
+                    <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground/70 flex items-center gap-2">
+                      <LayoutTemplate className="w-4 h-4" /> Ready-made Themes
+                    </h3>
+                    <div className="grid grid-cols-1 gap-3">
+                      <div
+                        onClick={() => setTheme(defaultTheme)}
+                        className="cursor-pointer group relative overflow-hidden rounded-lg border bg-gradient-to-br from-blue-50 to-indigo-50 p-4 hover:border-primary/50 transition-all hover:shadow-md"
+                      >
+                        <h4 className="font-bold text-primary">Standard Blue</h4>
+                        <p className="text-xs text-muted-foreground mt-1">Clean, professional default look.</p>
+                      </div>
+                      <div
+                        onClick={() => setTheme(darkTheme)}
+                        className="cursor-pointer group relative overflow-hidden rounded-lg border bg-gradient-to-br from-gray-900 to-slate-800 p-4 hover:border-primary/50 transition-all hover:shadow-md"
+                      >
+                        <h4 className="font-bold text-white">Dark Mode</h4>
+                        <p className="text-xs text-gray-400 mt-1">Sleek dark aesthetics for modern sites.</p>
+                      </div>
+                      <div
+                        onClick={() => setTheme(playfulTheme)}
+                        className="cursor-pointer group relative overflow-hidden rounded-lg border bg-gradient-to-br from-yellow-50 to-orange-50 p-4 hover:border-primary/50 transition-all hover:shadow-md"
+                      >
+                        <h4 className="font-bold text-orange-600">Playful & Fun</h4>
+                        <p className="text-xs text-muted-foreground mt-1">Bouncy animations and bright colors.</p>
+                      </div>
+                    </div>
+                  </div>
+                </TabsContent>
+
+                {/* VISUALS TAB */}
+                <TabsContent value="visuals" className="mt-0 space-y-8">
+                  {/* Branding Info */}
+                  <div className="space-y-4">
+                    <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground/70 flex items-center gap-2">
+                      <Smartphone className="w-4 h-4" /> Branding
+                    </h3>
+                    <div className="grid gap-4">
+                      <div className="space-y-2">
+                        <Label>Logo</Label>
+                        <label
+                          className="flex h-10 w-full items-center rounded-lg border border-input bg-card text-sm shadow-sm cursor-pointer overflow-hidden group transition-all hover:border-primary/30"
+                        >
+                          <span className="bg-[#001f2d] text-white h-full px-5 flex items-center font-semibold text-xs tracking-wide transition-colors group-hover:bg-[#00111a]">
+                            Browse
+                          </span>
+                          <span className="px-4 text-muted-foreground text-xs truncate">
+                            {selectedFileName || "Choose file"}
+                          </span>
+                          <input
+                            type="file"
+                            className="hidden"
+                            accept="image/*"
+                            onChange={handleLogoUpload}
+                          />
+                        </label>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold text-foreground">Header Title</Label>
+                        <div className="flex gap-2 items-center">
+                          <Input
+                            value={theme.headerTitle}
+                            onChange={(e) => updateTheme({ headerTitle: e.target.value })}
+                            className="flex-1 h-10 rounded-xl border-border/60 bg-muted/20"
+                          />
+                          <TinyColorPicker
+                            value={theme.headerTitleColor || '#000000'}
+                            onChange={(val) => updateTheme({ headerTitleColor: val })}
+                            onReset={() => updateTheme({ headerTitleColor: undefined })}
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-2">
+                        <Label className="text-xs font-bold text-foreground">Subtext</Label>
+                        <div className="flex gap-2 items-center">
+                          <Input
+                            value={theme.headerSubtext}
+                            onChange={(e) => updateTheme({ headerSubtext: e.target.value })}
+                            className="flex-1 h-10 rounded-xl border-border/60 bg-muted/20"
+                          />
+                          <TinyColorPicker
+                            value={theme.headerSubtextColor || '#6b7280'}
+                            onChange={(val) => updateTheme({ headerSubtextColor: val })}
+                            onReset={() => updateTheme({ headerSubtextColor: undefined })}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* Colors */}
+                  <div className="space-y-4">
+                    <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground/70 flex items-center gap-2">
+                      <Palette className="w-4 h-4" /> Color Scheme
+                    </h3>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <ColorPicker
+                        label="Primary"
+                        value={theme.primaryColor}
+                        onChange={handleColorChange('primaryColor')}
+                        onReset={() => handleColorChange('primaryColor')(defaultTheme.primaryColor)}
+                      />
+                      <ColorPicker
+                        label="Secondary"
+                        value={theme.secondaryColor}
+                        onChange={handleColorChange('secondaryColor')}
+                        onReset={() => handleColorChange('secondaryColor')(defaultTheme.secondaryColor)}
+                      />
+                      <ColorPicker
+                        label="Accent"
+                        value={theme.accentColor}
+                        onChange={handleColorChange('accentColor')}
+                        onReset={() => handleColorChange('accentColor')(defaultTheme.accentColor)}
+                      />
+                      <ColorPicker
+                        label="Border"
+                        value={theme.borderColor}
+                        onChange={handleColorChange('borderColor')}
+                        onReset={() => handleColorChange('borderColor')(defaultTheme.borderColor)}
+                      />
+                    </div>
+
+                    <div className="pt-2">
+                      <Label className="mb-2 block">Theme Mode</Label>
+                      <Select value={theme.colorMode} onValueChange={handleValueChange('colorMode')}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="light">Light</SelectItem>
+                          <SelectItem value="dark">Dark</SelectItem>
+                          <SelectItem value="auto">Auto (System)</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  {/* Shape */}
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Shape & Form</h3>
+                    <div className="space-y-4">
+                      <div className="space-y-3">
+                        <div className="flex justify-between"><Label>Roundness</Label> <span className="text-xs text-muted-foreground">{theme.roundedCorners}px</span></div>
+                        <Slider value={[theme.roundedCorners]} onValueChange={handleSliderChange('roundedCorners')} min={0} max={32} step={1} />
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex justify-between"><Label>Shadow</Label> <span className="text-xs text-muted-foreground">{theme.shadowIntensity}%</span></div>
+                        <Slider value={[theme.shadowIntensity]} onValueChange={handleSliderChange('shadowIntensity')} min={0} max={100} step={5} />
+                      </div>
+                    </div>
+                  </div>
+                </TabsContent>
+
+                {/* BEHAVIOR TAB */}
+                <TabsContent value="behavior" className="mt-0 space-y-8">
+                  <div className="space-y-4">
+                    <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Widget Content</h3>
+                    <div className="space-y-3">
+                      <Label>Greeting Bubble Message</Label>
+                      <Textarea
+                        value={theme.bubbleMessage}
+                        onChange={(e) => updateTheme({ bubbleMessage: e.target.value })}
+                        placeholder="👋 Hi there!"
+                        className="resize-none h-20"
+                      />
+                    </div>
+                    <div className="space-y-3">
+                      <Label>Launcher Size</Label>
+                      <Select value={theme.bubbleSize} onValueChange={handleValueChange('bubbleSize')}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="small">Compact</SelectItem>
+                          <SelectItem value="normal">Standard</SelectItem>
+                          <SelectItem value="large">Large</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-3">
+                      <Label>Position</Label>
+                      <Select value={theme.bubblePosition} onValueChange={handleValueChange('bubblePosition')}>
+                        <SelectTrigger><SelectValue /></SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="bottom-left">Bottom Left</SelectItem>
+                          <SelectItem value="bottom-right">Bottom Right</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </TabsContent>
+
+                {/* EFFECTS TAB */}
+                <TabsContent value="effects" className="mt-0 space-y-8">
+                  <div className="space-y-4">
+                    <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground/70 flex items-center gap-2">
+                      <Zap className="w-4 h-4" /> Motion
+                    </h3>
+                    <div className="grid gap-4">
+                      <div className="flex items-center justify-between">
+                        <Label>Idle Pulse</Label>
+                        <Switch checked={theme.idlePulse} onCheckedChange={handleValueChange('idlePulse')} />
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <Label>Hover Ripple</Label>
+                        <Switch checked={theme.hoverRipple} onCheckedChange={handleValueChange('hoverRipple')} />
+                      </div>
+                      <div className="space-y-2 pt-2">
+                        <Label>Animation Style</Label>
+                        <Select value={theme.openAnimation} onValueChange={handleValueChange('openAnimation')}>
+                          <SelectTrigger><SelectValue /></SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="scale-fade">Scale & Fade</SelectItem>
+                            <SelectItem value="particle-burst">Particle Burst</SelectItem>
+                            <SelectItem value="slide-up">Slide Up</SelectItem>
+                            <SelectItem value="flip-open">Flip</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Separator />
+
+                  <div className="space-y-4">
+                    <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground/70 flex items-center gap-2">
+                      <Volume2 className="w-4 h-4" /> Sound
+                    </h3>
+                    <div className="grid gap-4">
+                      <div className="flex items-center justify-between">
+                        <Label className="text-sm font-bold text-foreground">UI Sounds</Label>
+                        <Switch checked={theme.soundEffects} onCheckedChange={handleValueChange('soundEffects')} />
+                      </div>
+                      <div className="space-y-3">
+                        <div className="flex justify-between"><Label className="text-xs font-bold text-foreground">Output Intensity</Label> <span className="text-xs font-mono text-muted-foreground">{theme.soundVolume}%</span></div>
+                        <Slider value={[theme.soundVolume]} onValueChange={handleSliderChange('soundVolume')} min={0} max={100} step={10} />
+                      </div>
+                    </div>
+                  </div>
+                </TabsContent>
+              </div>
+            </ScrollArea>
+          </Tabs>
+
+        </div>
+
+        {/* Right Panel: Preview */}
+        <div className="flex-1 bg-muted/30 flex flex-col min-w-0">
+          <div className="flex-1 overflow-hidden relative">
+            <Preview theme={theme} configId={widgetId} />
+          </div>
         </div>
       </div>
     </div>

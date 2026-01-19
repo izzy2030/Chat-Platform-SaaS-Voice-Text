@@ -142,36 +142,40 @@ export default function ProfilePage() {
   };
 
   return (
-    <div className="container mx-auto max-w-2xl py-10">
-      <h1 className="mb-8 text-3xl font-bold">Profile Settings</h1>
+    <div className="container mx-auto max-w-2xl py-12">
+      <div className="mb-10">
+        <h1 className="text-4xl font-bold tracking-tight text-foreground">Account Configuration</h1>
+        <p className="text-sm text-muted-foreground font-medium mt-1">Manage your identity and security preferences.</p>
+      </div>
 
       <div className="grid gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Public Profile</CardTitle>
-            <CardDescription>
-              Update your public profile information.
+        <Card className="rounded-2xl shadow-md border-border/70 overflow-hidden bg-card">
+          <CardHeader className="pb-8">
+            <CardTitle className="text-xl font-bold">Public Profile</CardTitle>
+            <CardDescription className="text-muted-foreground/70">
+              Update your public identity within the ecosystem.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmitProfile(onProfileSubmit)} className="space-y-6">
-              <div className="flex items-center gap-6">
-                <div className="rounded-full p-1 bg-gradient-to-r from-[#94B4E4] to-[#B19CD9]">
-                  <Avatar className="h-24 w-24 border-2 border-background">
+              <div className="flex flex-col sm:flex-row items-center gap-8 mb-8">
+                <div className="rounded-3xl p-1 bg-primary/10 border border-primary/20 shadow-inner">
+                  <Avatar className="h-32 w-32 border-4 border-background shadow-xl">
                     {/* Prioritize currentPhotoURL from form state for preview, else fallback to user.user_metadata?.avatar_url */}
-                    <AvatarImage src={currentPhotoURL || user?.user_metadata?.avatar_url || undefined} alt={user?.user_metadata?.full_name || 'Avatar'} />
-                    <AvatarFallback className="text-xl">
+                    <AvatarImage src={currentPhotoURL || user?.user_metadata?.avatar_url || undefined} alt={user?.user_metadata?.full_name || 'Avatar'} className="object-cover" />
+                    <AvatarFallback className="text-3xl font-bold bg-muted/50">
                       {getInitials(user?.user_metadata?.full_name, user?.email)}
                     </AvatarFallback>
                   </Avatar>
                 </div>
                 <div className="flex-1 space-y-4">
                   <div className="grid gap-2">
-                    <Label htmlFor="photoURL">Profile Picture URL</Label>
+                    <Label htmlFor="photoURL" className="text-sm font-bold text-foreground">Avatar URL</Label>
                     <Input
                       id="photoURL"
                       placeholder="https://example.com/avatar.png"
                       {...registerProfile('photoURL')}
+                      className="h-12 rounded-xl border-border/60 bg-muted/20"
                     />
                     {profileErrors.photoURL && (
                       <p className="text-sm text-red-500">{profileErrors.photoURL.message}</p>
@@ -184,85 +188,88 @@ export default function ProfilePage() {
               </div>
 
               <div className="grid gap-2">
-                <Label htmlFor="displayName">Display Name</Label>
+                <Label htmlFor="displayName" className="text-sm font-bold text-foreground">Full Identity Name</Label>
                 <Input
                   id="displayName"
                   placeholder="John Doe"
                   {...registerProfile('displayName')}
+                  className="h-12 rounded-xl border-border/60 bg-muted/20"
                 />
                 {profileErrors.displayName && (
                   <p className="text-sm text-red-500">{profileErrors.displayName.message}</p>
                 )}
               </div>
 
-              <Button type="submit" disabled={isProfileLoading}>
+              <Button type="submit" disabled={isProfileLoading} className="w-full sm:w-auto h-11 px-8 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold shadow-md transition-all">
                 {isProfileLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Save Profile
+                Sync Profile
               </Button>
             </form>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="rounded-2xl shadow-md border-border/70 overflow-hidden bg-card">
           <CardHeader>
-            <CardTitle>Account Information</CardTitle>
-            <CardDescription>
-              View your account details.
+            <CardTitle className="text-xl font-bold">Node Identity</CardTitle>
+            <CardDescription className="text-muted-foreground/70">
+              Technical identifiers for your current session.
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-6">
             <div className="grid gap-2">
-              <Label>Email</Label>
-              <Input value={user?.email || ''} disabled readOnly />
+              <Label className="text-sm font-bold text-foreground">Authenticated Email</Label>
+              <Input value={user?.email || ''} disabled readOnly className="h-11 rounded-xl border-border/40 bg-muted/10 opacity-70" />
             </div>
             <div className="grid gap-2">
-              <Label>User ID</Label>
-              <Input value={user?.id || ''} disabled readOnly />
+              <Label className="text-sm font-bold text-foreground">Core User UID</Label>
+              <Input value={user?.id || ''} disabled readOnly className="h-11 rounded-xl border-border/40 bg-muted/10 font-mono text-xs opacity-70" />
             </div>
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="rounded-2xl shadow-md border-border/70 overflow-hidden bg-card">
           <CardHeader>
-            <CardTitle>Change Password</CardTitle>
-            <CardDescription>
-              Update your account password.
+            <CardTitle className="text-xl font-bold">Security Protocols</CardTitle>
+            <CardDescription className="text-muted-foreground/70">
+              Update your access credentials.
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleSubmitPassword(onPasswordSubmit)} className="space-y-4">
+            <form onSubmit={handleSubmitPassword(onPasswordSubmit)} className="space-y-6">
               <div className="grid gap-2">
-                <Label htmlFor="newPassword">New Password</Label>
+                <Label htmlFor="newPassword" className="text-sm font-bold text-foreground">New Security Key</Label>
                 <Input
                   id="newPassword"
                   type="password"
                   placeholder="••••••••"
                   {...registerPassword('newPassword')}
+                  className="h-12 rounded-xl border-border/60 bg-muted/20"
                 />
                 {passwordErrors.newPassword && (
-                  <p className="text-sm text-red-500">{passwordErrors.newPassword.message}</p>
+                  <p className="text-sm text-red-500 font-medium">{passwordErrors.newPassword.message}</p>
                 )}
               </div>
               <div className="grid gap-2">
-                <Label htmlFor="confirmPassword">Confirm New Password</Label>
+                <Label htmlFor="confirmPassword" className="text-sm font-bold text-foreground">Verify Security Key</Label>
                 <Input
                   id="confirmPassword"
                   type="password"
                   placeholder="••••••••"
                   {...registerPassword('confirmPassword')}
+                  className="h-12 rounded-xl border-border/60 bg-muted/20"
                 />
                 {passwordErrors.confirmPassword && (
-                  <p className="text-sm text-red-500">{passwordErrors.confirmPassword.message}</p>
+                  <p className="text-sm text-red-500 font-medium">{passwordErrors.confirmPassword.message}</p>
                 )}
               </div>
-              <Button type="submit" disabled={isPasswordLoading}>
+              <Button type="submit" disabled={isPasswordLoading} className="w-full h-12 rounded-xl bg-foreground text-background hover:bg-foreground/90 font-bold shadow-md transition-all">
                 {isPasswordLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                Update Password
+                Update Credentials
               </Button>
             </form>
           </CardContent>
         </Card>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 }

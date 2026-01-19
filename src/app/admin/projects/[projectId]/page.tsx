@@ -65,11 +65,13 @@ export default function ProjectDetailPage({ params }: { params: Promise<{ projec
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center gap-4">
-        <Folder className="h-8 w-8 text-primary" />
+      <div className="flex items-center gap-3">
+        <div className="bg-primary/10 p-2.5 rounded-xl border border-primary/20 flex items-center justify-center">
+          <Folder size={24} className="text-primary fill-primary/10" />
+        </div>
         <div>
-          <h1 className="text-2xl font-bold">{project.name}</h1>
-          <p className="text-muted-foreground">A list of all widgets in this project.</p>
+          <h1 className="text-4xl font-bold text-foreground tracking-tight">{project.name}</h1>
+          <p className="text-sm text-muted-foreground font-medium">A list of all agents deployed within this cluster.</p>
         </div>
       </div>
 

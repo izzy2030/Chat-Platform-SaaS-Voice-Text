@@ -2,10 +2,11 @@
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
+import { formatDistanceToNow } from 'date-fns';
 import { supabase } from '@/lib/supabase';
 import { useUser } from '@/supabase';
 import Link from 'next/link';
-import { Loader2, Edit, Code, Eye, Palette, MessageSquare, Mic, Trash2, Folder, Activity, Copy, Plus } from 'lucide-react';
+import { Loader2, Edit, Code, Eye, Palette, MessageSquare, Mic, Trash2, Folder, Activity, Copy, Plus, LineChart, Settings, Zap, Sparkles } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { ChatWidgetComponent } from '../widget/chat-widget';
 import type { WidgetTheme } from '@/app/admin/theming/[widgetId]/page';
@@ -21,6 +22,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { ScrollArea } from "@/components/ui/scroll-area";
+import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
 import {
   Dialog,
   DialogContent,
@@ -60,6 +62,7 @@ interface ChatWidget {
     welcomeMessage?: string;
     position?: 'left' | 'right';
   };
+  updated_at: string;
 }
 
 interface Project {
@@ -181,96 +184,110 @@ export function WidgetList({ projectId }: { projectId?: string }) {
   const renderWidgetCard = (widget: ChatWidget) => (
     <div
       key={widget.id}
-      className="glass-card p-6 flex flex-col gap-6 group rounded-lg bg-black/20 border border-white/5"
+      className="group bg-card hover:bg-card/80 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 border border-border/70 overflow-hidden flex flex-col"
     >
-      <div className="flex flex-col gap-5">
+      <div className="p-6 pb-5 flex flex-col gap-5 flex-1">
+        {/* Header */}
         <div className="flex justify-between items-start">
-          <div className="flex flex-col gap-1">
-            <h3 className="text-xl font-display font-bold text-premium group-hover:text-primary transition-colors duration-300">
+          <div className="space-y-0.5">
+            <h3 className="text-xl font-bold tracking-tight text-foreground">
               {widget.name}
             </h3>
-            <span className="text-[10px] font-mono text-premium/40 uppercase tracking-widest">Agent ID: {widget.id.split('-')[0]}...</span>
+            <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
+              AGENT ID: {widget.id.split('-')[0]}...
+            </p>
           </div>
-          <Badge
-            variant="secondary"
-            className="px-4 py-1.5 rounded-full bg-primary/10 text-primary border-primary/20"
-          >
+          <div className="bg-muted/50 px-3 py-1.5 rounded-full flex items-center gap-1.5 border border-border/70">
+            {widget.type === 'voice' ? <Mic size={14} className="text-foreground" /> : <MessageSquare size={14} className="text-foreground" />}
+            <span className="text-xs font-semibold text-foreground">{widget.type === 'voice' ? 'Voice Agent' : 'Chat Agent'}</span>
+          </div>
+        </div>
+
+        {/* Status Box */}
+        <div className="bg-muted/30 rounded-xl p-3 flex items-center gap-4 border border-border/60">
+          <div className="w-12 h-12 bg-background rounded-lg shadow-sm border border-border/70 flex items-center justify-center shrink-0">
+            <LineChart className="text-primary w-6 h-6" />
+          </div>
+          <div className="space-y-0.5">
+            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.1em]">Current Status</p>
             <div className="flex items-center gap-2">
-              {widget.type === 'voice' ? <Mic size={14} /> : <MessageSquare size={14} />}
-              <span className="text-sm font-bold">{widget.type === 'voice' ? 'Voice Agent' : 'Chat Agent'}</span>
-            </div>
-          </Badge>
-        </div>
-
-        <div className="glass-panel p-4 bg-white/5 rounded-lg">
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 flex-none bg-primary shadow-lg shadow-primary/30 rounded-lg flex items-center justify-center">
-              <Activity size={24} className="text-white" strokeWidth={2.5} />
-            </div>
-            <div className="flex flex-col gap-0">
-              <span className="text-[10px] font-bold text-premium/40 uppercase tracking-widest leading-none mb-1">Status</span>
-              <div className="flex items-center gap-2">
-                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.6)]" />
-                <span className="text-sm font-bold text-premium">Active & Operational</span>
-              </div>
+              <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.4)] animate-pulse" />
+              <p className="font-bold text-foreground text-sm">Active & Operational</p>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-3">
+        {/* Action Grid */}
+        <div className="grid grid-cols-2 gap-3">
           <Button
-            variant="ghost"
+            variant="outline"
             nativeButton={false}
             render={<Link href={`/admin/theming/${widget.id}`} />}
-            className="cursor-pointer font-bold h-11 glass-button-ghost bg-white/5 hover:bg-white/10"
+            className="h-20 flex-col gap-2 rounded-xl border-border/80 hover:border-primary/30 hover:bg-primary/5 hover:text-primary transition-all group/btn"
           >
-            <Palette size={18} className="mr-1" /> Designer
+            <Palette className="w-5 h-5 text-muted-foreground group-hover/btn:text-primary transition-colors" />
+            <span className="font-semibold text-sm">Designer</span>
           </Button>
 
           <Button
-            variant="ghost"
+            variant="outline"
             nativeButton={false}
             render={<Link href={`/admin/widget/${widget.id}`} />}
-            className="cursor-pointer font-bold h-11 glass-button-ghost bg-white/5 hover:bg-white/10"
+            className="h-20 flex-col gap-2 rounded-xl border-border/80 hover:border-primary/30 hover:bg-primary/5 hover:text-primary transition-all group/btn"
           >
-            <Edit size={18} className="mr-1" /> Configure
+            <Settings className="w-5 h-5 text-muted-foreground group-hover/btn:text-primary transition-colors" />
+            <span className="font-semibold text-sm">Configure</span>
           </Button>
 
           <Button
-            variant="ghost"
-            className="cursor-pointer font-bold h-11 glass-button-ghost bg-white/5 hover:bg-white/10"
+            variant="outline"
+            className="h-20 flex-col gap-2 rounded-xl border-border/80 hover:border-primary/30 hover:bg-primary/5 hover:text-primary transition-all group/btn"
             onClick={() => {
               setSelectedWidget(widget);
               setTestModalOpen(true);
             }}
           >
-            <Eye size={18} className="mr-1" /> Preview
+            <Eye className="w-5 h-5 text-muted-foreground group-hover/btn:text-primary transition-colors" />
+            <span className="font-semibold text-sm">Preview</span>
           </Button>
 
           <Button
-            variant="ghost"
-            className="cursor-pointer font-bold h-11 glass-button-ghost bg-white/5 hover:bg-white/10"
+            variant="outline"
+            className="h-20 flex-col gap-2 rounded-xl border-border/80 hover:border-primary/30 hover:bg-primary/5 hover:text-primary transition-all group/btn"
             onClick={() => {
               setSelectedWidget(widget);
               setScriptModalOpen(true);
             }}
           >
-            <Code size={18} className="mr-1" /> Embed
-          </Button>
-
-          <div />
-
-          <Button
-            variant="ghost"
-            className="cursor-pointer font-bold h-11 border border-red-500/10 bg-red-500/[0.02] hover:bg-red-500/[0.1] text-red-400 transition-all rounded-lg"
-            onClick={() => {
-              setWidgetToDelete(widget);
-              setDeleteConfirmOpen(true);
-            }}
-          >
-            <Trash2 size={18} className="mr-1" /> Remove
+            <Code className="w-5 h-5 text-muted-foreground group-hover/btn:text-primary transition-colors" />
+            <span className="font-semibold text-sm">Embed</span>
           </Button>
         </div>
+
+        {/* Remove Button */}
+        <Button
+          variant="ghost"
+          className="h-12 w-full bg-red-500/5 text-red-600 hover:bg-red-500/10 hover:text-red-700 rounded-xl font-semibold"
+          onClick={() => {
+            setWidgetToDelete(widget);
+            setDeleteConfirmOpen(true);
+          }}
+        >
+          <Trash2 size={16} className="mr-2" /> Remove Agent
+        </Button>
+      </div>
+
+      {/* Footer */}
+      <div className="bg-muted/15 px-6 py-4 border-t border-border/60 flex justify-between items-center mt-auto">
+        <p className="text-xs font-medium text-muted-foreground">
+          Last updated {formatDistanceToNow(new Date(widget.updated_at), { addSuffix: true })}
+        </p>
+        <Avatar className="w-7 h-7 rounded-lg border border-border/50">
+          <AvatarImage src={user?.user_metadata?.avatar_url || ''} />
+          <AvatarFallback className="rounded-lg bg-primary/10 text-primary text-[9px] font-bold">
+            {user?.user_metadata?.full_name?.substring(0, 2).toUpperCase() || user?.email?.substring(0, 2).toUpperCase() || '??'}
+          </AvatarFallback>
+        </Avatar>
       </div>
     </div>
   );
@@ -280,8 +297,8 @@ export function WidgetList({ projectId }: { projectId?: string }) {
       <section className="pb-4">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-4xl font-display font-bold text-premium text-vibrant mb-1 tracking-tightest">Agents</h1>
-            <p className="text-sm text-premium/50 font-medium font-sans">Deployment center for your communication nodes.</p>
+            <h1 className="text-4xl font-bold text-foreground mb-1 tracking-tightest">Agents</h1>
+            <p className="text-sm text-muted-foreground font-medium">Deployment center for your communication nodes.</p>
           </div>
           <Button size="lg" nativeButton={false} className="bg-primary hover:bg-primary/90 text-white font-bold h-11 px-6 shadow-xl shadow-primary/20 rounded-lg transition-all hover:scale-105 active:scale-95" render={<Link href="/admin/widget/create" />}>
             <Plus size={18} className="mr-2" /> Deploys New Agent
@@ -305,19 +322,19 @@ export function WidgetList({ projectId }: { projectId?: string }) {
           <div className="flex flex-col gap-12">
             {projects.map((project) => (
               <div key={project.id} className="space-y-6">
-                <div className="flex items-center gap-2 pb-3 border-b border-white/5">
-                  <div className="bg-primary shadow-lg shadow-primary/20 p-1.5 rounded-lg flex items-center justify-center">
-                    <Folder size={16} className="text-white fill-white" />
+                <div className="flex items-center gap-3 pb-3 border-b border-border/50">
+                  <div className="bg-primary/10 p-2 rounded-lg flex items-center justify-center border border-primary/20">
+                    <Folder size={18} className="text-primary fill-primary/20" />
                   </div>
-                  <h2 className="text-lg font-display font-bold text-premium uppercase tracking-[0.2em]">{project.name}</h2>
+                  <h2 className="text-lg font-bold text-foreground uppercase tracking-[0.2em]">{project.name}</h2>
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {widgetsByProject[project.id]?.map(renderWidgetCard)}
                   {(!widgetsByProject[project.id] || widgetsByProject[project.id].length === 0) && (
-                    <div className="col-span-full py-20 border-2 border-dashed border-white/5 rounded-lg flex flex-col items-center justify-center bg-transparent">
-                      <p className="text-lg text-premium/30 mb-6 font-medium">No active nodes in this project.</p>
-                      <Button variant="outline" size="lg" nativeButton={false} className="rounded-lg px-8 glass-button-ghost opacity-100" render={<Link href="/admin/widget/create" />}>
+                    <div className="col-span-full py-20 border-2 border-dashed border-border/50 rounded-2xl flex flex-col items-center justify-center bg-muted/20">
+                      <p className="text-lg text-muted-foreground/50 mb-6 font-medium">No active nodes in this project.</p>
+                      <Button variant="outline" size="lg" nativeButton={false} className="rounded-xl px-8" render={<Link href="/admin/widget/create" />}>
                         Deploy Initial Node
                       </Button>
                     </div>
@@ -333,7 +350,7 @@ export function WidgetList({ projectId }: { projectId?: string }) {
                 </div>
                 <div>
                   <h2 className="text-2xl font-bold mb-1">Platform Initialized</h2>
-                  <p className="text-lg text-gray-400">Create your first project to begin deploying AI agents.</p>
+                  <p className="text-lg text-muted-foreground">Create your first project to begin deploying AI agents.</p>
                 </div>
                 <Button size="lg" nativeButton={false} className="bg-primary font-bold px-8 h-12" render={<Link href="/admin/projects" />}>
                   Create Your First Project
@@ -360,7 +377,7 @@ export function WidgetList({ projectId }: { projectId?: string }) {
       </Dialog>
 
       <AlertDialog open={isDeleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
-        <AlertDialogContent className="glass border-white/10">
+        <AlertDialogContent className="bg-card border-border">
           <AlertDialogHeader>
             <AlertDialogTitle>Decommission Agent?</AlertDialogTitle>
             <AlertDialogDescription>

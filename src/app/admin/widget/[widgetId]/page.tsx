@@ -334,7 +334,7 @@ export default function EditWidgetPage({
   return (
     <div className="flex flex-col flex-1 min-h-0 rounded-lg border bg-background shadow-sm overflow-hidden">
       {/* Header */}
-      <div className="h-16 border-b bg-white/50 backdrop-blur-md px-6 flex items-center justify-between shrink-0 z-20">
+      <div className="h-16 border-b bg-card px-6 flex items-center justify-between shrink-0 z-20">
         <div className="flex items-center gap-4">
           <Button variant="ghost" size="icon" nativeButton={false} render={<Link href="/admin" />}>
             <span className="sr-only">Back</span>&larr;
@@ -358,7 +358,7 @@ export default function EditWidgetPage({
       {/* Workspace */}
       <div className="flex-1 flex overflow-hidden">
         {/* Left Sidebar - Controls */}
-        <div className="w-[400px] border-r bg-white flex flex-col shrink-0 z-10 shadow-xl shadow-black/5">
+        <div className="w-[400px] border-r bg-card flex flex-col shrink-0 z-10 shadow-lg">
           <Tabs defaultValue="visuals" className="w-full flex flex-col h-full">
             <div className="px-6 py-4 border-b">
               <TabsList className="w-full grid grid-cols-2">
@@ -407,9 +407,9 @@ export default function EditWidgetPage({
                       </section>
 
                       {/* Text Section */}
-                      <section className="space-y-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Messaging</h3>
+                      <section className="space-y-6">
+                        <div className="flex items-center gap-3 mb-4">
+                          <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground/70">Messaging</h3>
                           <div className="h-px bg-border flex-1"></div>
                         </div>
 
@@ -420,7 +420,7 @@ export default function EditWidgetPage({
                             <FormItem>
                               <FormLabel>Header Title</FormLabel>
                               <FormControl>
-                                <Input placeholder="Chat with us" {...field} />
+                                <Input placeholder="Chat with us" {...field} className="h-12 rounded-xl border-border/60 bg-muted/20" />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -434,7 +434,7 @@ export default function EditWidgetPage({
                             <FormItem>
                               <FormLabel>Welcome Message</FormLabel>
                               <FormControl>
-                                <Textarea placeholder="Hi there!" className="min-h-[80px]" {...field} />
+                                <Textarea placeholder="Hi there!" className="min-h-[100px] rounded-xl border-border/60 bg-muted/20 py-4" {...field} />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -444,8 +444,8 @@ export default function EditWidgetPage({
 
                       {/* Positioning */}
                       <section className="space-y-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Position</h3>
+                        <div className="flex items-center gap-3 mb-4">
+                          <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground/70">Position</h3>
                           <div className="h-px bg-border flex-1"></div>
                         </div>
                         <FormField
@@ -482,8 +482,11 @@ export default function EditWidgetPage({
 
                     <TabsContent value="settings" className="space-y-8 mt-0 data-[state=inactive]:hidden">
                       {/* Identity Section */}
-                      <section className="space-y-4">
-                        <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Identity</h3>
+                      <section className="space-y-6">
+                        <div className="flex items-center gap-3 mb-4">
+                          <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground/70">Identity</h3>
+                          <div className="h-px bg-border flex-1"></div>
+                        </div>
                         <FormField
                           control={form.control}
                           name="name"
@@ -491,7 +494,7 @@ export default function EditWidgetPage({
                             <FormItem>
                               <FormLabel>Widget Name</FormLabel>
                               <FormControl>
-                                <Input {...field} />
+                                <Input {...field} className="h-12 rounded-xl border-border/60 bg-muted/20" />
                               </FormControl>
                               <FormMessage />
                             </FormItem>
@@ -506,7 +509,7 @@ export default function EditWidgetPage({
                               <FormLabel>Project</FormLabel>
                               <Select onValueChange={field.onChange} value={field.value}>
                                 <FormControl>
-                                  <SelectTrigger>
+                                  <SelectTrigger className="h-12 w-full rounded-xl border-border/60 bg-muted/20">
                                     <SelectValue placeholder="Select a project" />
                                   </SelectTrigger>
                                 </FormControl>
@@ -529,8 +532,11 @@ export default function EditWidgetPage({
                       </section>
 
                       {/* Configuration */}
-                      <section className="space-y-4">
-                        <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Configuration</h3>
+                      <section className="space-y-6">
+                        <div className="flex items-center gap-3 mb-4">
+                          <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground/70">Configuration</h3>
+                          <div className="h-px bg-border flex-1"></div>
+                        </div>
                         <FormField
                           control={form.control}
                           name="type"
@@ -543,24 +549,24 @@ export default function EditWidgetPage({
                                   defaultValue={field.value}
                                   className="grid grid-cols-2 gap-4"
                                 >
-                                  <div>
+                                  <div className="relative">
                                     <RadioGroupItem value="text" id="text" className="peer sr-only" />
                                     <Label
                                       htmlFor="text"
-                                      className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                                      className="flex flex-col items-center justify-center rounded-2xl border border-border/60 bg-muted/10 p-4 hover:bg-primary/5 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 cursor-pointer transition-all duration-300"
                                     >
-                                      <MessageSquare className="mb-2 h-5 w-5" />
-                                      Text
+                                      <MessageSquare className="mb-2 h-6 w-6 text-muted-foreground peer-data-[state=checked]:text-primary" />
+                                      <span className="text-sm font-bold text-foreground">Text Stream</span>
                                     </Label>
                                   </div>
-                                  <div>
+                                  <div className="relative">
                                     <RadioGroupItem value="voice" id="voice" className="peer sr-only" />
                                     <Label
                                       htmlFor="voice"
-                                      className="flex flex-col items-center justify-between rounded-md border-2 border-muted bg-popover p-4 hover:bg-accent hover:text-accent-foreground peer-data-[state=checked]:border-primary [&:has([data-state=checked])]:border-primary cursor-pointer"
+                                      className="flex flex-col items-center justify-center rounded-2xl border border-border/60 bg-muted/10 p-4 hover:bg-primary/5 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 cursor-pointer transition-all duration-300"
                                     >
-                                      <Mic className="mb-2 h-5 w-5" />
-                                      Voice
+                                      <Mic className="mb-2 h-6 w-6 text-muted-foreground peer-data-[state=checked]:text-primary" />
+                                      <span className="text-sm font-bold text-foreground">Voice Matrix</span>
                                     </Label>
                                   </div>
                                 </RadioGroup>
@@ -574,11 +580,11 @@ export default function EditWidgetPage({
                           name="allowedDomains"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Allowed Domains</FormLabel>
+                              <FormLabel className="text-sm font-bold text-foreground">Allowed Domains</FormLabel>
                               <FormControl>
-                                <Input placeholder="example.com" {...field} />
+                                <Input placeholder="example.com" {...field} className="h-12 rounded-xl border-border/60 bg-muted/20" />
                               </FormControl>
-                              <FormDescription>Comma-separated list of allowed hostnames.</FormDescription>
+                              <FormDescription className="text-[10px] text-muted-foreground/50 mt-1">Comma-separated list of allowed hostnames.</FormDescription>
                               <FormMessage />
                             </FormItem>
                           )}
@@ -589,9 +595,9 @@ export default function EditWidgetPage({
                           name="webhookUrl"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel>Webhook URL</FormLabel>
+                              <FormLabel className="text-sm font-bold text-foreground">Webhook URL</FormLabel>
                               <FormControl>
-                                <Input placeholder="https://..." {...field} />
+                                <Input placeholder="https://..." {...field} className="h-12 rounded-xl border-border/60 bg-muted/20" />
                               </FormControl>
                               <FormMessage />
                             </FormItem>

@@ -115,15 +115,15 @@ export default function ProjectsPage() {
     <div className="space-y-8">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-3xl font-bold tracking-tight text-gray-900">Projects</h3>
-          <p className="text-md text-muted-foreground mt-1">
+          <h1 className="text-4xl font-bold tracking-tight text-foreground">Projects</h1>
+          <p className="text-sm text-muted-foreground font-medium mt-1">
             Organize your widgets into projects.
           </p>
         </div>
         <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
           <DialogTrigger
             render={
-              <Button className="rounded-full bg-indigo-600 hover:bg-indigo-700 text-white">
+              <Button size="lg" className="bg-primary hover:bg-primary/90 text-white font-bold h-11 px-6 shadow-md hover:shadow-lg transition-all rounded-lg">
                 <Plus className="mr-2 h-4 w-4" />
                 New Project
               </Button>
@@ -153,7 +153,7 @@ export default function ProjectsPage() {
                 />
                 <DialogFooter>
                   <Button type="button" variant="ghost" onClick={() => setIsDialogOpen(false)} className="rounded-lg">Cancel</Button>
-                  <Button type="submit" disabled={isLoading} className="rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white">
+                  <Button type="submit" disabled={isLoading} className="rounded-lg bg-primary hover:bg-primary/90 text-white">
                     {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                     Create Project
                   </Button>
@@ -173,31 +173,36 @@ export default function ProjectsPage() {
           {projects && projects.length > 0 ? (
             projects.map((project) => (
               <Link key={project.id} href={`/admin/projects/${project.id}`} className="block group">
-                <Card className="h-full overflow-hidden bg-white shadow-sm border border-indigo-100 rounded-lg hover:shadow-md transition-all duration-200">
-                  <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
-                    <div className="rounded-full bg-indigo-50 p-2.5 group-hover:bg-indigo-100 transition-colors">
-                      <Folder className="h-5 w-5 text-indigo-600" />
+                <Card className="h-full bg-card hover:bg-card/80 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 border border-border/70 overflow-hidden flex flex-col p-6">
+                  <div className="flex flex-col gap-6">
+                    <div className="flex justify-between items-start">
+                      <div className="bg-primary/10 p-2.5 rounded-xl border border-primary/20 flex items-center justify-center transition-colors group-hover:bg-primary/20">
+                        <Folder className="h-6 w-6 text-primary fill-primary/10 group-hover:fill-primary/20" />
+                      </div>
+                      <ArrowRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-all group-hover:translate-x-1" />
                     </div>
-                    <div className="rounded-full p-2 text-gray-400 group-hover:text-indigo-500 transition-colors">
-                      <ArrowRight className="h-4 w-4" />
+
+                    <div className="space-y-1">
+                      <h3 className="text-xl font-bold text-foreground group-hover:text-primary transition-colors">
+                        {project.name}
+                      </h3>
+                      <p className="text-sm text-muted-foreground">
+                        View project widgets
+                      </p>
                     </div>
-                  </CardHeader>
-                  <CardContent>
-                    <CardTitle className="text-xl font-bold text-gray-900 group-hover:text-indigo-700 transition-colors">{project.name}</CardTitle>
-                    <p className="text-sm text-muted-foreground mt-2">View project widgets</p>
-                  </CardContent>
+                  </div>
                 </Card>
               </Link>
             ))
           ) : (
-            <Card className="col-span-full border-0 shadow-sm bg-white rounded-lg">
-              <CardContent className="flex flex-col items-center justify-center py-16 text-center">
-                <div className="rounded-full bg-indigo-50 p-6 mb-6">
-                  <Folder className="h-12 w-12 text-indigo-500" />
+            <Card className="col-span-full border border-dashed border-border/50 bg-muted/20 rounded-2xl">
+              <CardContent className="flex flex-col items-center justify-center py-20 text-center">
+                <div className="rounded-2xl bg-primary/10 p-6 mb-6 border border-primary/20">
+                  <Folder className="h-12 w-12 text-primary" />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900 mb-2">No projects created yet</h3>
-                <p className="text-gray-500 mb-8 max-w-sm mx-auto">Get started by creating your first project.</p>
-                <Button onClick={() => setIsDialogOpen(true)} size="lg" className="rounded-full px-8 bg-indigo-600 hover:bg-indigo-700 text-white">
+                <h3 className="text-2xl font-bold text-foreground mb-2">No projects created yet</h3>
+                <p className="text-muted-foreground mb-8 max-w-sm mx-auto">Get started by creating your first project.</p>
+                <Button onClick={() => setIsDialogOpen(true)} size="lg" className="rounded-xl px-10 bg-primary hover:bg-primary/90 text-white font-bold h-12 shadow-md">
                   Create Project
                 </Button>
               </CardContent>

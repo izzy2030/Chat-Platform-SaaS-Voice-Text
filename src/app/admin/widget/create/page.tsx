@@ -167,33 +167,33 @@ export default function CreateWidgetPage() {
         &larr; Operations Console
       </Button>
 
-      <div className="glass-card-premium p-8 rounded-lg bg-black/20 border border-white/5 backdrop-blur-xl">
-        <div className="mb-8">
-          <h1 className="text-4xl font-display font-bold text-premium text-vibrant mb-2 tracking-tight">Deploy New Node</h1>
-          <p className="text-lg text-premium/40">Configure the parameters for your autonomous communication node.</p>
+      <div className="bg-card rounded-[32px] border border-border shadow-md overflow-hidden">
+        <div className="p-8 pb-4">
+          <h1 className="text-4xl font-bold text-foreground mb-2 tracking-tight">Deploy New Node</h1>
+          <p className="text-lg text-muted-foreground font-medium">Configure the parameters for your autonomous communication node.</p>
         </div>
 
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-12">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-10 p-8 pt-4">
               {/* Identity Section */}
-              <div className="flex flex-col gap-6">
-                <div>
-                  <h3 className="text-sm font-bold uppercase tracking-widest text-premium/50 mb-4 border-b border-white/5 pb-2">System Identity</h3>
+              <div className="flex flex-col gap-8">
+                <div className="space-y-6">
+                  <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground/70 mb-6 border-b border-border pb-3">System Identity</h3>
                   <div className="flex flex-col gap-6">
                     <FormField
                       control={form.control}
                       name="projectId"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="glass-label">Project Cluster</FormLabel>
+                          <FormLabel className="text-sm font-bold text-foreground">Project Cluster</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
-                              <SelectTrigger className="glass-input h-12 w-full">
+                              <SelectTrigger className="h-12 w-full rounded-xl border-border/60 bg-muted/20">
                                 <SelectValue placeholder="Access Cluster..." />
                               </SelectTrigger>
                             </FormControl>
-                            <SelectContent className="glass border-primary/10 rounded-lg">
+                            <SelectContent className="border-border rounded-xl">
                               {isLoadingProjects ? (
                                 <SelectItem value="loading" disabled>Loading Clusters...</SelectItem>
                               ) : (
@@ -215,9 +215,9 @@ export default function CreateWidgetPage() {
                       name="name"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="glass-label">Node Identifier</FormLabel>
+                          <FormLabel className="text-sm font-bold text-foreground">Node Identifier</FormLabel>
                           <FormControl>
-                            <Input placeholder="e.g. Primary Support Node" {...field} className="glass-input" />
+                            <Input placeholder="e.g. Primary Support Node" {...field} className="h-12 rounded-xl border-border/60 bg-muted/20" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -229,7 +229,7 @@ export default function CreateWidgetPage() {
                       name="type"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="glass-label">Interaction Protocol</FormLabel>
+                          <FormLabel className="text-sm font-bold text-foreground">Interaction Protocol</FormLabel>
                           <FormControl>
                             <RadioGroup
                               onValueChange={field.onChange}
@@ -240,20 +240,20 @@ export default function CreateWidgetPage() {
                                 <RadioGroupItem value="text" id="text" className="peer sr-only" />
                                 <Label
                                   htmlFor="text"
-                                  className="flex flex-col items-center justify-center rounded-lg border border-primary/5 bg-primary/5 p-6 hover:bg-primary/10 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10 cursor-pointer transition-all duration-300"
+                                  className="flex flex-col items-center justify-center rounded-2xl border border-border/60 bg-muted/10 p-6 hover:bg-primary/5 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 cursor-pointer transition-all duration-300"
                                 >
-                                  <MessageSquare className="mb-2 h-6 w-6 text-primary" />
-                                  <span className="text-sm font-bold text-premium">Text Stream</span>
+                                  <MessageSquare className="mb-2 h-7 w-7 text-muted-foreground peer-data-[state=checked]:text-primary" />
+                                  <span className="text-sm font-bold text-foreground">Text Stream</span>
                                 </Label>
                               </div>
                               <div className="relative">
                                 <RadioGroupItem value="voice" id="voice" className="peer sr-only" />
                                 <Label
                                   htmlFor="voice"
-                                  className="flex flex-col items-center justify-center rounded-lg border border-primary/5 bg-primary/5 p-6 hover:bg-primary/10 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10 cursor-pointer transition-all duration-300"
+                                  className="flex flex-col items-center justify-center rounded-2xl border border-border/60 bg-muted/10 p-6 hover:bg-primary/5 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 cursor-pointer transition-all duration-300"
                                 >
-                                  <Mic className="mb-2 h-6 w-6 text-accent" />
-                                  <span className="text-sm font-bold text-premium">Voice Matrix</span>
+                                  <Mic className="mb-2 h-7 w-7 text-muted-foreground peer-data-[state=checked]:text-primary" />
+                                  <span className="text-sm font-bold text-foreground">Voice Matrix</span>
                                 </Label>
                               </div>
                             </RadioGroup>
@@ -265,17 +265,17 @@ export default function CreateWidgetPage() {
                   </div>
                 </div>
 
-                <div>
-                  <h3 className="text-sm font-bold uppercase tracking-widest text-premium/50 mb-4 border-b border-white/5 pb-2">Security & Routing</h3>
-                  <div className="flex flex-col gap-5">
+                <div className="space-y-6">
+                  <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground/70 mb-6 border-b border-border pb-3">Security & Routing</h3>
+                  <div className="flex flex-col gap-6">
                     <FormField
                       control={form.control}
                       name="webhookUrl"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="glass-label">Endpoint URL</FormLabel>
+                          <FormLabel className="text-sm font-bold text-foreground">Endpoint URL</FormLabel>
                           <FormControl>
-                            <Input placeholder="https://api.matrix.io/endpoint" {...field} className="glass-input" />
+                            <Input placeholder="https://api.matrix.io/endpoint" {...field} className="h-12 rounded-xl border-border/60 bg-muted/20" />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -286,11 +286,11 @@ export default function CreateWidgetPage() {
                       name="allowedDomains"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="glass-label">Authorized Domains</FormLabel>
+                          <FormLabel className="text-sm font-bold text-foreground">Authorized Domains</FormLabel>
                           <FormControl>
-                            <Input placeholder="matrix.com, nodes.io" {...field} className="glass-input" />
+                            <Input placeholder="matrix.com, nodes.io" {...field} className="h-12 rounded-xl border-border/60 bg-muted/20" />
                           </FormControl>
-                          <FormDescription className="text-[10px] text-premium/20 mt-1">Comma-separated authorized origin domains.</FormDescription>
+                          <FormDescription className="text-[10px] text-muted-foreground/50 mt-1">Comma-separated authorized origin domains.</FormDescription>
                           <FormMessage />
                         </FormItem>
                       )}
@@ -298,22 +298,21 @@ export default function CreateWidgetPage() {
                   </div>
                 </div>
 
-                {/* Branding Section */}
-                <div className="flex flex-col gap-6">
-                  <div>
-                    <h3 className="text-sm font-bold uppercase tracking-widest text-premium/50 mb-4 border-b border-white/5 pb-2">Visual Core</h3>
-                    <div className="flex flex-col gap-5">
+                <div className="flex flex-col gap-10">
+                  <div className="space-y-6">
+                    <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground/70 mb-6 border-b border-border pb-3">Visual Core</h3>
+                    <div className="flex flex-col gap-6">
                       <div className="grid grid-cols-2 gap-4">
                         <FormField
                           control={form.control}
                           name="bubbleColor"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="glass-label">Interface Accent</FormLabel>
+                              <FormLabel className="text-sm font-bold text-foreground">Interface Accent</FormLabel>
                               <FormControl>
-                                <div className="flex items-center gap-3 glass-input h-12 px-4 rounded-lg">
+                                <div className="flex items-center gap-3 h-12 px-4 rounded-xl border border-border/60 bg-muted/20">
                                   <Input type="color" {...field} className="w-8 h-8 rounded-lg bg-transparent border-none cursor-pointer p-0" />
-                                  <span className="text-xs text-premium/60 font-mono uppercase">{field.value}</span>
+                                  <span className="text-xs text-muted-foreground/60 font-mono uppercase">{field.value}</span>
                                 </div>
                               </FormControl>
                               <FormMessage />
@@ -325,11 +324,11 @@ export default function CreateWidgetPage() {
                           name="panelColor"
                           render={({ field }) => (
                             <FormItem>
-                              <FormLabel className="glass-label">Base Surface</FormLabel>
+                              <FormLabel className="text-sm font-bold text-foreground">Base Surface</FormLabel>
                               <FormControl>
-                                <div className="flex items-center gap-3 glass-input h-12 px-4 rounded-lg">
+                                <div className="flex items-center gap-3 h-12 px-4 rounded-xl border border-border/60 bg-muted/20">
                                   <Input type="color" {...field} className="w-8 h-8 rounded-lg bg-transparent border-none cursor-pointer p-0" />
-                                  <span className="text-xs text-premium/60 font-mono uppercase">{field.value}</span>
+                                  <span className="text-xs text-muted-foreground/60 font-mono uppercase">{field.value}</span>
                                 </div>
                               </FormControl>
                               <FormMessage />
@@ -343,9 +342,9 @@ export default function CreateWidgetPage() {
                         name="headerTitle"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="glass-label">Display Heading</FormLabel>
+                            <FormLabel className="text-sm font-bold text-foreground">Display Heading</FormLabel>
                             <FormControl>
-                              <Input placeholder="Autonomous Interface" {...field} className="glass-input" />
+                              <Input placeholder="Autonomous Interface" {...field} className="h-12 rounded-xl border-border/60 bg-muted/20" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -357,9 +356,9 @@ export default function CreateWidgetPage() {
                         name="welcomeMessage"
                         render={({ field }) => (
                           <FormItem>
-                            <FormLabel className="glass-label">Initialization Message</FormLabel>
+                            <FormLabel className="text-sm font-bold text-foreground">Initialization Message</FormLabel>
                             <FormControl>
-                              <Textarea placeholder="System ready for interaction..." {...field} className="glass-input min-h-[120px] py-4 resize-none" />
+                              <Textarea placeholder="System ready for interaction..." {...field} className="min-h-[140px] rounded-xl border-border/60 bg-muted/20 py-4 resize-none" />
                             </FormControl>
                             <FormMessage />
                           </FormItem>
@@ -368,23 +367,23 @@ export default function CreateWidgetPage() {
                     </div>
                   </div>
 
-                  <div>
-                    <h3 className="text-sm font-bold uppercase tracking-widest text-premium/50 mb-4 border-b border-white/5 pb-2">Localization</h3>
+                  <div className="space-y-6">
+                    <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground/70 mb-6 border-b border-border pb-3">Localization</h3>
                     <FormField
                       control={form.control}
                       name="defaultLanguage"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="glass-label">Core Language</FormLabel>
+                          <FormLabel className="text-sm font-bold text-foreground">Core Language</FormLabel>
                           <Select onValueChange={field.onChange} defaultValue={field.value}>
                             <FormControl>
-                              <SelectTrigger className="glass-input h-12 w-full">
+                              <SelectTrigger className="h-12 w-full rounded-xl border-border/60 bg-muted/20">
                                 <SelectValue placeholder="Select Base Matrix Language" />
                               </SelectTrigger>
                             </FormControl>
-                            <SelectContent className="glass border-primary/10 rounded-lg">
-                              <SelectItem value="EN" className="hover:bg-primary/20 focus:bg-primary/20 rounded-lg">English (EN)</SelectItem>
-                              <SelectItem value="ES" className="hover:bg-primary/20 focus:bg-primary/20 rounded-lg">Spanish (ES)</SelectItem>
+                            <SelectContent className="border-border rounded-xl">
+                              <SelectItem value="EN" className="rounded-lg">English (EN)</SelectItem>
+                              <SelectItem value="ES" className="rounded-lg">Spanish (ES)</SelectItem>
                             </SelectContent>
                           </Select>
                           <FormMessage />
@@ -396,11 +395,11 @@ export default function CreateWidgetPage() {
               </div>
             </div>
 
-            <div className="flex justify-end gap-4 pt-8 border-t border-white/5">
-              <Button type="button" variant="ghost" onClick={() => router.push('/admin')} className="glass-button-ghost px-8 h-12 font-bold uppercase tracking-widest text-[11px]">
+            <div className="flex justify-between items-center bg-muted/10 p-8 border-t border-border">
+              <Button type="button" variant="outline" onClick={() => router.push('/admin')} className="px-8 h-12 font-bold rounded-xl border-border/60 hover:bg-background transition-all">
                 Abort Mission
               </Button>
-              <Button type="submit" disabled={isLoading} className="bg-primary hover:bg-primary/90 text-white px-10 h-12 rounded-lg font-bold uppercase tracking-widest text-[11px] shadow-2xl shadow-primary/30 transition-all hover:scale-105 active:scale-95">
+              <Button type="submit" disabled={isLoading} className="bg-primary hover:bg-primary/90 text-white px-10 h-12 rounded-xl font-bold shadow-xl shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98]">
                 {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Initialize Node'}
               </Button>
             </div>
