@@ -181,7 +181,7 @@ export function WidgetList({ projectId }: { projectId?: string }) {
   const renderWidgetCard = (widget: ChatWidget) => (
     <div
       key={widget.id}
-      className="glass-card p-6 flex flex-col gap-6 group rounded-[2rem] bg-black/20 border border-white/5"
+      className="glass-card p-6 flex flex-col gap-6 group rounded-lg bg-black/20 border border-white/5"
     >
       <div className="flex flex-col gap-5">
         <div className="flex justify-between items-start">
@@ -202,9 +202,9 @@ export function WidgetList({ projectId }: { projectId?: string }) {
           </Badge>
         </div>
 
-        <div className="glass-panel p-4 bg-white/5 rounded-2xl">
+        <div className="glass-panel p-4 bg-white/5 rounded-lg">
           <div className="flex items-center gap-4">
-            <div className="w-10 h-10 flex-none bg-primary shadow-lg shadow-primary/30 rounded-xl flex items-center justify-center">
+            <div className="w-10 h-10 flex-none bg-primary shadow-lg shadow-primary/30 rounded-lg flex items-center justify-center">
               <Activity size={24} className="text-white" strokeWidth={2.5} />
             </div>
             <div className="flex flex-col gap-0">
@@ -262,7 +262,7 @@ export function WidgetList({ projectId }: { projectId?: string }) {
 
           <Button
             variant="ghost"
-            className="cursor-pointer font-bold h-11 border border-red-500/10 bg-red-500/[0.02] hover:bg-red-500/[0.1] text-red-400 transition-all rounded-xl"
+            className="cursor-pointer font-bold h-11 border border-red-500/10 bg-red-500/[0.02] hover:bg-red-500/[0.1] text-red-400 transition-all rounded-lg"
             onClick={() => {
               setWidgetToDelete(widget);
               setDeleteConfirmOpen(true);
@@ -283,7 +283,7 @@ export function WidgetList({ projectId }: { projectId?: string }) {
             <h1 className="text-4xl font-display font-bold text-premium text-vibrant mb-1 tracking-tightest">Agents</h1>
             <p className="text-sm text-premium/50 font-medium font-sans">Deployment center for your communication nodes.</p>
           </div>
-          <Button size="lg" nativeButton={false} className="bg-primary hover:bg-primary/90 text-white font-bold h-11 px-6 shadow-xl shadow-primary/20 rounded-xl transition-all hover:scale-105 active:scale-95" render={<Link href="/admin/widget/create" />}>
+          <Button size="lg" nativeButton={false} className="bg-primary hover:bg-primary/90 text-white font-bold h-11 px-6 shadow-xl shadow-primary/20 rounded-lg transition-all hover:scale-105 active:scale-95" render={<Link href="/admin/widget/create" />}>
             <Plus size={18} className="mr-2" /> Deploys New Agent
           </Button>
         </div>
@@ -295,7 +295,7 @@ export function WidgetList({ projectId }: { projectId?: string }) {
         )}
 
         {error && (
-          <div className="bg-red-500/10 border border-red-500/20 p-6 rounded-3xl mb-9 backdrop-blur-md">
+          <div className="bg-red-500/10 border border-red-500/20 p-6 rounded-lg mb-9 backdrop-blur-md">
             <h3 className="text-red-500 font-bold text-lg mb-1">System Interruption</h3>
             <p className="text-red-500 text-sm opacity-80 leading-relaxed">{error.message}</p>
           </div>
@@ -315,9 +315,9 @@ export function WidgetList({ projectId }: { projectId?: string }) {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                   {widgetsByProject[project.id]?.map(renderWidgetCard)}
                   {(!widgetsByProject[project.id] || widgetsByProject[project.id].length === 0) && (
-                    <div className="col-span-full py-20 border-2 border-dashed border-white/5 rounded-[2.5rem] flex flex-col items-center justify-center bg-transparent">
+                    <div className="col-span-full py-20 border-2 border-dashed border-white/5 rounded-lg flex flex-col items-center justify-center bg-transparent">
                       <p className="text-lg text-premium/30 mb-6 font-medium">No active nodes in this project.</p>
-                      <Button variant="outline" size="lg" nativeButton={false} className="rounded-xl px-8 glass-button-ghost opacity-100" render={<Link href="/admin/widget/create" />}>
+                      <Button variant="outline" size="lg" nativeButton={false} className="rounded-lg px-8 glass-button-ghost opacity-100" render={<Link href="/admin/widget/create" />}>
                         Deploy Initial Node
                       </Button>
                     </div>
@@ -328,7 +328,7 @@ export function WidgetList({ projectId }: { projectId?: string }) {
 
             {projects.length === 0 && (
               <Card className="glass py-16 flex flex-col items-center justify-center gap-6 text-center border-white/5">
-                <div style={{ width: '80px', height: '80px' }} className="bg-primary/10 rounded-3xl flex items-center justify-center mb-2 animate-float">
+                <div style={{ width: '80px', height: '80px' }} className="bg-primary/10 rounded-lg flex items-center justify-center mb-2 animate-float">
                   <Folder size={40} className="text-primary" />
                 </div>
                 <div>

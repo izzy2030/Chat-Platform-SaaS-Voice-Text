@@ -167,7 +167,7 @@ export default function CreateWidgetPage() {
         &larr; Operations Console
       </Button>
 
-      <div className="glass-card-premium p-8 rounded-[2.5rem] bg-black/20 border border-white/5 backdrop-blur-xl">
+      <div className="glass-card-premium p-8 rounded-lg bg-black/20 border border-white/5 backdrop-blur-xl">
         <div className="mb-8">
           <h1 className="text-4xl font-display font-bold text-premium text-vibrant mb-2 tracking-tight">Deploy New Node</h1>
           <p className="text-lg text-premium/40">Configure the parameters for your autonomous communication node.</p>
@@ -193,7 +193,7 @@ export default function CreateWidgetPage() {
                                 <SelectValue placeholder="Access Cluster..." />
                               </SelectTrigger>
                             </FormControl>
-                            <SelectContent className="glass border-primary/10 rounded-xl">
+                            <SelectContent className="glass border-primary/10 rounded-lg">
                               {isLoadingProjects ? (
                                 <SelectItem value="loading" disabled>Loading Clusters...</SelectItem>
                               ) : (
@@ -240,7 +240,7 @@ export default function CreateWidgetPage() {
                                 <RadioGroupItem value="text" id="text" className="peer sr-only" />
                                 <Label
                                   htmlFor="text"
-                                  className="flex flex-col items-center justify-center rounded-2xl border border-primary/5 bg-primary/5 p-6 hover:bg-primary/10 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10 cursor-pointer transition-all duration-300"
+                                  className="flex flex-col items-center justify-center rounded-lg border border-primary/5 bg-primary/5 p-6 hover:bg-primary/10 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10 cursor-pointer transition-all duration-300"
                                 >
                                   <MessageSquare className="mb-2 h-6 w-6 text-primary" />
                                   <span className="text-sm font-bold text-premium">Text Stream</span>
@@ -250,7 +250,7 @@ export default function CreateWidgetPage() {
                                 <RadioGroupItem value="voice" id="voice" className="peer sr-only" />
                                 <Label
                                   htmlFor="voice"
-                                  className="flex flex-col items-center justify-center rounded-2xl border border-primary/5 bg-primary/5 p-6 hover:bg-primary/10 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10 cursor-pointer transition-all duration-300"
+                                  className="flex flex-col items-center justify-center rounded-lg border border-primary/5 bg-primary/5 p-6 hover:bg-primary/10 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/10 cursor-pointer transition-all duration-300"
                                 >
                                   <Mic className="mb-2 h-6 w-6 text-accent" />
                                   <span className="text-sm font-bold text-premium">Voice Matrix</span>
@@ -311,7 +311,7 @@ export default function CreateWidgetPage() {
                             <FormItem>
                               <FormLabel className="glass-label">Interface Accent</FormLabel>
                               <FormControl>
-                                <div className="flex items-center gap-3 glass-input h-12 px-4 rounded-xl">
+                                <div className="flex items-center gap-3 glass-input h-12 px-4 rounded-lg">
                                   <Input type="color" {...field} className="w-8 h-8 rounded-lg bg-transparent border-none cursor-pointer p-0" />
                                   <span className="text-xs text-premium/60 font-mono uppercase">{field.value}</span>
                                 </div>
@@ -327,7 +327,7 @@ export default function CreateWidgetPage() {
                             <FormItem>
                               <FormLabel className="glass-label">Base Surface</FormLabel>
                               <FormControl>
-                                <div className="flex items-center gap-3 glass-input h-12 px-4 rounded-xl">
+                                <div className="flex items-center gap-3 glass-input h-12 px-4 rounded-lg">
                                   <Input type="color" {...field} className="w-8 h-8 rounded-lg bg-transparent border-none cursor-pointer p-0" />
                                   <span className="text-xs text-premium/60 font-mono uppercase">{field.value}</span>
                                 </div>
@@ -382,7 +382,7 @@ export default function CreateWidgetPage() {
                                 <SelectValue placeholder="Select Base Matrix Language" />
                               </SelectTrigger>
                             </FormControl>
-                            <SelectContent className="glass border-primary/10 rounded-xl">
+                            <SelectContent className="glass border-primary/10 rounded-lg">
                               <SelectItem value="EN" className="hover:bg-primary/20 focus:bg-primary/20 rounded-lg">English (EN)</SelectItem>
                               <SelectItem value="ES" className="hover:bg-primary/20 focus:bg-primary/20 rounded-lg">Spanish (ES)</SelectItem>
                             </SelectContent>
@@ -400,7 +400,7 @@ export default function CreateWidgetPage() {
               <Button type="button" variant="ghost" onClick={() => router.push('/admin')} className="glass-button-ghost px-8 h-12 font-bold uppercase tracking-widest text-[11px]">
                 Abort Mission
               </Button>
-              <Button type="submit" disabled={isLoading} className="bg-primary hover:bg-primary/90 text-white px-10 h-12 rounded-2xl font-bold uppercase tracking-widest text-[11px] shadow-2xl shadow-primary/30 transition-all hover:scale-105 active:scale-95">
+              <Button type="submit" disabled={isLoading} className="bg-primary hover:bg-primary/90 text-white px-10 h-12 rounded-lg font-bold uppercase tracking-widest text-[11px] shadow-2xl shadow-primary/30 transition-all hover:scale-105 active:scale-95">
                 {isLoading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : 'Initialize Node'}
               </Button>
             </div>

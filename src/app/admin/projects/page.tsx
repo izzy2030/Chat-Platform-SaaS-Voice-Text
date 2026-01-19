@@ -129,7 +129,7 @@ export default function ProjectsPage() {
               </Button>
             }
           />
-          <DialogContent className="sm:max-w-[425px] rounded-2xl">
+          <DialogContent className="sm:max-w-[425px] rounded-lg">
             <DialogHeader>
               <DialogTitle>Create Project</DialogTitle>
               <DialogDescription>
@@ -173,7 +173,7 @@ export default function ProjectsPage() {
           {projects && projects.length > 0 ? (
             projects.map((project) => (
               <Link key={project.id} href={`/admin/projects/${project.id}`} className="block group">
-                <Card className="h-full overflow-hidden bg-white shadow-sm border border-indigo-100 rounded-2xl hover:shadow-md transition-all duration-200">
+                <Card className="h-full overflow-hidden bg-white shadow-sm border border-indigo-100 rounded-lg hover:shadow-md transition-all duration-200">
                   <CardHeader className="flex flex-row items-start justify-between space-y-0 pb-2">
                     <div className="rounded-full bg-indigo-50 p-2.5 group-hover:bg-indigo-100 transition-colors">
                       <Folder className="h-5 w-5 text-indigo-600" />
@@ -190,7 +190,7 @@ export default function ProjectsPage() {
               </Link>
             ))
           ) : (
-            <Card className="col-span-full border-0 shadow-sm bg-white rounded-2xl">
+            <Card className="col-span-full border-0 shadow-sm bg-white rounded-lg">
               <CardContent className="flex flex-col items-center justify-center py-16 text-center">
                 <div className="rounded-full bg-indigo-50 p-6 mb-6">
                   <Folder className="h-12 w-12 text-indigo-500" />

@@ -94,7 +94,7 @@ const ColorPicker = ({ label, value, onChange }: { label: string, value: string,
   <div className="space-y-3">
     <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</Label>
     <div className="flex items-center gap-3">
-      <div className="relative h-12 w-12 rounded-xl overflow-hidden shadow-sm hover:scale-105 transition-all duration-200 border-2 border-white ring-1 ring-border cursor-pointer bg-[url('https://transparenttextures.com/patterns/checkerboard.png')]">
+      <div className="relative h-12 w-12 rounded-lg overflow-hidden shadow-sm hover:scale-105 transition-all duration-200 border-2 border-white ring-1 ring-border cursor-pointer bg-[url('https://transparenttextures.com/patterns/checkerboard.png')]">
         <div
           style={{ backgroundColor: value }}
           className="absolute inset-0 w-full h-full"
@@ -137,7 +137,7 @@ function Preview({ widgetId, formValues }: { widgetId: string, formValues: Widge
   }, [widgetId, formValues]);
 
   return (
-    <div className="w-full h-full flex items-center justify-center p-8 bg-gradient-to-br from-gray-50 to-gray-100/50 relative overflow-hidden rounded-2xl border border-border/40 shadow-inner">
+    <div className="w-full h-full flex items-center justify-center p-8 bg-gradient-to-br from-gray-50 to-gray-100/50 relative overflow-hidden rounded-lg border border-border/40 shadow-inner">
       <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
 
       {/* Mock Window / Device Frame */}

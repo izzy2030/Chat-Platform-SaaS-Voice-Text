@@ -309,21 +309,21 @@ export default function ThemingPage({ params }: { params: Promise<{ widgetId: st
                   <div className="grid grid-cols-1 gap-3">
                     <div
                       onClick={() => setTheme(defaultTheme)}
-                      className="cursor-pointer group relative overflow-hidden rounded-xl border bg-gradient-to-br from-blue-50 to-indigo-50 p-4 hover:border-primary/50 transition-all hover:shadow-md"
+                      className="cursor-pointer group relative overflow-hidden rounded-lg border bg-gradient-to-br from-blue-50 to-indigo-50 p-4 hover:border-primary/50 transition-all hover:shadow-md"
                     >
                       <h4 className="font-bold text-primary">Standard Blue</h4>
                       <p className="text-xs text-muted-foreground mt-1">Clean, professional default look.</p>
                     </div>
                     <div
                       onClick={() => setTheme(darkTheme)}
-                      className="cursor-pointer group relative overflow-hidden rounded-xl border bg-gradient-to-br from-gray-900 to-slate-800 p-4 hover:border-primary/50 transition-all hover:shadow-md"
+                      className="cursor-pointer group relative overflow-hidden rounded-lg border bg-gradient-to-br from-gray-900 to-slate-800 p-4 hover:border-primary/50 transition-all hover:shadow-md"
                     >
                       <h4 className="font-bold text-white">Dark Mode</h4>
                       <p className="text-xs text-gray-400 mt-1">Sleek dark aesthetics for modern sites.</p>
                     </div>
                     <div
                       onClick={() => setTheme(playfulTheme)}
-                      className="cursor-pointer group relative overflow-hidden rounded-xl border bg-gradient-to-br from-yellow-50 to-orange-50 p-4 hover:border-primary/50 transition-all hover:shadow-md"
+                      className="cursor-pointer group relative overflow-hidden rounded-lg border bg-gradient-to-br from-yellow-50 to-orange-50 p-4 hover:border-primary/50 transition-all hover:shadow-md"
                     >
                       <h4 className="font-bold text-orange-600">Playful & Fun</h4>
                       <p className="text-xs text-muted-foreground mt-1">Bouncy animations and bright colors.</p>
