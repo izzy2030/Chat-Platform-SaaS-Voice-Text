@@ -137,13 +137,13 @@ export default function CreateWidgetPage() {
 
   return (
     <div className="w-full max-w-5xl mx-auto px-4 py-8">
-      <Button variant="ghost" nativeButton={false} className="mb-8 glass-button-ghost" render={<Link href="/admin" />}>
-        &larr; Operations Console
+      <Button variant="ghost" nativeButton={false} className="mb-8 glass-button-ghost" render={<Link href="/admin/widget" />}>
+        &larr; Widget Console
       </Button>
 
       <div className="bg-card rounded-[32px] border border-border shadow-md overflow-hidden">
         <div className="p-8 pb-4">
-          <h1 className="text-4xl font-bold text-foreground mb-2 tracking-tight">Deploy New Node</h1>
+          <h1 className="text-4xl font-bold text-foreground mb-2 tracking-tight">Initialize New Widget</h1>
           <p className="text-lg text-muted-foreground font-medium">Configure the parameters for your autonomous communication node.</p>
         </div>
 
