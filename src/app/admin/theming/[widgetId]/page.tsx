@@ -1,8 +1,9 @@
 'use client';
 
 import * as React from 'react';
-import { useUser } from '@/supabase';
-import { supabase } from '@/lib/supabase';
+import { useUser } from '@clerk/nextjs';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from 'convex/_generated/api';
 import { defaultTheme, darkTheme, playfulTheme } from '@/lib/themes';
 import { ChatWidgetComponent } from '@/components/widget/chat-widget';
 import { Button } from '@/components/ui/button';
@@ -205,35 +206,20 @@ export default function ThemingPage({ params }: { params: Promise<{ widgetId: st
   const { widgetId } = React.use(params);
   const [theme, setTheme] = React.useState<WidgetTheme>(defaultTheme);
   const [isSaving, setIsSaving] = React.useState(false);
-  const { user } = useUser();
-  const [isWidgetLoading, setIsWidgetLoading] = React.useState(true);
+  const { user, isLoaded } = useUser();
+
+  const widgetTheme = useQuery(
+    api.widgets.getTheme,
+    isLoaded && user ? { id: widgetId as any, userId: user.id } : 'skip'
+  );
+  const updateWidgetTheme = useMutation(api.widgets.updateTheme);
   const [selectedFileName, setSelectedFileName] = React.useState<string | null>(null);
 
   React.useEffect(() => {
-    const fetchWidget = async () => {
-      if (!user || !widgetId) return;
-      setIsWidgetLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('widgets')
-          .select('theme')
-          .eq('id', widgetId)
-          .eq('user_id', user.id)
-          .single();
-
-        if (error) throw error;
-        if (data?.theme) {
-          setTheme(prevTheme => ({ ...prevTheme, ...data.theme }));
-        }
-      } catch (error: any) {
-        console.error('Error fetching widget theme:', error);
-      } finally {
-        setIsWidgetLoading(false);
-      }
-    };
-
-    fetchWidget();
-  }, [user?.id, widgetId]);
+    if (widgetTheme) {
+      setTheme(prevTheme => ({ ...prevTheme, ...widgetTheme }));
+    }
+  }, [widgetTheme]);
 
   const updateTheme = (newValues: Partial<WidgetTheme>) => {
     setTheme((prevTheme) => ({ ...prevTheme, ...newValues }));
@@ -263,13 +249,11 @@ export default function ThemingPage({ params }: { params: Promise<{ widgetId: st
     }
     setIsSaving(true);
     try {
-      const { error } = await supabase
-        .from('widgets')
-        .update({ theme: theme })
-        .eq('id', widgetId)
-        .eq('user_id', user.id);
-
-      if (error) throw error;
+      await updateWidgetTheme({
+        id: widgetId as any,
+        userId: user.id,
+        theme: theme,
+      });
 
       toast({
         title: 'Theme Saved!',
@@ -311,7 +295,7 @@ export default function ThemingPage({ params }: { params: Promise<{ widgetId: st
     }
   };
 
-  if (isWidgetLoading) {
+  if (widgetTheme === undefined) {
     return (
       <div className="flex h-screen w-full items-center justify-center">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />

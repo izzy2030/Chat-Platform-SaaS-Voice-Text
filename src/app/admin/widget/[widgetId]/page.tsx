@@ -5,8 +5,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm, useWatch } from 'react-hook-form';
 import * as z from 'zod';
 import { useEffect, useState, use } from 'react';
-import { supabase } from '@/lib/supabase';
-import { useUser } from '@/supabase';
+import { useUser } from '@clerk/nextjs';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from 'convex/_generated/api';
 import { useRouter } from 'next/navigation';
 import { Loader2, MessageSquare, Mic, Save, Eye, Smartphone, Monitor } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -167,56 +168,18 @@ export default function EditWidgetPage({
 }) {
   const { widgetId } = use(params);
   const [isLoading, setIsLoading] = useState(false);
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
   const router = useRouter();
 
-  const [widget, setWidget] = useState<ChatWidget | null>(null);
-  const [isWidgetLoading, setIsWidgetLoading] = useState(true);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [isLoadingProjects, setIsLoadingProjects] = useState(true);
-
-  useEffect(() => {
-    const fetchWidget = async () => {
-      if (!user || !widgetId) return;
-      setIsWidgetLoading(true);
-      try {
-        const { data, error } = await supabase
-          .from('widgets')
-          .select('*')
-          .eq('id', widgetId)
-          .eq('user_id', user.id)
-          .single();
-
-        if (error) throw error;
-        setWidget(data);
-      } catch (error: any) {
-        console.error('Error fetching widget:', error);
-      } finally {
-        setIsWidgetLoading(false);
-      }
-    };
-
-    const fetchProjects = async () => {
-      if (!user) return;
-      setIsLoadingProjects(true);
-      try {
-        const { data, error } = await supabase
-          .from('projects')
-          .select('*')
-          .eq('user_id', user.id);
-
-        if (error) throw error;
-        setProjects(data || []);
-      } catch (error: any) {
-        toast({ variant: 'destructive', title: 'Error loading projects', description: error.message });
-      } finally {
-        setIsLoadingProjects(false);
-      }
-    };
-
-    fetchWidget();
-    fetchProjects();
-  }, [user?.id, widgetId]);
+  const widget = useQuery(
+    api.widgets.getById,
+    isLoaded && user ? { id: widgetId as any, userId: user.id } : 'skip'
+  );
+  const projects = useQuery(
+    api.projects.getByUserId,
+    isLoaded && user ? { userId: user.id } : 'skip'
+  );
+  const updateWidget = useMutation(api.widgets.update);
 
   const form = useForm<WidgetFormData>({
     resolver: zodResolver(widgetSchema),
@@ -243,11 +206,11 @@ export default function EditWidgetPage({
     if (widget) {
       const defaults = {
         name: widget.name || '',
-        projectId: widget.project_id || '',
+        projectId: String(widget.projectId || ''),
         type: widget.type || 'text',
-        webhookUrl: widget.webhook_url || '',
+        webhookUrl: widget.webhookUrl || '',
         webhookSecret: widget.config?.webhookSecret || '',
-        allowedDomains: Array.isArray(widget.allowed_domains) ? widget.allowed_domains.join(', ') : '',
+        allowedDomains: Array.isArray(widget.allowedDomains) ? widget.allowedDomains.join(', ') : '',
         bubbleColor: widget.theme?.bubbleColor || '#94B4E4',
         bubbleIcon: widget.theme?.bubbleIcon || '',
         panelColor: widget.theme?.panelColor || '#F0F4F8',
@@ -273,39 +236,32 @@ export default function EditWidgetPage({
     setIsLoading(true);
 
     try {
-      const { error } = await supabase
-        .from('widgets')
-        .update({
-          name: data.name,
-          project_id: data.projectId,
-          type: data.type,
-          webhook_url: data.webhookUrl,
-          allowed_domains: data.allowedDomains.split(',').map(d => d.trim()),
-          theme: {
-            bubbleColor: data.bubbleColor || '',
-            bubbleIcon: data.bubbleIcon || '',
-            panelColor: data.panelColor || '',
-            headerTitle: data.headerTitle || '',
-            welcomeMessage: data.welcomeMessage || '',
-            position: data.position,
-          },
-          config: {
-            webhookSecret: data.webhookSecret || '',
-            defaultLanguage: data.defaultLanguage,
-          }
-        })
-        .eq('id', widgetId)
-        .eq('user_id', user.id);
-
-      if (error) throw error;
+      await updateWidget({
+        id: widgetId as any,
+        userId: user.id,
+        name: data.name,
+        projectId: data.projectId as any,
+        type: data.type,
+        webhookUrl: data.webhookUrl,
+        allowedDomains: data.allowedDomains.split(',').map(d => d.trim()),
+        theme: {
+          bubbleColor: data.bubbleColor || '',
+          bubbleIcon: data.bubbleIcon || '',
+          panelColor: data.panelColor || '',
+          headerTitle: data.headerTitle || '',
+          welcomeMessage: data.welcomeMessage || '',
+          position: data.position,
+        },
+        config: {
+          webhookSecret: data.webhookSecret || '',
+          defaultLanguage: data.defaultLanguage,
+        },
+      });
 
       toast({
         title: 'Widget Updated!',
         description: 'Your chat widget has been updated successfully.',
       });
-
-      // Optional: Refresh local state or router
-      // router.refresh(); 
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -316,6 +272,9 @@ export default function EditWidgetPage({
       setIsLoading(false);
     }
   };
+
+  const isWidgetLoading = widget === undefined;
+  const isLoadingProjects = projects === undefined;
 
   if (isWidgetLoading) {
     return (
@@ -518,7 +477,7 @@ export default function EditWidgetPage({
                                     <SelectItem value="loading" disabled>Loading...</SelectItem>
                                   ) : (
                                     projects?.map((project) => (
-                                      <SelectItem key={project.id} value={project.id}>
+                                      <SelectItem key={project._id} value={project._id}>
                                         {project.name}
                                       </SelectItem>
                                     ))

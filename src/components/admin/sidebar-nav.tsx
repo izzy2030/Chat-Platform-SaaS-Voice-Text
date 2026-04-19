@@ -26,8 +26,7 @@ import {
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { supabase } from '@/lib/supabase';
-import { useUser } from '@/supabase';
+import { useUser, useClerk } from '@clerk/nextjs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import {
   DropdownMenu,
@@ -43,11 +42,11 @@ export function SidebarNav() {
   const pathname = usePathname();
   const router = useRouter();
   const { user } = useUser();
+  const { signOut } = useClerk();
   const { toggleSidebar, state } = useSidebar();
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    router.push('/login');
+    await signOut({ redirectUrl: '/login' });
   };
 
   return (
@@ -153,19 +152,19 @@ export function SidebarNav() {
               >
                 <Avatar className="h-9 w-9 rounded-lg border border-white/10">
                   <AvatarImage
-                    src={user?.user_metadata?.avatar_url || ''}
-                    alt={user?.user_metadata?.full_name || ''}
+                    src={user?.imageUrl || ''}
+                    alt={user?.fullName || ''}
                   />
                   <AvatarFallback className="rounded-lg bg-primary/20 text-primary font-bold">
-                    {getInitials(user?.email)}
+                    {getInitials(user?.emailAddresses?.[0]?.emailAddress)}
                   </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight ml-2">
                   <span className="truncate font-bold">
-                    {user?.user_metadata?.full_name || 'Operator'}
+                    {user?.fullName || 'Operator'}
                   </span>
                   <span className="truncate text-[10px] text-gray-500 uppercase tracking-tighter">
-                    {user?.email || ''}
+                    {user?.emailAddresses?.[0]?.emailAddress || ''}
                   </span>
                 </div>
                 <Settings className="ml-auto size-4 text-gray-400" />

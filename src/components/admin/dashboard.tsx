@@ -1,7 +1,6 @@
 'use client';
 
-import { supabase } from '@/lib/supabase';
-import { useUser } from '@/supabase';
+import { useUser, useClerk } from '@clerk/nextjs';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,11 +19,11 @@ import { getInitials } from '@/lib/utils';
 
 export function Dashboard() {
   const { user } = useUser();
+  const { signOut } = useClerk();
   const router = useRouter();
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    router.push('/login');
+    await signOut({ redirectUrl: '/login' });
   };
 
   return (
@@ -57,11 +56,11 @@ export function Dashboard() {
                 <Button variant="secondary" size="icon" className="rounded-full">
                   <Avatar>
                     <AvatarImage
-                      src={user?.user_metadata?.avatar_url || undefined}
-                      alt={user?.user_metadata?.full_name || 'user avatar'}
+                      src={user?.imageUrl || undefined}
+                      alt={user?.fullName || 'user avatar'}
                     />
                     <AvatarFallback>
-                      {getInitials(user?.email)}
+                      {getInitials(user?.emailAddresses?.[0]?.emailAddress)}
                     </AvatarFallback>
                   </Avatar>
                   <span className="sr-only">Toggle user menu</span>

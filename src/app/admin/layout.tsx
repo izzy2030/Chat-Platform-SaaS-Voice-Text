@@ -3,8 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, usePathname } from 'next/navigation';
 import Link from 'next/link';
-import { useUser } from '@/supabase';
-import { supabase } from '@/lib/supabase';
+import { useUser, useClerk } from '@clerk/nextjs';
 import { Loader2, Zap, LayoutDashboard, Folder, PlusCircle, User, PanelLeftClose, PanelRightClose, Settings, LogOut } from 'lucide-react';
 import { Sidebar, SidebarHeader, SidebarContent, SidebarFooter, SidebarGroup, SidebarGroupLabel, SidebarGroupContent, SidebarMenu, SidebarMenuItem, SidebarMenuButton, useSidebar, SidebarProvider } from '@/components/ui/sidebar';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -20,26 +19,22 @@ export default function AdminLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { user, isUserLoading } = useUser();
+  const { user, isLoaded } = useUser();
+  const { signOut } = useClerk();
   const router = useRouter();
   const { theme, setTheme } = useTheme();
-  // Sidebar state is handled inside the provider, we just render the structure here
-  // But we need access to state for the "Minimize Stream" text toggle if we want it perfect,
-  // however standard shadcn sidebar handles collapsing internally or via useSidebar hook in children.
-  // For the Layout, we can just wrap children.
 
   useEffect(() => {
-    if (!isUserLoading && !user) {
+    if (isLoaded && !user) {
       router.push('/login');
     }
-  }, [user, isUserLoading, router]);
+  }, [user, isLoaded, router]);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    router.push('/login');
+    await signOut({ redirectUrl: '/login' });
   };
 
-  if (isUserLoading || !user) {
+  if (!isLoaded || !user) {
     return (
       <div className="flex h-screen w-full items-center justify-center bg-background">
         <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
@@ -66,6 +61,11 @@ export default function AdminLayout({
 function AdminSidebar({ user, handleSignOut, setTheme, theme }: { user: any, handleSignOut: () => void, setTheme: any, theme: string | undefined }) {
   const pathname = usePathname();
   const { state, toggleSidebar } = useSidebar();
+
+  const fullName = user?.fullName || 'Operator';
+  const email = user?.emailAddresses?.[0]?.emailAddress || '';
+  const avatarUrl = user?.imageUrl || '';
+  const initials = getInitials(email);
 
   return (
     <Sidebar collapsible="icon">
@@ -159,19 +159,19 @@ function AdminSidebar({ user, handleSignOut, setTheme, theme }: { user: any, han
               >
                 <Avatar className="h-8 w-8 rounded-lg">
                   <AvatarImage
-                    src={user?.user_metadata?.avatar_url || ''}
-                    alt={user?.user_metadata?.full_name || ''}
+                    src={avatarUrl}
+                    alt={fullName}
                   />
                   <AvatarFallback className="rounded-lg">
-                    {getInitials(user?.email)}
+                    {initials}
                   </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight">
                   <span className="truncate font-semibold">
-                    {user?.user_metadata?.full_name || 'Operator'}
+                    {fullName}
                   </span>
                   <span className="truncate text-xs text-muted-foreground">
-                    {user?.email || ''}
+                    {email}
                   </span>
                 </div>
                 <Settings className="ml-auto size-4" />

@@ -1,8 +1,7 @@
 import type { Metadata } from 'next';
 import { Inter, Outfit } from 'next/font/google';
 import './globals.css';
-import { SupabaseProvider } from '@/supabase/provider';
-import { Toaster } from '@/components/ui/sonner';
+import { Providers } from '@/components/providers';
 
 const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const outfit = Outfit({ subsets: ['latin'], variable: '--font-outfit' });
@@ -12,8 +11,6 @@ export const metadata: Metadata = {
   description: 'Enterprise-grade AI communication platform with sub-second latency.',
 };
 
-import { ThemeProvider } from '@/components/theme-provider';
-
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -22,10 +19,9 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={`${inter.variable} ${outfit.variable} font-sans antialiased`}>
-        <ThemeProvider attribute="class" defaultTheme="dark" enableSystem>
-          <SupabaseProvider>{children}</SupabaseProvider>
-          <Toaster />
-        </ThemeProvider>
+        <Providers>
+          {children}
+        </Providers>
       </body>
     </html>
   );

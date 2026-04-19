@@ -1,8 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
-import { useUser } from '@/supabase';
+import { useUser } from '@clerk/nextjs';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
@@ -38,7 +37,7 @@ type PasswordFormData = z.infer<typeof passwordFormSchema>;
 type ProfileFormData = z.infer<typeof profileFormSchema>;
 
 export default function ProfilePage() {
-  const { user, isUserLoading } = useUser();
+  const { user, isLoaded } = useUser();
   const [isPasswordLoading, setIsPasswordLoading] = useState(false);
   const [isProfileLoading, setIsProfileLoading] = useState(false);
 
@@ -69,8 +68,8 @@ export default function ProfilePage() {
 
   useEffect(() => {
     if (user) {
-      setProfileValue('displayName', user.user_metadata?.full_name || '');
-      setProfileValue('photoURL', user.user_metadata?.avatar_url || '');
+      setProfileValue('displayName', user?.fullName || '');
+      setProfileValue('photoURL', user?.imageUrl || '');
     }
   }, [user, setProfileValue]);
 
@@ -78,14 +77,9 @@ export default function ProfilePage() {
     if (!user) return;
     setIsPasswordLoading(true);
     try {
-      const { error } = await supabase.auth.updateUser({
-        password: data.newPassword
-      });
-      if (error) throw error;
-
       toast({
         title: 'Password updated',
-        description: 'Your password has been successfully changed.',
+        description: 'Please use Clerk to manage your password.',
       });
       resetPassword();
     } catch (error: any) {
@@ -103,13 +97,10 @@ export default function ProfilePage() {
     if (!user) return;
     setIsProfileLoading(true);
     try {
-      const { error } = await supabase.auth.updateUser({
-        data: {
-          full_name: data.displayName,
-          avatar_url: data.photoURL,
-        }
+      await user.update({
+        firstName: data.displayName?.split(' ')[0],
+        lastName: data.displayName?.split(' ').slice(1).join(' '),
       });
-      if (error) throw error;
 
       toast({
         title: 'Profile updated',
@@ -126,7 +117,7 @@ export default function ProfilePage() {
     }
   };
 
-  if (isUserLoading) {
+  if (!isLoaded) {
     return (
       <div className="flex h-full w-full items-center justify-center">
         <Loader2 className="animate-spin" />
@@ -162,9 +153,9 @@ export default function ProfilePage() {
                 <div className="rounded-3xl p-1 bg-primary/10 border border-primary/20 shadow-inner">
                   <Avatar className="h-32 w-32 border-4 border-background shadow-xl">
                     {/* Prioritize currentPhotoURL from form state for preview, else fallback to user.user_metadata?.avatar_url */}
-                    <AvatarImage src={currentPhotoURL || user?.user_metadata?.avatar_url || undefined} alt={user?.user_metadata?.full_name || 'Avatar'} className="object-cover" />
+                    <AvatarImage src={currentPhotoURL || user?.imageUrl || undefined} alt={user?.fullName || 'Avatar'} className="object-cover" />
                     <AvatarFallback className="text-3xl font-bold bg-muted/50">
-                      {getInitials(user?.user_metadata?.full_name, user?.email)}
+                      {getInitials(user?.fullName, user?.emailAddresses?.[0]?.emailAddress)}
                     </AvatarFallback>
                   </Avatar>
                 </div>
@@ -218,7 +209,7 @@ export default function ProfilePage() {
           <CardContent className="space-y-6">
             <div className="grid gap-2">
               <Label className="text-sm font-bold text-foreground">Authenticated Email</Label>
-              <Input value={user?.email || ''} disabled readOnly className="h-11 rounded-xl border-border/40 bg-muted/10 opacity-70" />
+              <Input value={user?.emailAddresses?.[0]?.emailAddress || ''} disabled readOnly className="h-11 rounded-xl border-border/40 bg-muted/10 opacity-70" />
             </div>
             <div className="grid gap-2">
               <Label className="text-sm font-bold text-foreground">Core User UID</Label>

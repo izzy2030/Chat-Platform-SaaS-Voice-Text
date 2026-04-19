@@ -1,19 +1,18 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { supabase } from '@/lib/supabase';
-import { useUser } from '@/supabase';
+import { useUser } from '@clerk/nextjs';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from 'convex/_generated/api';
 import { toast } from '@/hooks/use-toast';
 import { Loader2, Folder, Plus, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import {
   Card,
   CardContent,
-  CardHeader,
-  CardTitle,
 } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -41,44 +40,16 @@ const projectSchema = z.object({
 
 type ProjectFormData = z.infer<typeof projectSchema>;
 
-interface Project {
-  id: string;
-  name: string;
-}
-
 export default function ProjectsPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [isLoadingProjects, setIsLoadingProjects] = useState(true);
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
 
-  const fetchProjects = async () => {
-    if (!user) return;
-    setIsLoadingProjects(true);
-    try {
-      const { data, error } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setProjects(data || []);
-    } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Error loading projects',
-        description: error.message,
-      });
-    } finally {
-      setIsLoadingProjects(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchProjects();
-  }, [user?.id]);
+  const projects = useQuery(
+    api.projects.getByUserId,
+    isLoaded && user ? { userId: user.id } : 'skip'
+  );
+  const createProject = useMutation(api.projects.create);
 
   const form = useForm<ProjectFormData>({
     resolver: zodResolver(projectSchema),
@@ -88,18 +59,11 @@ export default function ProjectsPage() {
   const onSubmit = async (data: ProjectFormData) => {
     if (!user) return;
     setIsLoading(true);
-
     try {
-      const { error } = await supabase
-        .from('projects')
-        .insert([{ name: data.name, user_id: user.id }]);
-
-      if (error) throw error;
-
+      await createProject({ name: data.name, userId: user.id });
       toast({ title: 'Project Created!', description: `The "${data.name}" project has been created.` });
       form.reset();
       setIsDialogOpen(false);
-      fetchProjects();
     } catch (error: any) {
       toast({
         variant: 'destructive',
@@ -164,15 +128,15 @@ export default function ProjectsPage() {
         </Dialog>
       </div>
 
-      {isLoadingProjects ? (
+      {projects === undefined ? (
         <div className="flex justify-center py-12">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       ) : (
         <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
           {projects && projects.length > 0 ? (
-            projects.map((project) => (
-              <Link key={project.id} href={`/admin/projects/${project.id}`} className="block group">
+            projects.map((project: any) => (
+              <Link key={project._id} href={`/admin/projects/${project._id}`} className="block group">
                 <Card className="h-full bg-card hover:bg-card/80 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 border border-border/70 overflow-hidden flex flex-col p-6">
                   <div className="flex flex-col gap-6">
                     <div className="flex justify-between items-start">

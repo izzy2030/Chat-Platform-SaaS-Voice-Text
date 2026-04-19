@@ -6,8 +6,9 @@ import Link from 'next/link';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
-import { supabase } from '@/lib/supabase';
-import { useUser } from '@/supabase';
+import { useUser } from '@clerk/nextjs';
+import { useQuery, useMutation } from 'convex/react';
+import { api } from 'convex/_generated/api';
 import { toast } from '@/hooks/use-toast';
 import {
   Loader2,
@@ -55,39 +56,16 @@ const widgetSchema = z.object({
 
 type WidgetFormData = z.infer<typeof widgetSchema>;
 
-interface Project {
-  id: string;
-  name: string;
-}
-
 export default function CreateWidgetPage() {
   const [isLoading, setIsLoading] = useState(false);
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [isLoadingProjects, setIsLoadingProjects] = useState(true);
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
   const router = useRouter();
 
-  useEffect(() => {
-    const fetchProjects = async () => {
-      if (!user) return;
-      setIsLoadingProjects(true);
-      try {
-        const { data, error } = await supabase
-          .from('projects')
-          .select('*')
-          .eq('user_id', user.id);
-
-        if (error) throw error;
-        setProjects(data || []);
-      } catch (error: any) {
-        toast({ variant: 'destructive', title: 'Error loading projects', description: error.message });
-      } finally {
-        setIsLoadingProjects(false);
-      }
-    };
-
-    fetchProjects();
-  }, [user]);
+  const projects = useQuery(
+    api.projects.getByUserId,
+    isLoaded && user ? { userId: user.id } : 'skip'
+  );
+  const createWidget = useMutation(api.widgets.create);
 
   const form = useForm<WidgetFormData>({
     resolver: zodResolver(widgetSchema),
@@ -120,30 +98,26 @@ export default function CreateWidgetPage() {
     setIsLoading(true);
 
     try {
-      const { error } = await supabase
-        .from('widgets')
-        .insert([{
-          name: data.name,
-          project_id: data.projectId,
-          type: data.type,
-          webhook_url: data.webhookUrl,
-          allowed_domains: data.allowedDomains.split(',').map(d => d.trim()),
-          theme: {
-            bubbleColor: data.bubbleColor || '#000000',
-            bubbleIcon: data.bubbleIcon || '',
-            panelColor: data.panelColor || '#FFFFFF',
-            headerTitle: data.headerTitle || '',
-            welcomeMessage: data.welcomeMessage || '',
-            position: data.position,
-          },
-          user_id: user.id,
-          config: {
-            webhookSecret: data.webhookSecret || '',
-            defaultLanguage: data.defaultLanguage,
-          }
-        }]);
-
-      if (error) throw error;
+      await createWidget({
+        name: data.name,
+        projectId: data.projectId as any,
+        type: data.type,
+        webhookUrl: data.webhookUrl,
+        allowedDomains: data.allowedDomains.split(',').map(d => d.trim()),
+        theme: {
+          bubbleColor: data.bubbleColor || '#000000',
+          bubbleIcon: data.bubbleIcon || '',
+          panelColor: data.panelColor || '#FFFFFF',
+          headerTitle: data.headerTitle || '',
+          welcomeMessage: data.welcomeMessage || '',
+          position: data.position,
+        },
+        userId: user.id,
+        config: {
+          webhookSecret: data.webhookSecret || '',
+          defaultLanguage: data.defaultLanguage,
+        },
+      });
 
       toast({
         title: 'Widget Created!',
@@ -176,7 +150,6 @@ export default function CreateWidgetPage() {
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-12">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-10 p-8 pt-4">
-              {/* Identity Section */}
               <div className="flex flex-col gap-8">
                 <div className="space-y-6">
                   <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground/70 mb-6 border-b border-border pb-3">System Identity</h3>
@@ -194,11 +167,11 @@ export default function CreateWidgetPage() {
                               </SelectTrigger>
                             </FormControl>
                             <SelectContent className="border-border rounded-xl">
-                              {isLoadingProjects ? (
+                              {projects === undefined ? (
                                 <SelectItem value="loading" disabled>Loading Clusters...</SelectItem>
                               ) : (
                                 projects?.map((project) => (
-                                  <SelectItem key={project.id} value={project.id} className="hover:bg-primary/20 focus:bg-primary/20 rounded-lg">
+                                  <SelectItem key={project._id} value={project._id} className="hover:bg-primary/20 focus:bg-primary/20 rounded-lg">
                                     {project.name}
                                   </SelectItem>
                                 ))

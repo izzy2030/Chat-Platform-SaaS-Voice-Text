@@ -1,10 +1,10 @@
-
 'use client';
 
 import { useMemo, useState, useEffect } from 'react';
 import { formatDistanceToNow } from 'date-fns';
-import { supabase } from '@/lib/supabase';
-import { useUser } from '@/supabase';
+import { useUser } from '@clerk/nextjs';
+import { useQuery, useMutation, useConvex } from 'convex/react';
+import { api } from 'convex/_generated/api';
 import Link from 'next/link';
 import { Loader2, Edit, Code, Eye, Palette, MessageSquare, Mic, Trash2, Folder, Activity, Copy, Plus, LineChart, Settings, Zap, Sparkles } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
@@ -45,37 +45,12 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-interface ChatWidget {
-  id: string;
-  name: string;
-  project_id: string;
-  type?: 'text' | 'voice';
-  user_id: string;
-  webhook_url: string;
-  allowed_domains: string[];
-  theme?: Partial<WidgetTheme>;
-  brand?: {
-    bubbleColor?: string;
-    bubbleIcon?: string;
-    panelColor?: string;
-    headerTitle?: string;
-    welcomeMessage?: string;
-    position?: 'left' | 'right';
-  };
-  updated_at: string;
-}
-
-interface Project {
-  id: string;
-  name: string;
-}
-
-function ScriptTagDialog({ widget, open, onOpenChange }: { widget: ChatWidget | null, open: boolean, onOpenChange: (open: boolean) => void }) {
+function ScriptTagDialog({ widget, open, onOpenChange }: { widget: any | null, open: boolean, onOpenChange: (open: boolean) => void }) {
   if (!widget) return null;
 
   const scriptTag = `<script
   src="${typeof window !== 'undefined' ? window.location.origin : ''}/widget.js"
-  data-key="${widget.id}"
+  data-key="${widget._id}"
   data-site="${widget.name.toUpperCase().replace(/\s+/g, '-')}"
 ></script>`;
 
@@ -121,80 +96,62 @@ function ScriptTagDialog({ widget, open, onOpenChange }: { widget: ChatWidget | 
 }
 
 export function WidgetList({ projectId }: { projectId?: string }) {
-  const { user } = useUser();
-  const [selectedWidget, setSelectedWidget] = useState<ChatWidget | null>(null);
-  const [isScriptModalOpen, setScriptModalOpen] = useState(false);
-  const [isTestModalOpen, setTestModalOpen] = useState(false);
-  const [widgetToDelete, setWidgetToDelete] = useState<ChatWidget | null>(null);
-  const [isDeleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const { user, isLoaded } = useUser();
+  const deleteWidget = useMutation(api.widgets.remove);
+  const convex = useConvex();
 
-  const [projects, setProjects] = useState<Project[]>([]);
-  const [widgets, setWidgets] = useState<ChatWidget[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<any>(null);
-
-  const fetchData = async () => {
-    if (!user) return;
-    setIsLoading(true);
-    try {
-      const { data: projectsData, error: projectsError } = await supabase
-        .from('projects')
-        .select('*')
-        .eq('user_id', user.id);
-
-      if (projectsError) throw projectsError;
-      setProjects(projectsData || []);
-
-      let widgetsQuery = supabase
-        .from('widgets')
-        .select('*')
-        .eq('user_id', user.id);
-
-      if (projectId) {
-        widgetsQuery = widgetsQuery.eq('project_id', projectId);
-      }
-
-      const { data: widgetsData, error: widgetsError } = await widgetsQuery;
-      if (widgetsError) throw widgetsError;
-      setWidgets(widgetsData || []);
-
-    } catch (err: any) {
-      setError(err);
-      toast({ variant: 'destructive', title: 'Error loading data', description: err.message });
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  const [convexReady, setConvexReady] = useState(false);
 
   useEffect(() => {
-    fetchData();
-  }, [user?.id, projectId]);
+    convex.query(api.projects.getByUserId, { userId: 'probe' })
+      .then(() => setConvexReady(true))
+      .catch(() => setConvexReady(true));
+  }, [convex]);
+
+  const projects = useQuery(
+    api.projects.getByUserId,
+    convexReady && isLoaded && user ? { userId: user.id } : 'skip'
+  );
+
+  const allWidgets = useQuery(
+    projectId ? api.widgets.getByProjectId : api.widgets.getByUserId,
+    convexReady && isLoaded && user
+      ? projectId
+        ? { userId: user.id, projectId: projectId as any }
+        : { userId: user.id }
+      : 'skip'
+  );
+
+  const [selectedWidget, setSelectedWidget] = useState<any | null>(null);
+  const [isScriptModalOpen, setScriptModalOpen] = useState(false);
+  const [isTestModalOpen, setTestModalOpen] = useState(false);
+  const [widgetToDelete, setWidgetToDelete] = useState<any | null>(null);
+  const [isDeleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
   const widgetsByProject = useMemo(() => {
-    if (!widgets) return {};
-    const grouped: { [key: string]: ChatWidget[] } = {};
-    widgets.forEach((widget) => {
-      const pId = widget.project_id || 'unassigned';
+    if (!allWidgets) return {};
+    const grouped: { [key: string]: any[] } = {};
+    allWidgets.forEach((widget) => {
+      const pId = widget.projectId || 'unassigned';
       if (!grouped[pId]) grouped[pId] = [];
       grouped[pId].push(widget);
     });
     return grouped;
-  }, [widgets]);
+  }, [allWidgets]);
 
-  const renderWidgetCard = (widget: ChatWidget) => (
+  const renderWidgetCard = (widget: any) => (
     <div
-      key={widget.id}
+      key={widget._id}
       className="group bg-card hover:bg-card/80 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 border border-border/70 overflow-hidden flex flex-col"
     >
       <div className="p-6 pb-5 flex flex-col gap-5 flex-1">
-        {/* Header */}
         <div className="flex justify-between items-start">
           <div className="space-y-0.5">
             <h3 className="text-xl font-bold tracking-tight text-foreground">
               {widget.name}
             </h3>
             <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
-              AGENT ID: {widget.id.split('-')[0]}...
+              AGENT ID: {String(widget._id).slice(0, 8)}...
             </p>
           </div>
           <div className="bg-muted/50 px-3 py-1.5 rounded-full flex items-center gap-1.5 border border-border/70">
@@ -203,7 +160,6 @@ export function WidgetList({ projectId }: { projectId?: string }) {
           </div>
         </div>
 
-        {/* Status Box */}
         <div className="bg-muted/30 rounded-xl p-3 flex items-center gap-4 border border-border/60">
           <div className="w-12 h-12 bg-background rounded-lg shadow-sm border border-border/70 flex items-center justify-center shrink-0">
             <LineChart className="text-primary w-6 h-6" />
@@ -217,12 +173,11 @@ export function WidgetList({ projectId }: { projectId?: string }) {
           </div>
         </div>
 
-        {/* Action Grid */}
         <div className="grid grid-cols-2 gap-3">
           <Button
             variant="outline"
             nativeButton={false}
-            render={<Link href={`/admin/theming/${widget.id}`} />}
+            render={<Link href={`/admin/theming/${widget._id}`} />}
             className="h-20 flex-col gap-2 rounded-xl border-border/80 hover:border-primary/30 hover:bg-primary/5 hover:text-primary transition-all group/btn"
           >
             <Palette className="w-5 h-5 text-muted-foreground group-hover/btn:text-primary transition-colors" />
@@ -232,7 +187,7 @@ export function WidgetList({ projectId }: { projectId?: string }) {
           <Button
             variant="outline"
             nativeButton={false}
-            render={<Link href={`/admin/widget/${widget.id}`} />}
+            render={<Link href={`/admin/widget/${widget._id}`} />}
             className="h-20 flex-col gap-2 rounded-xl border-border/80 hover:border-primary/30 hover:bg-primary/5 hover:text-primary transition-all group/btn"
           >
             <Settings className="w-5 h-5 text-muted-foreground group-hover/btn:text-primary transition-colors" />
@@ -264,7 +219,6 @@ export function WidgetList({ projectId }: { projectId?: string }) {
           </Button>
         </div>
 
-        {/* Remove Button */}
         <Button
           variant="ghost"
           className="h-12 w-full bg-red-500/5 text-red-600 hover:bg-red-500/10 hover:text-red-700 rounded-xl font-semibold"
@@ -277,15 +231,14 @@ export function WidgetList({ projectId }: { projectId?: string }) {
         </Button>
       </div>
 
-      {/* Footer */}
       <div className="bg-muted/15 px-6 py-4 border-t border-border/60 flex justify-between items-center mt-auto">
         <p className="text-xs font-medium text-muted-foreground">
-          Last updated {formatDistanceToNow(new Date(widget.updated_at), { addSuffix: true })}
+          Last updated {formatDistanceToNow(new Date(widget._creationTime), { addSuffix: true })}
         </p>
         <Avatar className="w-7 h-7 rounded-lg border border-border/50">
-          <AvatarImage src={user?.user_metadata?.avatar_url || ''} />
+          <AvatarImage src={user?.imageUrl || ''} />
           <AvatarFallback className="rounded-lg bg-primary/10 text-primary text-[9px] font-bold">
-            {user?.user_metadata?.full_name?.substring(0, 2).toUpperCase() || user?.email?.substring(0, 2).toUpperCase() || '??'}
+            {user?.fullName?.substring(0, 2).toUpperCase() || user?.emailAddresses?.[0]?.emailAddress?.substring(0, 2).toUpperCase() || '??'}
           </AvatarFallback>
         </Avatar>
       </div>
@@ -305,23 +258,14 @@ export function WidgetList({ projectId }: { projectId?: string }) {
           </Button>
         </div>
 
-        {isLoading && (
+        {!isLoaded ? (
           <div className="flex justify-center py-20">
             <Loader2 className="h-12 w-12 animate-spin text-primary" />
           </div>
-        )}
-
-        {error && (
-          <div className="bg-red-500/10 border border-red-500/20 p-6 rounded-lg mb-9 backdrop-blur-md">
-            <h3 className="text-red-500 font-bold text-lg mb-1">System Interruption</h3>
-            <p className="text-red-500 text-sm opacity-80 leading-relaxed">{error.message}</p>
-          </div>
-        )}
-
-        {!isLoading && !error && (
+        ) : (
           <div className="flex flex-col gap-12">
-            {projects.map((project) => (
-              <div key={project.id} className="space-y-6">
+            {(projects ?? []).map((project) => (
+              <div key={project._id} className="space-y-6">
                 <div className="flex items-center gap-3 pb-3 border-b border-border/50">
                   <div className="bg-primary/10 p-2 rounded-lg flex items-center justify-center border border-primary/20">
                     <Folder size={18} className="text-primary fill-primary/20" />
@@ -330,8 +274,8 @@ export function WidgetList({ projectId }: { projectId?: string }) {
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                  {widgetsByProject[project.id]?.map(renderWidgetCard)}
-                  {(!widgetsByProject[project.id] || widgetsByProject[project.id].length === 0) && (
+                  {widgetsByProject[project._id]?.map(renderWidgetCard)}
+                  {(!widgetsByProject[project._id] || widgetsByProject[project._id].length === 0) && (
                     <div className="col-span-full py-20 border-2 border-dashed border-border/50 rounded-2xl flex flex-col items-center justify-center bg-muted/20">
                       <p className="text-lg text-muted-foreground/50 mb-6 font-medium">No active nodes in this project.</p>
                       <Button variant="outline" size="lg" nativeButton={false} className="rounded-xl px-8" render={<Link href="/admin/widget/create" />}>
@@ -343,7 +287,7 @@ export function WidgetList({ projectId }: { projectId?: string }) {
               </div>
             ))}
 
-            {projects.length === 0 && (
+            {(projects ?? []).length === 0 && (
               <Card className="glass py-16 flex flex-col items-center justify-center gap-6 text-center border-white/5">
                 <div style={{ width: '80px', height: '80px' }} className="bg-primary/10 rounded-lg flex items-center justify-center mb-2 animate-float">
                   <Folder size={40} className="text-primary" />
@@ -369,7 +313,7 @@ export function WidgetList({ projectId }: { projectId?: string }) {
             {selectedWidget && (
               <ChatWidgetComponent
                 widgetConfig={selectedWidget}
-                sessionId={`test-session-${selectedWidget.id}`}
+                sessionId={`test-session-${selectedWidget._id}`}
               />
             )}
           </div>
@@ -393,10 +337,8 @@ export function WidgetList({ projectId }: { projectId?: string }) {
               <span onClick={async () => {
                 if (!widgetToDelete || !user) return;
                 try {
-                  const { error } = await supabase.from('widgets').delete().eq('id', widgetToDelete.id).eq('user_id', user.id);
-                  if (error) throw error;
+                  await deleteWidget({ id: widgetToDelete._id, userId: user.id });
                   toast({ title: 'Agent decommissioned.' });
-                  fetchData();
                 } catch (err: any) {
                   toast({ variant: 'destructive', title: 'Error', description: err.message });
                 } finally {

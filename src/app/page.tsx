@@ -2,22 +2,22 @@
 
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { useUser } from '@/supabase';
+import { useUser } from '@clerk/nextjs';
 import { Loader2 } from 'lucide-react';
 
 export default function HomePage() {
-  const { user, isUserLoading } = useUser();
+  const { user, isLoaded } = useUser();
   const router = useRouter();
 
   useEffect(() => {
-    if (!isUserLoading) {
+    if (isLoaded) {
       if (user) {
         router.push('/admin');
       } else {
         router.push('/login');
       }
     }
-  }, [user, isUserLoading, router]);
+  }, [user, isLoaded, router]);
 
   return (
     <div className="flex h-screen w-screen items-center justify-center">
