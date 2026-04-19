@@ -41,9 +41,14 @@ export default defineSchema({
     kind: v.union(v.literal("text"), v.literal("audio")),
     body: v.string(),
     audioStorageId: v.optional(v.id("_storage")),
+    uploadthingFileKey: v.optional(v.string()),
+    uploadthingUrl: v.optional(v.string()),
+    expiresAt: v.optional(v.number()),
     durationMs: v.optional(v.number()),
     createdAt: v.number(),
-  }).index("by_conversationId_and_createdAt", ["conversationId", "createdAt"]),
+  })
+    .index("by_conversationId_and_createdAt", ["conversationId", "createdAt"])
+    .index("by_expiresAt", ["expiresAt"]),
 
   widgets: defineTable({
     name: v.string(), // "Widget Title" in Content tab
@@ -74,6 +79,7 @@ export default defineSchema({
         inputBorderColor: v.optional(v.string()),
         borderRadius: v.optional(v.string()),
         fontFamily: v.optional(v.string()),
+        successConfetti: v.optional(v.union(v.literal("small-burst"), v.literal("firework"), v.literal("golden-rain"))),
 
         // Legacy/Other Fields
         bubbleColor: v.optional(v.string()),
@@ -96,6 +102,7 @@ export default defineSchema({
       v.object({
         webhookSecret: v.optional(v.string()),
         defaultLanguage: v.optional(v.union(v.literal("EN"), v.literal("ES"))),
+        recordingRetentionDays: v.optional(v.number()),
       })
     ),
   })

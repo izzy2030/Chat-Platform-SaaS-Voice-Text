@@ -1,5 +1,50 @@
-import { query, mutation } from "./_generated/server";
+import { query, mutation, action } from "./_generated/server";
 import { v } from "convex/values";
+
+export const testWebhook = action({
+  args: {
+    webhookUrl: v.string(),
+  },
+  handler: async (ctx, args) => {
+    const samplePayload = {
+      sessionId: "test-session-123",
+      action: "sendMessage",
+      chatInput: "This is a test message from the Widget Studio.",
+      metadata: {
+        source: "Widget Studio",
+        type: "test_ping",
+        timestamp: new Date().toISOString(),
+      },
+    };
+
+    try {
+      const response = await fetch(args.webhookUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "User-Agent": "BuildLoop-Webhook-Tester/1.0",
+        },
+        body: JSON.stringify(samplePayload),
+      });
+
+      const responseText = await response.text();
+
+      return {
+        success: response.ok,
+        status: response.status,
+        statusText: response.statusText,
+        body: responseText.slice(0, 500),
+      };
+    } catch (error: any) {
+      return {
+        success: false,
+        status: 0,
+        statusText: "Fetch Error",
+        body: error.message || String(error),
+      };
+    }
+  },
+});
 
 export const getByUserId = query({
   args: { userId: v.string() },
@@ -66,6 +111,7 @@ export const create = mutation({
         inputBorderColor: v.optional(v.string()),
         borderRadius: v.optional(v.string()),
         fontFamily: v.optional(v.string()),
+        successConfetti: v.optional(v.union(v.literal("small-burst"), v.literal("firework"), v.literal("golden-rain"))),
         bubbleColor: v.optional(v.string()),
         bubbleIcon: v.optional(v.string()),
         panelColor: v.optional(v.string()),
@@ -86,6 +132,7 @@ export const create = mutation({
       v.object({
         webhookSecret: v.optional(v.string()),
         defaultLanguage: v.optional(v.union(v.literal("EN"), v.literal("ES"))),
+        recordingRetentionDays: v.optional(v.number()),
       })
     ),
   },
@@ -122,6 +169,7 @@ export const update = mutation({
         inputBorderColor: v.optional(v.string()),
         borderRadius: v.optional(v.string()),
         fontFamily: v.optional(v.string()),
+        successConfetti: v.optional(v.union(v.literal("small-burst"), v.literal("firework"), v.literal("golden-rain"))),
         bubbleColor: v.optional(v.string()),
         bubbleIcon: v.optional(v.string()),
         panelColor: v.optional(v.string()),
@@ -132,6 +180,7 @@ export const update = mutation({
       v.object({
         webhookSecret: v.optional(v.string()),
         defaultLanguage: v.optional(v.union(v.literal("EN"), v.literal("ES"))),
+        recordingRetentionDays: v.optional(v.number()),
       })
     ),
   },

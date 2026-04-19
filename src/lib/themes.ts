@@ -1,16 +1,35 @@
 
 export interface WidgetTheme {
-  logoUrl?: string;
+  // Content Tab
   headerTitle: string;
-  headerTitleColor?: string;
-  headerSubtext: string;
-  headerSubtextColor?: string;
-  fontFamily: string;
-  fontSize: number;
-  avatarStyle: 'round' | 'square';
-  primaryColor: string;
-  secondaryColor: string;
+  headerSubtitle: string;
+  welcomeMessage: string;
+  placeholderText: string;
+  botName: string;
+  showBranding: boolean;
+
+  // Design Tab
   accentColor: string;
+  headerTextColor: string;
+  chatBackgroundColor: string;
+  botBubbleBgColor: string;
+  botTextColor: string;
+  userTextColor: string;
+  inputBgColor: string;
+  inputTextColor: string;
+  inputBorderColor: string;
+  borderRadius: string;
+  fontFamily: string;
+
+  // Visual/Animation (Internal/Not in schema yet)
+  logoUrl?: string;
+  fontSize: number;
+  headerTitleColor?: string; // Legacy field, keeping for compatibility
+  headerSubtext?: string;    // Legacy field, keeping for compatibility
+  headerSubtextColor?: string; // Legacy field, keeping for compatibility
+  avatarStyle: 'round' | 'square';
+  primaryColor: string;      // Mapping to accentColor for internal use
+  secondaryColor: string;    // Mapping to chatBackgroundColor for internal use
   borderColor: string;
   darkPrimaryColor?: string;
   darkSecondaryColor?: string;
@@ -19,8 +38,6 @@ export interface WidgetTheme {
   backgroundBlur: number;
   colorMode: 'light' | 'dark' | 'auto';
   bubbleMessage: string;
-  placeholderText?: string;
-  botName?: string;
   conversationStarters: string[];
   idlePulse: boolean;
   idlePulseStrength: number;
@@ -44,7 +61,7 @@ export interface WidgetTheme {
   celebrationDuration: number;
   closeAnimation: 'shrink' | 'paper-plane' | 'drop-bounce';
   winkAfterClose: boolean;
-  roundedCorners: number;
+  roundedCorners: number; // Mapping to borderRadius
   shadowIntensity: number;
   borderThickness: number;
   windowSize: 'small' | 'medium' | 'large';
@@ -54,23 +71,38 @@ export interface WidgetTheme {
   hapticFeedback: boolean;
 }
 
-// Default theme state
+// Default theme state based on screenshots
 export const defaultTheme: WidgetTheme = {
-  logoUrl: '',
-  headerTitle: 'Chat with us!',
-  headerSubtext: 'We are here to help',
+  // Content
+  headerTitle: 'My Business Name',
+  headerSubtitle: 'Ready to help you!',
+  welcomeMessage: 'Hi! How can I help you today?',
+  placeholderText: 'Type your message...',
+  botName: 'AI Assistant',
+  showBranding: true,
+
+  // Design
+  accentColor: '#3CB993',
+  headerTextColor: '#000000',
+  chatBackgroundColor: '#FFFFFF',
+  botBubbleBgColor: '#5D5DDF',
+  botTextColor: '#E5E5E5',
+  userTextColor: '#FFFFFF',
+  inputBgColor: '#27272A',
+  inputTextColor: '#E5E5E5',
+  inputBorderColor: '#3F3F46',
+  borderRadius: '12px',
   fontFamily: 'Inter',
+
+  // Internal/Legacy
+  logoUrl: '',
   fontSize: 14,
   avatarStyle: 'round',
-  primaryColor: '#94B4E4',
-  secondaryColor: '#F0F4F8',
-  accentColor: '#B19CD9',
+  primaryColor: '#3CB993', // Linked to accentColor
+  secondaryColor: '#FFFFFF', // Linked to chatBackgroundColor
+  borderColor: '#E5E7EB',
   backgroundBlur: 10,
   colorMode: 'light',
-  darkPrimaryColor: '#6366F1',
-  darkSecondaryColor: '#1F2937',
-  darkAccentColor: '#EC4899',
-  darkBorderColor: '#374151',
   bubbleMessage: '👋 Hi! How can we help?',
   conversationStarters: [],
   idlePulse: true,
@@ -98,7 +130,6 @@ export const defaultTheme: WidgetTheme = {
   roundedCorners: 12,
   shadowIntensity: 50,
   borderThickness: 1,
-  borderColor: '#E5E7EB',
   windowSize: 'medium',
   soundEffects: true,
   soundVolume: 50,
@@ -109,22 +140,24 @@ export const defaultTheme: WidgetTheme = {
 export const darkTheme: WidgetTheme = {
   ...defaultTheme,
   headerTitle: 'Dark Mode Chat',
-  headerSubtext: 'Online 24/7',
-  primaryColor: '#6366F1', // Indigo 500
-  secondaryColor: '#1F2937', // Gray 800
-  accentColor: '#EC4899', // Pink 500
+  headerSubtitle: 'Online 24/7',
+  accentColor: '#6366F1', // Indigo 500
+  chatBackgroundColor: '#1F2937', // Gray 800
   colorMode: 'dark',
   borderColor: '#4B5563', // Gray 600
+  primaryColor: '#6366F1',
+  secondaryColor: '#1F2937',
 };
 
 export const playfulTheme: WidgetTheme = {
   ...defaultTheme,
   headerTitle: 'Let\'s have fun!',
-  headerSubtext: 'Ask me anything!',
+  headerSubtitle: 'Ask me anything!',
   fontFamily: 'Comic Sans MS',
-  primaryColor: '#FBBF24', // Amber 400
-  secondaryColor: '#F3F4F6', // Gray 100
-  accentColor: '#34D399', // Emerald 400
+  accentColor: '#FBBF24', // Amber 400
+  chatBackgroundColor: '#F3F4F6', // Gray 100
+  primaryColor: '#FBBF24',
+  secondaryColor: '#F3F4F6',
   avatarStyle: 'square',
   bubbleSize: 'large',
   openAnimation: 'particle-burst',

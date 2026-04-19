@@ -6,10 +6,10 @@ import { useForm, useWatch } from 'react-hook-form';
 import * as z from 'zod';
 import { useEffect, useState, use } from 'react';
 import { useUser } from '@clerk/nextjs';
-import { useQuery, useMutation } from 'convex/react';
+import { useQuery, useMutation, useAction } from 'convex/react';
 import { api } from 'convex/_generated/api';
 import { useRouter } from 'next/navigation';
-import { Loader2, Save, Type, Palette, Code, Check, Copy } from 'lucide-react';
+import { Loader2, Save, Type, Palette, Code, Check, Copy, Globe, FlaskConical, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -28,9 +28,13 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { ChatWidgetComponent } from '@/components/widget/chat-widget';
 import Link from 'next/link';
 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+
 const widgetSchema = z.object({
   // Content Tab
   name: z.string().min(1, 'Widget Title is required'),
+  webhookUrl: z.string().url('Invalid Webhook URL').or(z.string().length(0)),
+  recordingRetentionDays: z.number().min(1).max(365),
   headerSubtitle: z.string().optional(),
   welcomeMessage: z.string().optional(),
   placeholderText: z.string().optional(),
@@ -49,6 +53,7 @@ const widgetSchema = z.object({
   inputBorderColor: z.string().optional(),
   borderRadius: z.string().optional(),
   fontFamily: z.string().optional(),
+  successConfetti: z.enum(['small-burst', 'firework', 'golden-rain']).default('small-burst'),
 });
 
 type WidgetFormData = z.infer<typeof widgetSchema>;
@@ -82,15 +87,31 @@ function Preview({ widgetId, formValues }: { widgetId: string, formValues: Widge
       webhook_url: '',
       type: 'text' as const,
       theme: {
+        // Content
+        headerTitle: formValues.name,
+        headerSubtitle: formValues.headerSubtitle,
+        welcomeMessage: formValues.welcomeMessage,
+        placeholderText: formValues.placeholderText,
+        botName: formValues.botName,
+        showBranding: formValues.showBranding,
+
+        // Design
+        accentColor: formValues.accentColor,
+        headerTextColor: formValues.headerTextColor,
+        chatBackgroundColor: formValues.chatBackgroundColor,
+        botBubbleBgColor: formValues.botBubbleBgColor,
+        botTextColor: formValues.botTextColor,
+        userTextColor: formValues.userTextColor,
+        inputBgColor: formValues.inputBgColor,
+        inputTextColor: formValues.inputTextColor,
+        inputBorderColor: formValues.inputBorderColor,
+        borderRadius: formValues.borderRadius,
+        fontFamily: formValues.fontFamily,
+        successConfetti: formValues.successConfetti,
+
+        // Internal mappings
         primaryColor: formValues.accentColor,
         secondaryColor: formValues.chatBackgroundColor,
-        headerTitle: formValues.name,
-        headerTitleColor: formValues.headerTextColor,
-        headerSubtext: formValues.headerSubtitle,
-        bubbleMessage: formValues.welcomeMessage,
-        fontFamily: formValues.fontFamily,
-        darkPrimaryColor: formValues.accentColor,
-        darkSecondaryColor: formValues.chatBackgroundColor,
       },
     };
   }, [widgetId, formValues]);
@@ -98,17 +119,27 @@ function Preview({ widgetId, formValues }: { widgetId: string, formValues: Widge
   return (
     <div className="w-full h-full flex flex-col items-center justify-center p-8 bg-muted/30 relative overflow-hidden">
       <div className="mb-8 flex items-center justify-center gap-4 z-10">
-        <span className="text-muted-foreground text-sm">Preview</span>
-        <Button variant="outline" size="sm" className="rounded-full bg-background text-foreground hover:bg-muted">
+        <span className="text-muted-foreground text-sm font-medium">Live Preview</span>
+        <Button variant="outline" size="sm" className="rounded-full bg-background text-foreground hover:bg-muted shadow-sm">
           Try it Live
         </Button>
       </div>
 
-      <div className="relative w-[380px] h-[600px] shadow-2xl rounded-2xl border border-border bg-card overflow-hidden z-10">
-        <ChatWidgetComponent
-          widgetConfig={previewConfig}
-          sessionId="preview-session"
-        />
+      <div className="relative w-[400px] h-[640px] shadow-[0_32px_64px_-12px_rgba(0,0,0,0.14)] rounded-[2.5rem] border-[8px] border-[#191C1A] bg-[#191C1A] overflow-hidden z-10 ring-1 ring-white/10">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-[#191C1A] rounded-b-2xl z-20" />
+        <div className="w-full h-full bg-background rounded-[1.8rem] overflow-hidden">
+          <ChatWidgetComponent
+            widgetConfig={previewConfig}
+            sessionId="preview-session"
+          />
+        </div>
+      </div>
+      
+      <div className="mt-8 flex items-center gap-6 text-muted-foreground/60">
+         <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+            <span className="text-xs font-semibold uppercase tracking-wider">Active Studio</span>
+         </div>
       </div>
     </div>
   );
@@ -121,6 +152,7 @@ export default function BuilderPage({
 }) {
   const { widgetId } = use(params);
   const [isLoading, setIsLoading] = useState(false);
+  const [isTestingWebhook, setIsTestingWebhook] = useState(false);
   const [copiedScript, setCopiedScript] = useState(false);
   const [copiedIframe, setCopiedIframe] = useState(false);
   const [copiedKey, setCopiedKey] = useState(false);
@@ -133,26 +165,28 @@ export default function BuilderPage({
   );
   
   const updateWidget = useMutation(api.widgets.update);
+  const runTestWebhook = useAction(api.widgets.testWebhook);
 
   const form = useForm<WidgetFormData>({
     resolver: zodResolver(widgetSchema),
     defaultValues: {
-      name: 'Chat with BuildLoop AI',
-      headerSubtitle: 'Online',
+      name: 'My Business Name',
+      webhookUrl: '',
+      headerSubtitle: 'Ready to help you!',
       welcomeMessage: 'Hi! How can I help you today?',
       placeholderText: 'Type your message...',
       botName: 'AI Assistant',
       showBranding: true,
       
-      accentColor: '#10b981',
-      headerTextColor: '#ffffff',
+      accentColor: '#3CB993',
+      headerTextColor: '#000000',
       chatBackgroundColor: '#ffffff',
-      botBubbleBgColor: '#f4f4f5',
-      botTextColor: '#18181b',
+      botBubbleBgColor: '#5D5DDF',
+      botTextColor: '#E5E5E5',
       userTextColor: '#ffffff',
-      inputBgColor: '#ffffff',
-      inputTextColor: '#18181b',
-      inputBorderColor: '#e4e4e7',
+      inputBgColor: '#27272A',
+      inputTextColor: '#E5E5E5',
+      inputBorderColor: '#3F3F46',
       borderRadius: '12px',
       fontFamily: 'Inter, sans-serif',
     },
@@ -163,25 +197,31 @@ export default function BuilderPage({
   useEffect(() => {
     if (widget) {
       form.reset({
-        name: widget.name || 'Chat with BuildLoop AI',
-        headerSubtitle: widget.theme?.headerSubtitle || 'Online',
+        name: widget.name || 'My Business Name',
+        webhookUrl: widget.webhookUrl || '',
+        headerSubtitle: widget.theme?.headerSubtitle || 'Ready to help you!',
         welcomeMessage: widget.theme?.welcomeMessage || 'Hi! How can I help you today?',
         placeholderText: widget.theme?.placeholderText || 'Type your message...',
         botName: widget.theme?.botName || 'AI Assistant',
         showBranding: widget.theme?.showBranding ?? true,
 
-        accentColor: widget.theme?.accentColor || '#10b981',
-        headerTextColor: widget.theme?.headerTextColor || '#ffffff',
+        accentColor: widget.theme?.accentColor || '#3CB993',
+        headerTextColor: widget.theme?.headerTextColor || '#000000',
         chatBackgroundColor: widget.theme?.chatBackgroundColor || '#ffffff',
-        botBubbleBgColor: widget.theme?.botBubbleBgColor || '#f4f4f5',
-        botTextColor: widget.theme?.botTextColor || '#18181b',
+        botBubbleBgColor: widget.theme?.botBubbleBgColor || '#5D5DDF',
+        botTextColor: widget.theme?.botTextColor || '#E5E5E5',
         userTextColor: widget.theme?.userTextColor || '#ffffff',
-        inputBgColor: widget.theme?.inputBgColor || '#ffffff',
-        inputTextColor: widget.theme?.inputTextColor || '#18181b',
-        inputBorderColor: widget.theme?.inputBorderColor || '#e4e4e7',
+        inputBgColor: widget.theme?.inputBgColor || '#27272A',
+        inputTextColor: widget.theme?.inputTextColor || '#E5E5E5',
+        inputBorderColor: widget.theme?.inputBorderColor || '#3F3F46',
         borderRadius: widget.theme?.borderRadius || '12px',
         fontFamily: widget.theme?.fontFamily || 'Inter, sans-serif',
+        successConfetti: widget.theme?.successConfetti || 'small-burst',
       });
+
+      if (widget.config?.recordingRetentionDays !== undefined) {
+        form.setValue('recordingRetentionDays', widget.config.recordingRetentionDays);
+      }
     }
   }, [widget, form]);
 
@@ -194,8 +234,12 @@ export default function BuilderPage({
         id: widgetId as any,
         userId: user.id,
         name: data.name,
+        webhookUrl: data.webhookUrl,
+        config: {
+          recordingRetentionDays: data.recordingRetentionDays,
+        },
         theme: {
-          headerTitle: data.name, // Keep legacy fields in sync
+          headerTitle: data.name, 
           headerSubtitle: data.headerSubtitle,
           welcomeMessage: data.welcomeMessage,
           placeholderText: data.placeholderText,
@@ -213,6 +257,7 @@ export default function BuilderPage({
           inputBorderColor: data.inputBorderColor,
           borderRadius: data.borderRadius,
           fontFamily: data.fontFamily,
+          successConfetti: data.successConfetti,
         },
       });
 
@@ -228,6 +273,39 @@ export default function BuilderPage({
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const onTestWebhook = async () => {
+    const url = form.getValues('webhookUrl');
+    if (!url) {
+      toast({ variant: 'destructive', title: 'Webhook URL Missing', description: 'Please enter a webhook URL first.' });
+      return;
+    }
+
+    setIsTestingWebhook(true);
+    try {
+      const result = await runTestWebhook({ webhookUrl: url });
+      if (result.success) {
+        toast({
+          title: 'Webhook Success',
+          description: `Received ${result.status} ${result.statusText}`,
+        });
+      } else {
+        toast({
+          variant: 'destructive',
+          title: 'Webhook Failed',
+          description: `Result: ${result.status} ${result.statusText}. ${result.body}`,
+        });
+      }
+    } catch (error: any) {
+      toast({
+        variant: 'destructive',
+        title: 'Test Failed',
+        description: error.message || 'Could not reach webhook.',
+      });
+    } finally {
+      setIsTestingWebhook(false);
     }
   };
 
@@ -358,6 +436,66 @@ export default function BuilderPage({
                       </FormItem>
                     )}
                   />
+                  
+                  <FormField
+                    control={form.control}
+                    name="webhookUrl"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex items-center justify-between mb-2">
+                          <FormLabel className="text-xs text-muted-foreground font-medium mb-0">Webhook URL</FormLabel>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            className="h-7 px-2 text-[10px] font-bold uppercase tracking-wider text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700"
+                            onClick={onTestWebhook}
+                            disabled={isTestingWebhook || !field.value}
+                          >
+                            {isTestingWebhook ? (
+                              <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />
+                            ) : (
+                              <FlaskConical className="mr-1.5 h-3 w-3" />
+                            )}
+                            Test
+                          </Button>
+                        </div>
+                        <FormControl>
+                          <div className="relative">
+                             <Globe className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
+                             <Input {...field} placeholder="https://api.yoursite.com/webhook" className="h-11 pl-10 rounded-lg border-border bg-background text-sm text-foreground focus-visible:ring-1 focus-visible:ring-primary/50" />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <FormField
+                    control={form.control}
+                    name="recordingRetentionDays"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-muted-foreground font-medium">Voice Recording Retention (Days)</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                             <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground/50" />
+                             <Input 
+                                type="number" 
+                                {...field} 
+                                onChange={e => field.onChange(parseInt(e.target.value))}
+                                className="h-11 pl-10 rounded-lg border-border bg-background text-sm text-foreground focus-visible:ring-1 focus-visible:ring-primary/50" 
+                             />
+                          </div>
+                        </FormControl>
+                        <p className="text-[10px] text-muted-foreground italic px-1">
+                          Recordings will be automatically deleted after this period. Max 365 days.
+                        </p>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
                   <FormField
                     control={form.control}
                     name="showBranding"
@@ -499,6 +637,29 @@ export default function BuilderPage({
                           <FormControl>
                             <Input {...field} className="h-11 rounded-lg border-border bg-background text-sm text-foreground focus-visible:ring-1 focus-visible:ring-primary/50" />
                           </FormControl>
+                        </FormItem>
+                      )}
+                    />
+
+                    <FormField
+                      control={form.control}
+                      name="successConfetti"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs text-muted-foreground font-medium">Success Celebration</FormLabel>
+                          <Select onValueChange={field.onChange} defaultValue={field.value}>
+                            <FormControl>
+                              <SelectTrigger className="h-11 rounded-lg border-border bg-background text-sm text-foreground">
+                                <SelectValue placeholder="Select a celebration style" />
+                              </SelectTrigger>
+                            </FormControl>
+                            <SelectContent>
+                              <SelectItem value="small-burst">Small Burst</SelectItem>
+                              <SelectItem value="firework">Firework Show</SelectItem>
+                              <SelectItem value="golden-rain">Golden Rain</SelectItem>
+                            </SelectContent>
+                          </Select>
+                          <FormMessage />
                         </FormItem>
                       )}
                     />

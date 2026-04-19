@@ -3,15 +3,29 @@ export class AudioProcessor {
     public processor: ScriptProcessorNode | null = null;
     private source: MediaStreamAudioSourceNode | null = null;
     private stream: MediaStream | null = null;
+    private destination: MediaStreamAudioDestinationNode | null = null;
+
+    constructor(audioContext?: AudioContext) {
+        if (audioContext) {
+            this.audioContext = audioContext;
+        }
+    }
 
     async start(onAudioData: (base64Data: string) => void) {
-        this.audioContext = new AudioContext({ sampleRate: 16000 });
+        if (!this.audioContext) {
+            this.audioContext = new AudioContext({ sampleRate: 16000 });
+        }
+        
         this.stream = await navigator.mediaDevices.getUserMedia({ audio: true });
         this.source = this.audioContext.createMediaStreamSource(this.stream);
         this.processor = this.audioContext.createScriptProcessor(4096, 1, 1);
+        this.destination = this.audioContext.createMediaStreamDestination();
 
         this.source.connect(this.processor);
         this.processor.connect(this.audioContext.destination);
+        
+        // Also connect source to our destination for combined recording
+        this.source.connect(this.destination);
 
         this.processor.onaudioprocess = (event) => {
             const inputData = event.inputBuffer.getChannelData(0);
@@ -27,8 +41,24 @@ export class AudioProcessor {
         this.source = null;
         this.stream?.getTracks().forEach((track) => track.stop());
         this.stream = null;
-        this.audioContext?.close();
-        this.audioContext = null;
+        this.destination = null;
+        // Don't close audioContext if it might be shared
+    }
+
+    getStream() {
+        return this.stream;
+    }
+
+    getCombinedStream() {
+        return this.destination?.stream;
+    }
+
+    getAudioContext() {
+        return this.audioContext;
+    }
+
+    getDestination() {
+        return this.destination;
     }
 
     private floatTo16BitPCM(input: Float32Array) {
@@ -58,9 +88,11 @@ export class AudioProcessor {
 export class AudioPlayer {
     private audioContext: AudioContext | null = null;
     private nextStartTime = 0;
+    private destination: AudioNode | null = null;
 
-    constructor() {
-        this.audioContext = new AudioContext({ sampleRate: 24000 });
+    constructor(audioContext?: AudioContext, destination?: AudioNode) {
+        this.audioContext = audioContext || new AudioContext({ sampleRate: 24000 });
+        this.destination = destination || null;
     }
 
     async playChunk(base64Data: string) {
@@ -84,6 +116,11 @@ export class AudioPlayer {
         const source = this.audioContext.createBufferSource();
         source.buffer = audioBuffer;
         source.connect(this.audioContext.destination);
+        
+        // Also connect to combined destination if provided
+        if (this.destination) {
+            source.connect(this.destination);
+        }
 
         const currentTime = this.audioContext.currentTime;
         if (this.nextStartTime < currentTime) {
@@ -95,8 +132,7 @@ export class AudioPlayer {
     }
 
     stop() {
-        this.audioContext?.close();
-        this.audioContext = new AudioContext({ sampleRate: 24000 });
+        // We don't want to close the shared context, just reset timing
         this.nextStartTime = 0;
     }
 }

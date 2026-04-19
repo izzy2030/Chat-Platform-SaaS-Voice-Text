@@ -7,6 +7,7 @@ import { formatDistanceToNow } from "date-fns";
 import {
   AudioLines,
   Bot,
+  Download,
   Globe,
   PhoneCall,
   Search,
@@ -16,6 +17,7 @@ import {
 
 import { api } from "convex/_generated/api";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -316,13 +318,15 @@ export default function CallsPage() {
                                 {formatDuration(message.durationMs ?? 0)}
                               </Badge>
                             </div>
-                            {message.audioUrl ? (
+                            {message.audioUrl && (!message.expiresAt || message.expiresAt > Date.now()) ? (
                               <audio controls className="w-full">
                                 <source src={message.audioUrl} />
                               </audio>
                             ) : (
                               <p className="text-xs font-medium text-[#7E8B83]">
-                                Recording upload unavailable for this clip.
+                                {message.expiresAt && message.expiresAt <= Date.now()
+                                  ? "This recording has expired."
+                                  : "Recording upload unavailable for this clip."}
                               </p>
                             )}
                           </div>
@@ -330,53 +334,82 @@ export default function CallsPage() {
                     )}
                   </div>
 
-                  <div>
-                    <h3 className="text-xs font-black uppercase tracking-[0.18em] text-[#6D7A70]">
-                      Transcript
-                    </h3>
-                    <div className="mt-3 flex flex-col gap-2 rounded-[24px] bg-[#F5F8F6] p-3">
-                      {activeCall.messages.map((message) => (
-                        <div
-                          key={message._id}
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-xs font-black uppercase tracking-[0.18em] text-[#6D7A70]">
+                        Transcript
+                      </h3>
+                    </div>
+                    {activeCall && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="h-7 gap-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider text-[#008353] hover:bg-[#EBFBF3] hover:text-[#008353]"
+                        onClick={() => {
+                          const content = activeCall.messages
+                            .map((m) => {
+                              const time = new Date(m.createdAt).toLocaleTimeString();
+                              const sender = m.sender === "agent" ? "AGENT" : "VISITOR";
+                              const body = m.kind === "audio" ? "[Voice Recording]" : m.body;
+                              return `[${time}] ${sender}: ${body}`;
+                            })
+                            .join("\n");
+                          const blob = new Blob([content], { type: "text/plain" });
+                          const url = URL.createObjectURL(blob);
+                          const a = document.createElement("a");
+                          a.href = url;
+                          a.download = `transcript-${activeCall.visitorLabel}-${new Date().toISOString().split("T")[0]}.txt`;
+                          a.click();
+                          URL.revokeObjectURL(url);
+                        }}
+                      >
+                        <Download className="size-3" />
+                        Download
+                      </Button>
+                    )}
+                  </div>
+                  <div className="mt-3 flex flex-col gap-2 rounded-[24px] bg-[#F5F8F6] p-3">
+                    {activeCall.messages.map((message) => (
+                      <div
+                        key={message._id}
+                        className={cn(
+                          "max-w-[88%] rounded-[20px] px-3.5 py-2.5 shadow-sm",
+                          message.sender === "agent"
+                            ? "self-start bg-white text-[#203129]"
+                            : "self-end bg-[#00B171] text-white"
+                        )}
+                      >
+                        <div className="mb-1 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.14em]">
+                          {message.sender === "agent" ? (
+                            <>
+                              <Bot className="size-3.5" />
+                              Agent
+                            </>
+                          ) : (
+                            <>
+                              <User className="size-3.5" />
+                              Visitor
+                            </>
+                          )}
+                        </div>
+                        {message.kind === "audio" ? (
+                          <p className="text-sm leading-6">
+                            Voice recording
+                            {message.durationMs ? ` • ${formatDuration(message.durationMs)}` : ""}
+                          </p>
+                        ) : (
+                          <p className="text-sm leading-6">{message.body}</p>
+                        )}
+                        <p
                           className={cn(
-                            "max-w-[88%] rounded-[20px] px-3.5 py-2.5 shadow-sm",
-                            message.sender === "agent"
-                              ? "self-start bg-white text-[#203129]"
-                              : "self-end bg-[#00B171] text-white"
+                            "mt-1.5 text-[10px] font-semibold",
+                            message.sender === "agent" ? "text-[#7B8B82]" : "text-white/75"
                           )}
                         >
-                          <div className="mb-1 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.14em]">
-                            {message.sender === "agent" ? (
-                              <>
-                                <Bot className="size-3.5" />
-                                Agent
-                              </>
-                            ) : (
-                              <>
-                                <User className="size-3.5" />
-                                Visitor
-                              </>
-                            )}
-                          </div>
-                          {message.kind === "audio" ? (
-                            <p className="text-sm leading-6">
-                              Voice recording
-                              {message.durationMs ? ` • ${formatDuration(message.durationMs)}` : ""}
-                            </p>
-                          ) : (
-                            <p className="text-sm leading-6">{message.body}</p>
-                          )}
-                          <p
-                            className={cn(
-                              "mt-1.5 text-[10px] font-semibold",
-                              message.sender === "agent" ? "text-[#7B8B82]" : "text-white/75"
-                            )}
-                          >
-                            {formatRelative(message.createdAt)}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
+                          {formatRelative(message.createdAt)}
+                        </p>
+                      </div>
+                    ))}
                   </div>
                 </div>
               </div>

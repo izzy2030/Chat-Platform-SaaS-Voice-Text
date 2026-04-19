@@ -89,6 +89,9 @@ async function appendMessage(
     body: string;
     pageUrl?: string;
     audioStorageId?: Id<"_storage">;
+    uploadthingFileKey?: string;
+    uploadthingUrl?: string;
+    expiresAt?: number;
     durationMs?: number;
   }
 ) {
@@ -102,6 +105,9 @@ async function appendMessage(
     kind: args.kind,
     body: args.body,
     audioStorageId: args.audioStorageId,
+    uploadthingFileKey: args.uploadthingFileKey,
+    uploadthingUrl: args.uploadthingUrl,
+    expiresAt: args.expiresAt,
     durationMs: args.durationMs,
     createdAt,
   });
@@ -171,19 +177,13 @@ export const getById = query({
       .order("asc")
       .take(200);
 
-    const messagesWithUrls = await Promise.all(
-      messages.map(async (message) => ({
-        ...message,
-        audioUrl: message.audioStorageId
-          ? await ctx.storage.getUrl(message.audioStorageId)
-          : null,
-      }))
-    );
-
     return {
       ...conversation,
       widgetName: widget?.name ?? "Unknown Widget",
-      messages: messagesWithUrls,
+      messages: messages.map((message) => ({
+        ...message,
+        audioUrl: message.uploadthingUrl ?? null,
+      })),
     };
   },
 });
@@ -257,6 +257,9 @@ export const recordVisitorMessage = mutation({
     text: v.string(),
     pageUrl: v.optional(v.string()),
     audioStorageId: v.optional(v.id("_storage")),
+    uploadthingFileKey: v.optional(v.string()),
+    uploadthingUrl: v.optional(v.string()),
+    expiresAt: v.optional(v.number()),
     durationMs: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
@@ -269,6 +272,9 @@ export const recordVisitorMessage = mutation({
       body: args.text,
       pageUrl: args.pageUrl,
       audioStorageId: args.audioStorageId,
+      uploadthingFileKey: args.uploadthingFileKey,
+      uploadthingUrl: args.uploadthingUrl,
+      expiresAt: args.expiresAt,
       durationMs: args.durationMs,
     });
   },
@@ -293,20 +299,6 @@ export const recordAgentMessage = mutation({
       body: args.text,
       pageUrl: args.pageUrl,
     });
-  },
-});
-
-export const generateAudioUploadUrl = mutation({
-  args: {
-    widgetId: v.id("widgets"),
-  },
-  handler: async (ctx, args) => {
-    const widget = await ctx.db.get(args.widgetId);
-    if (!widget) {
-      throw new Error("Widget not found");
-    }
-
-    return await ctx.storage.generateUploadUrl();
   },
 });
 

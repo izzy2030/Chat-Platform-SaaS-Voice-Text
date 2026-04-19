@@ -10,7 +10,9 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { api } from 'convex/_generated/api';
 import type { WidgetTheme } from '@/lib/themes';
 import { defaultTheme } from '@/lib/themes';
+import { uploadFiles } from '@/lib/uploadthing';
 import { useToast } from '@/hooks/use-toast';
+import confetti from 'canvas-confetti';
 
 // Voice Agent Imports
 import { GoogleGenAI, Modality, Type, type LiveServerMessage, type Tool, type Content } from '@google/genai';
@@ -29,6 +31,10 @@ interface ChatWidgetProps {
       headerTitle?: string;
       welcomeMessage?: string;
     };
+    config?: {
+      defaultLanguage?: 'EN' | 'ES';
+      recordingRetentionDays?: number;
+    };
   };
   sessionId: string;
 }
@@ -45,6 +51,7 @@ interface Message {
 const AGENT_TIMEOUT_MS = 20_000;
 const GEMINI_MODEL = "gemini-3.1-flash-live-preview";
 const GEMINI_VOICE = "Zephyr";
+const RECORDING_RETENTION_DAYS = 60;
 
 const SYSTEM_INSTRUCTION = `
 You are a helpful virtual assistant for our website.
@@ -59,6 +66,11 @@ const GEMINI_TOOLS: Tool[] = [
       {
         name: "endSession",
         description: "End the voice session. Use when the user says goodbye or the conversation is complete.",
+        parameters: { type: Type.OBJECT, properties: {} },
+      },
+      {
+        name: "celebrate",
+        description: "Trigger a visual celebration (confetti) when the user achieves a goal, completes a task, or expresses great satisfaction.",
         parameters: { type: Type.OBJECT, properties: {} },
       },
     ],
@@ -103,6 +115,9 @@ export function ChatWidgetComponent({
   const audioProcessorRef = React.useRef<AudioProcessor | null>(null);
   const audioPlayerRef = React.useRef<AudioPlayer | null>(null);
   const allowMicStreamingRef = React.useRef(false);
+  const callRecorderRef = React.useRef<MediaRecorder | null>(null);
+  const callChunksRef = React.useRef<Blob[]>([]);
+  const callStartedAtRef = React.useRef<number | null>(null);
   const geminiApiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
 
   // Theme State
@@ -150,29 +165,187 @@ export function ChatWidgetComponent({
   }, [messages]);
 
   // --- VOICE AGENT LOGIC ---
+  const triggerCelebration = React.useCallback(() => {
+    const style = theme.successConfetti || 'small-burst';
+    
+    if (style === 'small-burst') {
+      confetti({
+        particleCount: 100,
+        spread: 70,
+        origin: { y: 0.6 },
+        colors: [theme.accentColor || '#3CB993', '#ffffff', '#5D5DDF']
+      });
+    } else if (style === 'firework') {
+      const duration = 3 * 1000;
+      const animationEnd = Date.now() + duration;
+      const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 0 };
+
+      const randomInRange = (min: number, max: number) => Math.random() * (max - min) + min;
+
+      const interval: any = setInterval(function() {
+        const timeLeft = animationEnd - Date.now();
+
+        if (timeLeft <= 0) {
+          return clearInterval(interval);
+        }
+
+        const particleCount = 50 * (timeLeft / duration);
+        confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } });
+        confetti({ ...defaults, particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } });
+      }, 250);
+    } else if (style === 'golden-rain') {
+      const end = Date.now() + (3 * 1000);
+      const colors = ['#ffd700', '#ffa500', '#ff8c00'];
+
+      (function frame() {
+        confetti({
+          particleCount: 2,
+          angle: 60,
+          spread: 55,
+          origin: { x: 0 },
+          colors: colors
+        });
+        confetti({
+          particleCount: 2,
+          angle: 120,
+          spread: 55,
+          origin: { x: 1 },
+          colors: colors
+        });
+
+        if (Date.now() < end) {
+          requestAnimationFrame(frame);
+        }
+      }());
+    }
+  }, [theme.accentColor, theme.successConfetti]);
+
+  const flushRecordedCall = React.useCallback(async () => {
+    const chunks = callChunksRef.current;
+    const startedAt = callStartedAtRef.current;
+
+    callChunksRef.current = [];
+    callStartedAtRef.current = null;
+
+    if (!chunks.length || !startedAt) {
+      return;
+    }
+
+    const audioBlob = new Blob(chunks, { type: callRecorderRef.current?.mimeType || 'audio/webm' });
+    const durationMs = Math.max(Date.now() - startedAt, 0);
+    
+    const retentionDays = widgetConfig.config?.recordingRetentionDays ?? RECORDING_RETENTION_DAYS;
+    const expiresAt = Date.now() + retentionDays * 24 * 60 * 60 * 1000;
+
+    let uploadthingFileKey: string | undefined;
+    let uploadthingUrl: string | undefined;
+
+    try {
+      const extension = audioBlob.type.includes('ogg')
+        ? 'ogg'
+        : audioBlob.type.includes('mp4')
+          ? 'm4a'
+          : 'webm';
+
+      const file = new File([audioBlob], `voice-call-${sessionId}-${Date.now()}.${extension}`, {
+        type: audioBlob.type || 'audio/webm',
+      });
+
+      const uploaded = await uploadFiles('voiceRecording', {
+        files: [file],
+        input: {
+          widgetId: String(widgetConfig.id),
+          sessionId,
+        },
+      });
+
+      const uploadedFile = uploaded[0];
+      if (uploadedFile) {
+        uploadthingFileKey = uploadedFile.key ?? undefined;
+        uploadthingUrl = uploadedFile.url;
+      }
+    } catch (error) {
+      console.error('Failed to upload call recording:', error);
+    }
+
+    await recordVisitorMessage({
+      widgetId: widgetConfig.id as any,
+      sessionId,
+      channel: 'voice',
+      kind: 'audio',
+      text: 'Voice call recording',
+      pageUrl: visitorPageUrl,
+      uploadthingFileKey,
+      uploadthingUrl,
+      expiresAt,
+      durationMs,
+    });
+  }, [recordVisitorMessage, sessionId, visitorPageUrl, widgetConfig.id]);
+
+  const stopCallRecording = React.useCallback(() => {
+    const recorder = callRecorderRef.current;
+    if (!recorder) {
+      return;
+    }
+
+    callRecorderRef.current = null;
+
+    if (recorder.state !== 'inactive') {
+      recorder.stop();
+    } else {
+      void flushRecordedCall();
+    }
+  }, [flushRecordedCall]);
+
+  const startCallRecording = React.useCallback((stream: MediaStream | null | undefined) => {
+    if (!stream || typeof MediaRecorder === 'undefined') {
+      return;
+    }
+
+    try {
+      callChunksRef.current = [];
+      callStartedAtRef.current = Date.now();
+      const recorder = new MediaRecorder(stream);
+      callRecorderRef.current = recorder;
+
+      recorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          callChunksRef.current.push(event.data);
+        }
+      };
+
+      recorder.onstop = () => {
+        void flushRecordedCall();
+      };
+
+      recorder.start();
+    } catch (error) {
+      console.error('Failed to start call recording:', error);
+    }
+  }, [flushRecordedCall]);
+
+  const cleanupVoiceResources = React.useCallback(() => {
+    allowMicStreamingRef.current = false;
+    stopCallRecording();
+    audioProcessorRef.current?.stop();
+    audioProcessorRef.current = null;
+    audioPlayerRef.current?.stop();
+    audioPlayerRef.current = null;
+    setVoiceState("disconnected");
+    setTimedOut(false);
+  }, [stopCallRecording]);
+
   const disconnectVoice = React.useCallback(() => {
     const session = sessionRef.current;
     sessionRef.current = null;
-    allowMicStreamingRef.current = false;
-    audioProcessorRef.current?.stop();
-    audioProcessorRef.current = null;
-    audioPlayerRef.current?.stop();
-    audioPlayerRef.current = null;
+    cleanupVoiceResources();
     session?.close();
-    setVoiceState("disconnected");
-    setTimedOut(false);
-  }, []);
+  }, [cleanupVoiceResources]);
 
   const cleanupDisconnectedSession = React.useCallback(() => {
     sessionRef.current = null;
-    allowMicStreamingRef.current = false;
-    audioProcessorRef.current?.stop();
-    audioProcessorRef.current = null;
-    audioPlayerRef.current?.stop();
-    audioPlayerRef.current = null;
-    setVoiceState("disconnected");
-    setTimedOut(false);
-  }, []);
+    cleanupVoiceResources();
+  }, [cleanupVoiceResources]);
 
   const connectVoice = React.useCallback(async () => {
     if (!geminiApiKey) {
@@ -185,9 +358,11 @@ export function ChatWidgetComponent({
       setTimedOut(false);
 
       const ai = new GoogleGenAI({ apiKey: geminiApiKey });
-      audioProcessorRef.current = new AudioProcessor();
-      audioPlayerRef.current = new AudioPlayer();
-
+      
+      // Use a single AudioContext for both capture and playback to allow mixing/recording
+      const sharedContext = new AudioContext({ sampleRate: 16000 });
+      audioProcessorRef.current = new AudioProcessor(sharedContext);
+      
       const sessionPromise = ai.live.connect({
         model: GEMINI_MODEL,
         callbacks: {
@@ -202,6 +377,11 @@ export function ChatWidgetComponent({
                   audio: { data: base64Data, mimeType: "audio/pcm;rate=16000" },
                 });
               });
+
+              // Now that processor is started, we have a destination for mixing
+              audioPlayerRef.current = new AudioPlayer(sharedContext, audioProcessorRef.current?.getDestination() || undefined);
+
+              startCallRecording(audioProcessorRef.current?.getCombinedStream());
               setVoiceState("listening");
               sessionPromise.then((session) => {
                 setTimeout(() => {
@@ -216,15 +396,42 @@ export function ChatWidgetComponent({
             }
           },
           onmessage: async (message: LiveServerMessage) => {
+            // Handle Audio Playback
             const base64Audio = message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
             if (base64Audio) {
               allowMicStreamingRef.current = false;
               setVoiceState("speaking");
               await audioPlayerRef.current?.playChunk(base64Audio);
             }
+
+            // Handle Transcripts
             if (message.serverContent?.inputTranscription?.text) {
               setVoiceState("thinking");
+              void recordVisitorMessage({
+                widgetId: widgetConfig.id as any,
+                sessionId,
+                channel: 'voice',
+                kind: 'text',
+                text: message.serverContent.inputTranscription.text,
+                pageUrl: visitorPageUrl,
+              });
             }
+
+            const modelParts = message.serverContent?.modelTurn?.parts;
+            if (modelParts) {
+              const textPart = modelParts.find(p => p.text);
+              if (textPart?.text) {
+                void recordAgentMessage({
+                  widgetId: widgetConfig.id as any,
+                  sessionId,
+                  channel: 'voice',
+                  kind: 'text',
+                  text: textPart.text,
+                  pageUrl: visitorPageUrl,
+                });
+              }
+            }
+
             if (message.toolCall?.functionCalls) {
               for (const call of message.toolCall.functionCalls as any[]) {
                 if (call.name === "endSession") {
@@ -232,6 +439,12 @@ export function ChatWidgetComponent({
                     functionResponses: [{ id: call.id, name: call.name, response: { success: true } }],
                   });
                   disconnectVoice();
+                }
+                if (call.name === "celebrate") {
+                  sessionRef.current?.sendToolResponse({
+                    functionResponses: [{ id: call.id, name: call.name, response: { success: true } }],
+                  });
+                  triggerCelebration();
                 }
               }
             }
@@ -262,7 +475,7 @@ export function ChatWidgetComponent({
       toast({ variant: 'destructive', title: 'Connection Failed', description: "Could not establish voice connection." });
       cleanupDisconnectedSession();
     }
-  }, [cleanupDisconnectedSession, disconnectVoice, geminiApiKey, theme.bubbleMessage, toast]);
+  }, [cleanupDisconnectedSession, disconnectVoice, geminiApiKey, startCallRecording, theme.bubbleMessage, toast]);
 
   React.useEffect(() => {
     if (voiceState === "disconnected") return;
@@ -321,23 +534,34 @@ export function ChatWidgetComponent({
   };
 
   const widgetStyle: React.CSSProperties = {
-    backgroundColor: theme.secondaryColor,
-    borderRadius: `${theme.roundedCorners}px`,
+    backgroundColor: theme.chatBackgroundColor || theme.secondaryColor,
+    borderRadius: theme.borderRadius || `${theme.roundedCorners}px`,
     boxShadow: `0 0 ${theme.shadowIntensity / 5}px rgba(0,0,0,${theme.shadowIntensity / 100})`,
     fontFamily: theme.fontFamily,
     colorScheme: theme.colorMode === 'dark' ? 'dark' : 'light',
   };
 
   const userMessageStyle: React.CSSProperties = {
-    backgroundColor: theme.primaryColor,
-    color: '#FFFFFF',
+    backgroundColor: theme.accentColor || theme.primaryColor,
+    color: theme.userTextColor || '#FFFFFF',
+  };
+
+  const botMessageStyle: React.CSSProperties = {
+    backgroundColor: theme.botBubbleBgColor || 'rgba(var(--muted), 0.5)',
+    color: theme.botTextColor || 'inherit',
+  };
+
+  const inputAreaStyle: React.CSSProperties = {
+    backgroundColor: theme.inputBgColor || 'rgba(var(--background), 0.5)',
+    borderColor: theme.inputBorderColor || 'rgba(var(--border), 0.4)',
+    color: theme.inputTextColor || 'inherit',
   };
 
   const isVoiceActive = voiceState !== "disconnected" && voiceState !== "connecting";
 
   return (
     <div className="flex flex-col h-full bg-transparent w-full">
-      <Card className="flex flex-col h-full w-full border border-border shadow-2xl rounded-2xl overflow-hidden" style={widgetStyle}>
+      <Card className="flex flex-col h-full w-full border border-border shadow-2xl overflow-hidden" style={widgetStyle}>
         
         {/* Header */}
         <CardHeader className="flex-shrink-0 p-4 border-b border-border/10">
@@ -345,13 +569,13 @@ export function ChatWidgetComponent({
             {theme.logoUrl ? (
               <Image src={theme.logoUrl} alt="Logo" width={40} height={40} className="h-10 w-10 object-cover rounded-full" />
             ) : (
-              <div className="h-10 w-10 rounded-full flex items-center justify-center text-white" style={{ backgroundColor: theme.primaryColor }}>
+              <div className="h-10 w-10 rounded-full flex items-center justify-center text-white" style={{ backgroundColor: theme.accentColor || theme.primaryColor }}>
                 <Bot size={24} />
               </div>
             )}
             <div>
-              <h3 className="font-bold text-lg leading-tight" style={{ color: theme.headerTitleColor }}>{theme.headerTitle || "AI Assistant"}</h3>
-              <p className="text-xs text-muted-foreground" style={{ color: theme.headerSubtextColor }}>{theme.headerSubtext || "Online"}</p>
+              <h3 className="font-bold text-lg leading-tight" style={{ color: theme.headerTextColor || theme.headerTitleColor }}>{theme.headerTitle || "AI Assistant"}</h3>
+              <p className="text-xs text-muted-foreground" style={{ color: theme.headerSubtextColor }}>{theme.headerSubtitle || theme.headerSubtext || "Online"}</p>
             </div>
           </div>
         </CardHeader>
@@ -383,8 +607,8 @@ export function ChatWidgetComponent({
                     </div>
                   )}
                   <div
-                    className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm ${msg.sender === 'user' ? '' : 'bg-muted/50 text-foreground'}`}
-                    style={msg.sender === 'user' ? userMessageStyle : {}}
+                    className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm`}
+                    style={msg.sender === 'user' ? userMessageStyle : botMessageStyle}
                   >
                     <p>{msg.text}</p>
                   </div>
@@ -408,7 +632,7 @@ export function ChatWidgetComponent({
             </CardContent>
 
             <CardFooter className="p-3 shrink-0 border-t border-border/10">
-              <form onSubmit={handleSendMessage} className="flex w-full items-center gap-2 bg-background/50 border border-border/40 rounded-full pl-4 pr-1.5 py-1.5">
+              <form onSubmit={handleSendMessage} className="flex w-full items-center gap-2 rounded-full pl-4 pr-1.5 py-1.5 border" style={inputAreaStyle}>
                 <Input
                   type="text"
                   placeholder={theme.placeholderText || "Type a message..."}
@@ -417,7 +641,7 @@ export function ChatWidgetComponent({
                   className="flex-1 bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-0 h-9"
                   disabled={isLoadingText}
                 />
-                <Button type="submit" size="icon" disabled={isLoadingText || !inputValue.trim()} className="rounded-full h-9 w-9 shrink-0 transition-transform active:scale-95" style={{ backgroundColor: theme.primaryColor, color: '#fff' }}>
+                <Button type="submit" size="icon" disabled={isLoadingText || !inputValue.trim()} className="rounded-full h-9 w-9 shrink-0 transition-transform active:scale-95" style={{ backgroundColor: theme.accentColor || theme.primaryColor, color: theme.userTextColor || '#fff' }}>
                   <SendHorizonal className="h-4 w-4" />
                 </Button>
               </form>
@@ -427,16 +651,16 @@ export function ChatWidgetComponent({
           {/* VOICE TAB */}
           <TabsContent value="voice" className="flex-grow flex flex-col outline-none m-0 data-[state=active]:flex overflow-hidden relative">
             <div className="absolute inset-0 z-0 flex items-center justify-center opacity-30 pointer-events-none">
-              <div className="h-[300px] w-[300px] rounded-full blur-[80px]" style={{ backgroundColor: theme.primaryColor }} />
+              <div className="h-[300px] w-[300px] rounded-full blur-[80px]" style={{ backgroundColor: theme.accentColor || theme.primaryColor }} />
             </div>
             
             <div className="flex-grow flex flex-col items-center justify-center p-6 z-10 relative">
               {!isVoiceActive ? (
                 <div className="flex flex-col items-center justify-center text-center space-y-8 mt-[-20px]">
                   <div className="relative">
-                    <div className="absolute inset-0 animate-ping rounded-full opacity-20" style={{ backgroundColor: theme.primaryColor }} />
-                    <div className="h-24 w-24 rounded-full flex items-center justify-center shadow-xl backdrop-blur-md border border-white/10" style={{ backgroundColor: `${theme.primaryColor}20` }}>
-                      <Mic size={36} style={{ color: theme.primaryColor }} />
+                    <div className="absolute inset-0 animate-ping rounded-full opacity-20" style={{ backgroundColor: theme.accentColor || theme.primaryColor }} />
+                    <div className="h-24 w-24 rounded-full flex items-center justify-center shadow-xl backdrop-blur-md border border-white/10" style={{ backgroundColor: `${theme.accentColor || theme.primaryColor}20` }}>
+                      <Mic size={36} style={{ color: theme.accentColor || theme.primaryColor }} />
                     </div>
                   </div>
                   
@@ -451,7 +675,7 @@ export function ChatWidgetComponent({
                     disabled={voiceState === "connecting"}
                     onClick={connectVoice}
                     className="rounded-full h-12 px-8 font-bold shadow-lg transition-transform active:scale-95"
-                    style={{ backgroundColor: theme.primaryColor, color: '#fff' }}
+                    style={{ backgroundColor: theme.accentColor || theme.primaryColor, color: theme.userTextColor || '#fff' }}
                   >
                     {voiceState === "connecting" ? (
                       <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Connecting...</>
@@ -471,7 +695,7 @@ export function ChatWidgetComponent({
                     <div className="flex flex-col items-center justify-center relative w-full h-[250px]">
                       <AgentAudioVisualizerAura
                         size="lg"
-                        color={theme.primaryColor as `#\${string}`}
+                        color={(theme.accentColor || theme.primaryColor) as `#${string}`}
                         state={stateToVisualizerState(voiceState)}
                         analyserNode={null}
                         themeMode={theme.colorMode as 'light' | 'dark'}
