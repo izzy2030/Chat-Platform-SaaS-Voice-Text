@@ -132,27 +132,6 @@
     @apply border-border selection:bg-primary/30 selection:text-foreground transition-colors duration-300;
   }
 
-  /* Global scrollbar styling for all elements */
-  * {
-    scrollbar-width: thin;
-    scrollbar-color: var(--primary) transparent;
-  }
-
-  *::-webkit-scrollbar {
-    width: 6px;
-    height: 6px;
-  }
-
-  *::-webkit-scrollbar-track {
-    background: transparent;
-  }
-
-  *::-webkit-scrollbar-thumb {
-    @apply bg-primary/20 rounded-full transition-colors hover:bg-primary/40;
-    border: 1px solid transparent;
-    background-clip: padding-box;
-  }
-
   body {
     @apply bg-background text-foreground transition-colors duration-300;
     font-feature-settings: "rlig" 1, "calt" 1;
@@ -168,11 +147,96 @@
     box-shadow: var(--shadow-premium) !important;
   }
 
-  /* Thin stylized scrollbar utility - even more discrete */
+  /* Widget Theme Utilities */
+  .widget-bg {
+    background-color: var(--widget-bg, var(--background));
+  }
+
+  .widget-user-message {
+    background-color: var(--widget-user-bg, var(--primary));
+    color: var(--widget-user-text, var(--primary-foreground));
+  }
+
+  .widget-bot-message {
+    background-color: var(--widget-bot-bg, var(--muted));
+    color: var(--widget-bot-text, var(--foreground));
+  }
+
+  .widget-input-area {
+    background-color: var(--widget-input-bg, rgba(var(--background), 0.5));
+    border-color: var(--widget-input-border, rgba(var(--border), 0.4));
+    color: var(--widget-input-text, var(--foreground));
+  }
+
+  .widget-header-text {
+    color: var(--widget-header-text, var(--foreground));
+  }
+
+  .widget-accent {
+    background-color: var(--widget-accent, var(--primary));
+    color: var(--widget-accent-text, var(--primary-foreground));
+  }
+
+  .widget-accent-bg {
+    background-color: var(--widget-accent, var(--primary));
+  }
+
+  .widget-accent-text {
+    color: var(--widget-accent-text, var(--primary-foreground));
+  }
+
+  .widget-tabs-bg {
+    background-color: var(--widget-tabs-bg, var(--muted));
+  }
+
+  .widget-tabs-text {
+    color: var(--widget-tabs-text, var(--foreground));
+  }
+
+  .widget-avatar-bg {
+    background-color: var(--widget-avatar-bg, var(--muted));
+  }
+
+  .widget-avatar-icon {
+    color: var(--widget-avatar-icon, var(--muted-foreground));
+  }
+
+  /* Dynamic theme utilities for components that need runtime theme switching */
+  .dynamic-bg {
+    background-color: var(--dynamic-bg, var(--background));
+  }
+
+  .dynamic-text {
+    color: var(--dynamic-text, var(--foreground));
+  }
+
+  .dynamic-border {
+    border-color: var(--dynamic-border, var(--border));
+  }
+
+  /* Scrollable content utilities */
+  .scrollable-content {
+    scrollbar-width: thin;
+    scrollbar-color: var(--primary) transparent;
+
+    &::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    &::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    &::-webkit-scrollbar-thumb {
+      @apply bg-primary/20 rounded-full transition-colors hover:bg-primary/40;
+      border: 1px solid transparent;
+      background-clip: padding-box;
+    }
+  }
+
   .pretty-scrollbar {
     scrollbar-width: thin;
     scrollbar-color: var(--primary) transparent;
-    
+
     &::-webkit-scrollbar {
       width: 4px;
       height: 4px;

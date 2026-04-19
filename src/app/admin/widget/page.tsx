@@ -122,10 +122,7 @@ export default function WidgetsPage() {
             <div key={widget._id} className="group relative flex flex-col bg-card rounded-[32px] overflow-hidden shadow-sm hover:shadow-lg transition-all duration-500 hover:-translate-y-1">
               <div className="p-6 space-y-4">
                 <div className="flex items-center justify-between">
-                  <div className={cn(
-                    "w-12 h-12 rounded-2xl flex items-center justify-center",
-                    widget.type === 'voice' ? "bg-blue-500/10 text-blue-500" : "bg-emerald-500/10 text-emerald-500"
-                  )}>
+                  <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-primary/10 text-primary">
                     {widget.type === 'voice' ? <Mic className="w-6 h-6" /> : <MessageSquare className="w-6 h-6" />}
                   </div>
                   <Badge variant="outline" className="rounded-full border-border/60 bg-muted/20 text-[10px] font-bold uppercase tracking-wider">

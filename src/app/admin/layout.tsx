@@ -172,7 +172,7 @@ function AdminSidebar({ user, handleSignOut, setTheme, theme }: { user: any, han
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight ml-2 group-data-[collapsible=icon]:hidden">
                     <span className="truncate font-black text-xs text-[#191C1D] dark:text-white">{fullName}</span>
-                    <span className="truncate text-[9px] text-slate-400 font-bold uppercase tracking-tighter">{email}</span>
+                    <span className="truncate text-[9px] text-slate-400 font-bold tracking-tighter">{email}</span>
                   </div>
                   <ChevronRight className="ml-auto size-4 text-[#BCCABE] dark:text-zinc-500 group-data-[collapsible=icon]:hidden" />
                 </DropdownMenuTrigger>
