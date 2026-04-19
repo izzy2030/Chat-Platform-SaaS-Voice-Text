@@ -8,7 +8,7 @@ export default defineSchema({
   }).index("by_userId", ["userId"]),
 
   widgets: defineTable({
-    name: v.string(),
+    name: v.string(), // "Widget Title" in Content tab
     projectId: v.id("projects"),
     type: v.union(v.literal("text"), v.literal("voice")),
     webhookUrl: v.string(),
@@ -16,11 +16,31 @@ export default defineSchema({
     userId: v.string(),
     theme: v.optional(
       v.object({
+        // Content Tab
+        headerTitle: v.optional(v.string()), // Alias for Widget Title
+        headerSubtitle: v.optional(v.string()),
+        welcomeMessage: v.optional(v.string()),
+        placeholderText: v.optional(v.string()),
+        botName: v.optional(v.string()),
+        showBranding: v.optional(v.boolean()),
+
+        // Design Tab
+        accentColor: v.optional(v.string()),
+        headerTextColor: v.optional(v.string()),
+        chatBackgroundColor: v.optional(v.string()),
+        botBubbleBgColor: v.optional(v.string()),
+        botTextColor: v.optional(v.string()),
+        userTextColor: v.optional(v.string()),
+        inputBgColor: v.optional(v.string()),
+        inputTextColor: v.optional(v.string()),
+        inputBorderColor: v.optional(v.string()),
+        borderRadius: v.optional(v.string()),
+        fontFamily: v.optional(v.string()),
+
+        // Legacy/Other Fields
         bubbleColor: v.optional(v.string()),
         bubbleIcon: v.optional(v.string()),
         panelColor: v.optional(v.string()),
-        headerTitle: v.optional(v.string()),
-        welcomeMessage: v.optional(v.string()),
         position: v.optional(v.union(v.literal("left"), v.literal("right"))),
       })
     ),
