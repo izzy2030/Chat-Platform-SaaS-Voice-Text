@@ -9,97 +9,55 @@ import { useUser } from '@clerk/nextjs';
 import { useQuery, useMutation } from 'convex/react';
 import { api } from 'convex/_generated/api';
 import { useRouter } from 'next/navigation';
-import { Loader2, MessageSquare, Mic, Save, Eye, Smartphone, Monitor } from 'lucide-react';
+import { Loader2, Save, Type, Palette, Code, Check, Copy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import { Textarea } from '@/components/ui/textarea';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Switch } from '@/components/ui/switch';
 import { toast } from '@/hooks/use-toast';
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card';
-import { Skeleton } from '@/components/ui/skeleton';
-import Link from 'next/link';
-import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import { ChatWidgetComponent } from '@/components/widget/chat-widget';
+import Link from 'next/link';
 
 const widgetSchema = z.object({
-  name: z.string().min(1, 'Widget Name is required'),
-  projectId: z.string().min(1, 'Please select a project'),
-  type: z.enum(['text', 'voice']).default('text'),
-  webhookUrl: z.string().url('Please enter a valid URL'),
-  webhookSecret: z.string().optional(),
-  allowedDomains: z.string().min(1, 'At least one domain is required'),
-  bubbleColor: z.string().optional(),
-  bubbleIcon: z.string().optional(),
-  panelColor: z.string().optional(),
-  headerTitle: z.string().optional(),
+  // Content Tab
+  name: z.string().min(1, 'Widget Title is required'),
+  headerSubtitle: z.string().optional(),
   welcomeMessage: z.string().optional(),
-  defaultLanguage: z.enum(['EN', 'ES']).default('EN'),
-  position: z.enum(['left', 'right']).default('right'),
+  placeholderText: z.string().optional(),
+  botName: z.string().optional(),
+  showBranding: z.boolean().default(true),
+
+  // Design Tab
+  accentColor: z.string().optional(),
+  headerTextColor: z.string().optional(),
+  chatBackgroundColor: z.string().optional(),
+  botBubbleBgColor: z.string().optional(),
+  botTextColor: z.string().optional(),
+  userTextColor: z.string().optional(),
+  inputBgColor: z.string().optional(),
+  inputTextColor: z.string().optional(),
+  inputBorderColor: z.string().optional(),
+  borderRadius: z.string().optional(),
+  fontFamily: z.string().optional(),
 });
 
 type WidgetFormData = z.infer<typeof widgetSchema>;
 
-interface ChatWidget {
-  id: string;
-  name: string;
-  project_id: string;
-  type?: 'text' | 'voice';
-  webhook_url: string;
-  allowed_domains: string[];
-  theme: {
-    bubbleColor?: string;
-    bubbleIcon?: string;
-    panelColor?: string;
-    headerTitle?: string;
-    welcomeMessage?: string;
-    position?: 'left' | 'right';
-  };
-  user_id: string;
-  config?: {
-    webhookSecret?: string;
-    defaultLanguage?: 'EN' | 'ES';
-  }
-}
-
-interface Project {
-  id: string;
-  name: string;
-}
-
 const ColorPicker = ({ label, value, onChange }: { label: string, value: string, onChange: (val: string) => void }) => (
-  <div className="space-y-3">
-    <Label className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">{label}</Label>
-    <div className="flex items-center gap-3">
-      <div className="relative h-12 w-12 rounded-lg overflow-hidden shadow-sm hover:scale-105 transition-all duration-200 border-2 border-white ring-1 ring-border cursor-pointer bg-[url('https://transparenttextures.com/patterns/checkerboard.png')]">
-        <div
-          style={{ backgroundColor: value }}
-          className="absolute inset-0 w-full h-full"
-        />
+  <div className="flex items-center justify-between group">
+    <FormLabel className="text-sm text-zinc-400 font-normal">{label}</FormLabel>
+    <div className="flex items-center gap-2">
+      <div className="relative h-6 w-6 rounded shadow-sm border border-zinc-800 overflow-hidden shrink-0">
+        <div style={{ backgroundColor: value }} className="absolute inset-0 w-full h-full" />
         <input
           type="color"
           value={value}
@@ -107,51 +65,47 @@ const ColorPicker = ({ label, value, onChange }: { label: string, value: string,
           className="absolute -top-[50%] -left-[50%] h-[200%] w-[200%] p-0 opacity-0 cursor-pointer"
         />
       </div>
-      <div className="flex-1">
-        <Input
-          value={value}
-          onChange={(e) => onChange(e.target.value)}
-          className="font-mono text-sm h-9 uppercase"
-          placeholder="#000000"
-        />
-      </div>
+      <Input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="h-8 w-[90px] font-mono text-xs uppercase bg-zinc-900 border-zinc-800 text-zinc-300"
+      />
     </div>
   </div>
 );
 
 function Preview({ widgetId, formValues }: { widgetId: string, formValues: WidgetFormData }) {
-  // Construct a preview config that matches what ChatWidgetComponent expects
   const previewConfig = React.useMemo(() => {
     return {
       id: widgetId,
-      webhook_url: formValues.webhookUrl || '',
+      webhook_url: '',
+      type: 'text' as const,
       theme: {
-        primaryColor: formValues.bubbleColor,
-        secondaryColor: formValues.panelColor,
-        headerTitle: formValues.headerTitle,
+        // Map form values to the component's expected theme properties
+        primaryColor: formValues.accentColor,
+        secondaryColor: formValues.chatBackgroundColor,
+        headerTitle: formValues.name,
+        headerTitleColor: formValues.headerTextColor,
+        headerSubtext: formValues.headerSubtitle,
         bubbleMessage: formValues.welcomeMessage,
-      },
-      brand: { // Legacy fallback if needed
-        welcomeMessage: formValues.welcomeMessage
+        fontFamily: formValues.fontFamily,
+        // The component might need these explicit names based on how it's built internally
+        darkPrimaryColor: formValues.accentColor,
+        darkSecondaryColor: formValues.chatBackgroundColor,
       },
     };
   }, [widgetId, formValues]);
 
   return (
-    <div className="w-full h-full flex items-center justify-center p-8 bg-gradient-to-br from-gray-50 to-gray-100/50 relative overflow-hidden rounded-lg border border-border/40 shadow-inner">
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,#80808012_1px,transparent_1px),linear-gradient(to_bottom,#80808012_1px,transparent_1px)] bg-[size:24px_24px]"></div>
+    <div className="w-full h-full flex flex-col items-center justify-center p-8 bg-[#0a0a0a] relative overflow-hidden">
+      <div className="mb-8 flex items-center justify-center gap-4 z-10">
+        <span className="text-zinc-500 text-sm">Preview</span>
+        <Button variant="outline" size="sm" className="rounded-full border-zinc-800 bg-transparent text-white hover:bg-zinc-900">
+          Try it Live
+        </Button>
+      </div>
 
-      {/* Mock Window / Device Frame */}
-      <div className={`relative transition-all duration-500 ease-in-out w-[380px] h-[600px] shadow-2xl rounded-[3rem] border-[8px] border-white bg-white overflow-hidden ring-1 ring-black/5`}>
-        {/* Status Bar */}
-        <div className="h-6 w-full bg-white flex items-center justify-between px-6 z-10 relative">
-          <div className="text-[10px] font-bold">9:41</div>
-          <div className="flex gap-1.5">
-            <div className="w-3 h-3 bg-black/10 rounded-full" />
-            <div className="w-3 h-3 bg-black/10 rounded-full" />
-          </div>
-        </div>
-
+      <div className="relative w-[380px] h-[600px] shadow-2xl rounded-2xl border border-zinc-800/50 bg-[#18181b] overflow-hidden z-10">
         <ChatWidgetComponent
           widgetConfig={previewConfig}
           sessionId="preview-session"
@@ -161,13 +115,16 @@ function Preview({ widgetId, formValues }: { widgetId: string, formValues: Widge
   );
 }
 
-export default function EditWidgetPage({
+export default function BuilderPage({
   params,
 }: {
   params: Promise<{ widgetId: string }>;
 }) {
   const { widgetId } = use(params);
   const [isLoading, setIsLoading] = useState(false);
+  const [copiedScript, setCopiedScript] = useState(false);
+  const [copiedIframe, setCopiedIframe] = useState(false);
+  const [copiedKey, setCopiedKey] = useState(false);
   const { user, isLoaded } = useUser();
   const router = useRouter();
 
@@ -175,97 +132,99 @@ export default function EditWidgetPage({
     api.widgets.getById,
     isLoaded && user ? { id: widgetId as any, userId: user.id } : 'skip'
   );
-  const projects = useQuery(
-    api.projects.getByUserId,
-    isLoaded && user ? { userId: user.id } : 'skip'
-  );
+  
   const updateWidget = useMutation(api.widgets.update);
 
   const form = useForm<WidgetFormData>({
     resolver: zodResolver(widgetSchema),
     defaultValues: {
-      name: '',
-      projectId: '',
-      type: 'text',
-      webhookUrl: '',
-      webhookSecret: '',
-      allowedDomains: '',
-      bubbleColor: '#94B4E4',
-      panelColor: '#F0F4F8',
-      headerTitle: 'Chat with us!',
-      welcomeMessage: 'Hello! How can we help you today?',
-      defaultLanguage: 'EN',
-      position: 'right',
+      name: 'Chat with BuildLoop AI',
+      headerSubtitle: 'Online',
+      welcomeMessage: 'Hi! How can I help you today?',
+      placeholderText: 'Type your message...',
+      botName: 'AI Assistant',
+      showBranding: true,
+      
+      accentColor: '#e4ff04',
+      headerTextColor: '#ffffff',
+      chatBackgroundColor: '#18181b',
+      botBubbleBgColor: '#27272a',
+      botTextColor: '#e5e5e5',
+      userTextColor: '#ffffff',
+      inputBgColor: '#27272a',
+      inputTextColor: '#e5e5e5',
+      inputBorderColor: '#3f3f46',
+      borderRadius: '12px',
+      fontFamily: 'Inter, sans-serif',
     },
   });
 
-  // Watch all values for real-time preview
   const formValues = useWatch({ control: form.control });
 
   useEffect(() => {
     if (widget) {
-      const defaults = {
-        name: widget.name || '',
-        projectId: String(widget.projectId || ''),
-        type: widget.type || 'text',
-        webhookUrl: widget.webhookUrl || '',
-        webhookSecret: widget.config?.webhookSecret || '',
-        allowedDomains: Array.isArray(widget.allowedDomains) ? widget.allowedDomains.join(', ') : '',
-        bubbleColor: widget.theme?.bubbleColor || '#94B4E4',
-        bubbleIcon: widget.theme?.bubbleIcon || '',
-        panelColor: widget.theme?.panelColor || '#F0F4F8',
-        headerTitle: widget.theme?.headerTitle || 'Chat with us!',
-        welcomeMessage: widget.theme?.welcomeMessage || 'Hello! How can we help you today?',
-        defaultLanguage: widget.config?.defaultLanguage || 'EN',
-        position: widget.theme?.position || 'right',
-      };
-      form.reset(defaults);
+      form.reset({
+        name: widget.name || 'Chat with BuildLoop AI',
+        headerSubtitle: widget.theme?.headerSubtitle || 'Online',
+        welcomeMessage: widget.theme?.welcomeMessage || 'Hi! How can I help you today?',
+        placeholderText: widget.theme?.placeholderText || 'Type your message...',
+        botName: widget.theme?.botName || 'AI Assistant',
+        showBranding: widget.theme?.showBranding ?? true,
+
+        accentColor: widget.theme?.accentColor || '#e4ff04',
+        headerTextColor: widget.theme?.headerTextColor || '#ffffff',
+        chatBackgroundColor: widget.theme?.chatBackgroundColor || '#18181b',
+        botBubbleBgColor: widget.theme?.botBubbleBgColor || '#27272a',
+        botTextColor: widget.theme?.botTextColor || '#e5e5e5',
+        userTextColor: widget.theme?.userTextColor || '#ffffff',
+        inputBgColor: widget.theme?.inputBgColor || '#27272a',
+        inputTextColor: widget.theme?.inputTextColor || '#e5e5e5',
+        inputBorderColor: widget.theme?.inputBorderColor || '#3f3f46',
+        borderRadius: widget.theme?.borderRadius || '12px',
+        fontFamily: widget.theme?.fontFamily || 'Inter, sans-serif',
+      });
     }
   }, [widget, form]);
 
   const onSubmit = async (data: WidgetFormData) => {
-    if (!user || !widgetId) {
-      toast({
-        variant: 'destructive',
-        title: 'Error',
-        description: 'You must be logged in to update a widget.',
-      });
-      return;
-    }
+    if (!user || !widgetId) return;
 
     setIsLoading(true);
-
     try {
       await updateWidget({
         id: widgetId as any,
         userId: user.id,
         name: data.name,
-        projectId: data.projectId as any,
-        type: data.type,
-        webhookUrl: data.webhookUrl,
-        allowedDomains: data.allowedDomains.split(',').map(d => d.trim()),
         theme: {
-          bubbleColor: data.bubbleColor || '',
-          bubbleIcon: data.bubbleIcon || '',
-          panelColor: data.panelColor || '',
-          headerTitle: data.headerTitle || '',
-          welcomeMessage: data.welcomeMessage || '',
-          position: data.position,
-        },
-        config: {
-          webhookSecret: data.webhookSecret || '',
-          defaultLanguage: data.defaultLanguage,
+          headerTitle: data.name, // Keep legacy fields in sync
+          headerSubtitle: data.headerSubtitle,
+          welcomeMessage: data.welcomeMessage,
+          placeholderText: data.placeholderText,
+          botName: data.botName,
+          showBranding: data.showBranding,
+          
+          accentColor: data.accentColor,
+          headerTextColor: data.headerTextColor,
+          chatBackgroundColor: data.chatBackgroundColor,
+          botBubbleBgColor: data.botBubbleBgColor,
+          botTextColor: data.botTextColor,
+          userTextColor: data.userTextColor,
+          inputBgColor: data.inputBgColor,
+          inputTextColor: data.inputTextColor,
+          inputBorderColor: data.inputBorderColor,
+          borderRadius: data.borderRadius,
+          fontFamily: data.fontFamily,
         },
       });
 
       toast({
-        title: 'Widget Updated!',
-        description: 'Your chat widget has been updated successfully.',
+        title: 'Widget Updated',
+        description: 'Your widget settings have been saved.',
       });
     } catch (error: any) {
       toast({
         variant: 'destructive',
-        title: 'Error updating widget',
+        title: 'Error',
         description: error.message,
       });
     } finally {
@@ -273,332 +232,355 @@ export default function EditWidgetPage({
     }
   };
 
-  const isWidgetLoading = widget === undefined;
-  const isLoadingProjects = projects === undefined;
+  const copyToClipboard = (text: string, setter: (val: boolean) => void) => {
+    navigator.clipboard.writeText(text);
+    setter(true);
+    setTimeout(() => setter(false), 2000);
+  };
 
-  if (isWidgetLoading) {
+  if (widget === undefined) {
     return (
-      <div className="flex justify-center p-12 w-full h-full align-middle">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      <div className="flex justify-center items-center p-12 w-full h-full bg-[#0a0a0a]">
+        <Loader2 className="h-8 w-8 animate-spin text-emerald-500" />
       </div>
     );
   }
-
   if (!widget) return null;
 
-  // We type cast formValues to WidgetFormData because useWatch returns Partial<DeepPartial<T>>
-  // but we know it's seeded with default values.
   const currentValues = formValues as WidgetFormData;
+  const scriptSnippet = `<script src="${typeof window !== 'undefined' ? window.location.origin : ''}/widget.js" data-key="${widgetId}" id="chat-widget-script" async></script>`;
+  const iframeSnippet = `<iframe src="${typeof window !== 'undefined' ? window.location.origin : ''}/widget/${widgetId}" style="position:fixed;bottom:0;right:0;width:400px;height:600px;border:none;z-index:99999;" allow="microphone"></iframe>`;
 
   return (
-    <div className="flex flex-col flex-1 min-h-0 rounded-lg border bg-background shadow-sm overflow-hidden">
-      {/* Header */}
-      <div className="h-16 border-b bg-card px-6 flex items-center justify-between shrink-0 z-20">
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" nativeButton={false} render={<Link href="/admin" />}>
-            <span className="sr-only">Back</span>&larr;
-          </Button>
-          <div>
-            <h1 className="text-lg font-bold tracking-tight">Widget Studio</h1>
-            <div className="text-xs text-muted-foreground flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
-              Live Preview
-            </div>
+    <div className="flex h-screen bg-[#0a0a0a] text-white overflow-hidden font-sans">
+      
+      {/* Left Sidebar - Builder */}
+      <div className="w-[420px] bg-[#121214] border-r border-zinc-800 flex flex-col shrink-0 z-10">
+        
+        <div className="h-20 px-8 flex items-center justify-between shrink-0 border-b border-zinc-800/50">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" className="hover:bg-zinc-800 rounded-full h-8 w-8 text-zinc-400" nativeButton={false} render={<Link href="/admin/widget" />}>
+              &larr;
+            </Button>
+            <h1 className="text-xl font-semibold text-zinc-100">Widget Builder</h1>
           </div>
-        </div>
-        <div className="flex items-center gap-2">
-          <Button onClick={form.handleSubmit(onSubmit)} disabled={isLoading} className="gap-2">
-            {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-            Save Changes
+          <Button 
+            onClick={form.handleSubmit(onSubmit)} 
+            disabled={isLoading} 
+            className="bg-[#10b981] hover:bg-[#059669] text-black font-semibold h-9 px-6 rounded-lg shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all hover:shadow-[0_0_20px_rgba(16,185,129,0.5)]"
+          >
+            {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : 'Save'}
           </Button>
         </div>
+
+        <Tabs defaultValue="content" className="flex flex-col flex-1 min-h-0 w-full px-6 pt-6">
+          <TabsList className="w-full bg-[#18181b] border border-zinc-800/80 rounded-xl p-1.5 h-auto grid grid-cols-3 mb-6">
+            <TabsTrigger value="content" className="rounded-lg text-xs py-2 data-[state=active]:bg-[#27272a] data-[state=active]:text-white text-zinc-400 font-medium tracking-wide">
+              <Type className="w-3.5 h-3.5 mr-2" /> Content
+            </TabsTrigger>
+            <TabsTrigger value="design" className="rounded-lg text-xs py-2 data-[state=active]:bg-[#27272a] data-[state=active]:text-white text-zinc-400 font-medium tracking-wide">
+              <Palette className="w-3.5 h-3.5 mr-2" /> Design
+            </TabsTrigger>
+            <TabsTrigger value="embed" className="rounded-lg text-xs py-2 data-[state=active]:bg-[#27272a] data-[state=active]:text-white text-zinc-400 font-medium tracking-wide">
+              <Code className="w-3.5 h-3.5 mr-2" /> Embed
+            </TabsTrigger>
+          </TabsList>
+
+          <ScrollArea className="flex-1 -mx-6 px-6">
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="pb-12">
+                
+                {/* CONTENT TAB */}
+                <TabsContent value="content" className="mt-0 space-y-6 outline-none">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-zinc-400 font-medium">Widget Title</FormLabel>
+                        <FormControl>
+                          <Input {...field} className="h-11 rounded-lg border-zinc-800 bg-[#0a0a0a] text-sm text-zinc-200 focus-visible:ring-1 focus-visible:ring-emerald-500/50" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="headerSubtitle"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-zinc-400 font-medium">Header Subtitle</FormLabel>
+                        <FormControl>
+                          <Input {...field} className="h-11 rounded-lg border-emerald-500/50 bg-[#0a0a0a] text-sm text-zinc-200 focus-visible:ring-1 focus-visible:ring-emerald-500/50 shadow-[0_0_10px_rgba(16,185,129,0.1)]" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="welcomeMessage"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-zinc-400 font-medium">Welcome Message</FormLabel>
+                        <FormControl>
+                          <Input {...field} className="h-11 rounded-lg border-zinc-800 bg-[#0a0a0a] text-sm text-zinc-200 focus-visible:ring-1 focus-visible:ring-emerald-500/50" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="placeholderText"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-zinc-400 font-medium">Placeholder Text</FormLabel>
+                        <FormControl>
+                          <Input {...field} className="h-11 rounded-lg border-zinc-800 bg-[#0a0a0a] text-sm text-zinc-200 focus-visible:ring-1 focus-visible:ring-emerald-500/50" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="botName"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-xs text-zinc-400 font-medium">Bot Name</FormLabel>
+                        <FormControl>
+                          <Input {...field} className="h-11 rounded-lg border-zinc-800 bg-[#0a0a0a] text-sm text-zinc-200 focus-visible:ring-1 focus-visible:ring-emerald-500/50" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="showBranding"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center justify-between rounded-lg p-0 pt-4">
+                        <FormLabel className="text-xs text-zinc-400 font-medium mt-0">Show Branding</FormLabel>
+                        <FormControl>
+                          <Switch
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                            className="data-[state=checked]:bg-emerald-500"
+                          />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                </TabsContent>
+
+                {/* DESIGN TAB */}
+                <TabsContent value="design" className="mt-0 space-y-4 outline-none">
+                  <FormField
+                    control={form.control}
+                    name="accentColor"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <ColorPicker label="Accent Color" value={field.value || '#e4ff04'} onChange={field.onChange} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="headerTextColor"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <ColorPicker label="Header Text" value={field.value || '#ffffff'} onChange={field.onChange} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="chatBackgroundColor"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <ColorPicker label="Chat Background" value={field.value || '#18181b'} onChange={field.onChange} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="botBubbleBgColor"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <ColorPicker label="Bot Bubble BG" value={field.value || '#27272a'} onChange={field.onChange} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="botTextColor"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <ColorPicker label="Bot Text" value={field.value || '#e5e5e5'} onChange={field.onChange} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="userTextColor"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <ColorPicker label="User Text" value={field.value || '#ffffff'} onChange={field.onChange} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="inputBgColor"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <ColorPicker label="Input BG" value={field.value || '#27272a'} onChange={field.onChange} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="inputTextColor"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <ColorPicker label="Input Text" value={field.value || '#e5e5e5'} onChange={field.onChange} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="inputBorderColor"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <ColorPicker label="Input Border" value={field.value || '#3f3f46'} onChange={field.onChange} />
+                        </FormControl>
+                      </FormItem>
+                    )}
+                  />
+                  
+                  <div className="pt-4 space-y-4 border-t border-zinc-800/50 mt-6">
+                    <FormField
+                      control={form.control}
+                      name="borderRadius"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs text-zinc-400 font-medium">Border Radius</FormLabel>
+                          <FormControl>
+                            <Input {...field} className="h-11 rounded-lg border-zinc-800 bg-[#0a0a0a] text-sm text-zinc-200 focus-visible:ring-1 focus-visible:ring-emerald-500/50" />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                    <FormField
+                      control={form.control}
+                      name="fontFamily"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-xs text-zinc-400 font-medium">Font Family</FormLabel>
+                          <FormControl>
+                            <Input {...field} className="h-11 rounded-lg border-zinc-800 bg-[#0a0a0a] text-sm text-zinc-200 focus-visible:ring-1 focus-visible:ring-emerald-500/50" />
+                          </FormControl>
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </TabsContent>
+
+                {/* EMBED TAB */}
+                <TabsContent value="embed" className="mt-0 space-y-6 outline-none">
+                  <div className="space-y-2">
+                    <Label className="text-xs text-zinc-400 font-medium">API Key</Label>
+                    <div className="flex bg-[#0a0a0a] border border-zinc-800 rounded-lg overflow-hidden h-11">
+                      <div className="flex-1 px-3 flex items-center text-sm font-mono text-zinc-300 truncate">
+                        {widgetId}
+                      </div>
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-full rounded-none border-l border-zinc-800 hover:bg-zinc-900 text-zinc-400"
+                        onClick={() => copyToClipboard(widgetId, setCopiedKey)}
+                      >
+                        {copiedKey ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs text-zinc-400 font-medium">Script Tag (Recommended)</Label>
+                    <div className="flex bg-[#0a0a0a] border border-zinc-800 rounded-lg overflow-hidden h-11 relative group">
+                      <div className="flex-1 px-3 flex items-center text-sm font-mono text-zinc-300 overflow-x-auto whitespace-nowrap hide-scrollbar">
+                        {scriptSnippet}
+                      </div>
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="icon" 
+                        className="h-full absolute right-0 bg-[#0a0a0a]/80 backdrop-blur-sm rounded-none border-l border-zinc-800 hover:bg-zinc-900 text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => copyToClipboard(scriptSnippet, setCopiedScript)}
+                      >
+                        {copiedScript ? <Check className="h-4 w-4 text-emerald-500" /> : <Copy className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="text-xs text-zinc-400 font-medium">iFrame Embed</Label>
+                    <div className="relative border border-zinc-800 rounded-lg bg-[#0a0a0a] p-3 pt-8 group">
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="icon" 
+                        className="absolute top-2 right-2 h-6 w-6 rounded-md hover:bg-zinc-900 text-zinc-400 opacity-0 group-hover:opacity-100 transition-opacity"
+                        onClick={() => copyToClipboard(iframeSnippet, setCopiedIframe)}
+                      >
+                        {copiedIframe ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
+                      </Button>
+                      <pre className="text-xs font-mono text-zinc-400 overflow-x-auto whitespace-pre-wrap break-all hide-scrollbar">
+                        {iframeSnippet}
+                      </pre>
+                    </div>
+                  </div>
+                </TabsContent>
+              </form>
+            </Form>
+          </ScrollArea>
+        </Tabs>
       </div>
 
-      {/* Workspace */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Left Sidebar - Controls */}
-        <div className="w-[400px] border-r bg-card flex flex-col shrink-0 z-10 shadow-lg">
-          <Tabs defaultValue="visuals" className="w-full flex flex-col h-full">
-            <div className="px-6 py-4 border-b">
-              <TabsList className="w-full grid grid-cols-2">
-                <TabsTrigger value="visuals">Design</TabsTrigger>
-                <TabsTrigger value="settings">Settings</TabsTrigger>
-              </TabsList>
-            </div>
-
-            <ScrollArea className="flex-1">
-              <div className="p-6">
-                <Form {...form}>
-                  <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-                    <TabsContent value="visuals" className="space-y-8 mt-0 data-[state=inactive]:hidden">
-                      {/* Color Section */}
-                      <section className="space-y-4">
-                        <div className="flex items-center gap-2 mb-2">
-                          <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Color Palette</h3>
-                          <div className="h-px bg-border flex-1"></div>
-                        </div>
-
-                        <FormField
-                          control={form.control}
-                          name="bubbleColor"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormControl>
-                                <ColorPicker label="Primary Brand Color" value={field.value || '#94B4E4'} onChange={field.onChange} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="panelColor"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormControl>
-                                <ColorPicker label="Background / Secondary" value={field.value || '#F0F4F8'} onChange={field.onChange} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </section>
-
-                      {/* Text Section */}
-                      <section className="space-y-6">
-                        <div className="flex items-center gap-3 mb-4">
-                          <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground/70">Messaging</h3>
-                          <div className="h-px bg-border flex-1"></div>
-                        </div>
-
-                        <FormField
-                          control={form.control}
-                          name="headerTitle"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Header Title</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Chat with us" {...field} className="h-12 rounded-xl border-border/60 bg-muted/20" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="welcomeMessage"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Welcome Message</FormLabel>
-                              <FormControl>
-                                <Textarea placeholder="Hi there!" className="min-h-[100px] rounded-xl border-border/60 bg-muted/20 py-4" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </section>
-
-                      {/* Positioning */}
-                      <section className="space-y-4">
-                        <div className="flex items-center gap-3 mb-4">
-                          <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground/70">Position</h3>
-                          <div className="h-px bg-border flex-1"></div>
-                        </div>
-                        <FormField
-                          control={form.control}
-                          name="position"
-                          render={({ field }) => (
-                            <FormItem className="space-y-3">
-                              <FormControl>
-                                <RadioGroup
-                                  onValueChange={field.onChange}
-                                  defaultValue={field.value}
-                                  className="flex space-x-4"
-                                >
-                                  <FormItem className="flex items-center space-x-2">
-                                    <FormControl>
-                                      <RadioGroupItem value="left" />
-                                    </FormControl>
-                                    <FormLabel className="font-normal cursor-pointer">Bottom Left</FormLabel>
-                                  </FormItem>
-                                  <FormItem className="flex items-center space-x-2">
-                                    <FormControl>
-                                      <RadioGroupItem value="right" />
-                                    </FormControl>
-                                    <FormLabel className="font-normal cursor-pointer">Bottom Right</FormLabel>
-                                  </FormItem>
-                                </RadioGroup>
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </section>
-                    </TabsContent>
-
-                    <TabsContent value="settings" className="space-y-8 mt-0 data-[state=inactive]:hidden">
-                      {/* Identity Section */}
-                      <section className="space-y-6">
-                        <div className="flex items-center gap-3 mb-4">
-                          <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground/70">Identity</h3>
-                          <div className="h-px bg-border flex-1"></div>
-                        </div>
-                        <FormField
-                          control={form.control}
-                          name="name"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Widget Name</FormLabel>
-                              <FormControl>
-                                <Input {...field} className="h-12 rounded-xl border-border/60 bg-muted/20" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="projectId"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Project</FormLabel>
-                              <Select onValueChange={field.onChange} value={field.value}>
-                                <FormControl>
-                                  <SelectTrigger className="h-12 w-full rounded-xl border-border/60 bg-muted/20">
-                                    <SelectValue placeholder="Select a project" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  {isLoadingProjects ? (
-                                    <SelectItem value="loading" disabled>Loading...</SelectItem>
-                                  ) : (
-                                    projects?.map((project) => (
-                                      <SelectItem key={project._id} value={project._id}>
-                                        {project.name}
-                                      </SelectItem>
-                                    ))
-                                  )}
-                                </SelectContent>
-                              </Select>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </section>
-
-                      {/* Configuration */}
-                      <section className="space-y-6">
-                        <div className="flex items-center gap-3 mb-4">
-                          <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-muted-foreground/70">Configuration</h3>
-                          <div className="h-px bg-border flex-1"></div>
-                        </div>
-                        <FormField
-                          control={form.control}
-                          name="type"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Interaction Type</FormLabel>
-                              <FormControl>
-                                <RadioGroup
-                                  onValueChange={field.onChange}
-                                  defaultValue={field.value}
-                                  className="grid grid-cols-2 gap-4"
-                                >
-                                  <div className="relative">
-                                    <RadioGroupItem value="text" id="text" className="peer sr-only" />
-                                    <Label
-                                      htmlFor="text"
-                                      className="flex flex-col items-center justify-center rounded-2xl border border-border/60 bg-muted/10 p-4 hover:bg-primary/5 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 cursor-pointer transition-all duration-300"
-                                    >
-                                      <MessageSquare className="mb-2 h-6 w-6 text-muted-foreground peer-data-[state=checked]:text-primary" />
-                                      <span className="text-sm font-bold text-foreground">Text Stream</span>
-                                    </Label>
-                                  </div>
-                                  <div className="relative">
-                                    <RadioGroupItem value="voice" id="voice" className="peer sr-only" />
-                                    <Label
-                                      htmlFor="voice"
-                                      className="flex flex-col items-center justify-center rounded-2xl border border-border/60 bg-muted/10 p-4 hover:bg-primary/5 peer-data-[state=checked]:border-primary peer-data-[state=checked]:bg-primary/5 cursor-pointer transition-all duration-300"
-                                    >
-                                      <Mic className="mb-2 h-6 w-6 text-muted-foreground peer-data-[state=checked]:text-primary" />
-                                      <span className="text-sm font-bold text-foreground">Voice Matrix</span>
-                                    </Label>
-                                  </div>
-                                </RadioGroup>
-                              </FormControl>
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="allowedDomains"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-sm font-bold text-foreground">Allowed Domains</FormLabel>
-                              <FormControl>
-                                <Input placeholder="example.com" {...field} className="h-12 rounded-xl border-border/60 bg-muted/20" />
-                              </FormControl>
-                              <FormDescription className="text-[10px] text-muted-foreground/50 mt-1">Comma-separated list of allowed hostnames.</FormDescription>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="webhookUrl"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel className="text-sm font-bold text-foreground">Webhook URL</FormLabel>
-                              <FormControl>
-                                <Input placeholder="https://..." {...field} className="h-12 rounded-xl border-border/60 bg-muted/20" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="defaultLanguage"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Language</FormLabel>
-                              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                  <SelectTrigger>
-                                    <SelectValue placeholder="Language" />
-                                  </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                  <SelectItem value="EN">English</SelectItem>
-                                  <SelectItem value="ES">Spanish</SelectItem>
-                                </SelectContent>
-                              </Select>
-                            </FormItem>
-                          )}
-                        />
-                      </section>
-                    </TabsContent>
-                  </form>
-                </Form>
-              </div>
-            </ScrollArea>
-          </Tabs>
-        </div>
-
-        {/* Right - Preview Area */}
-        <div className="flex-1 bg-gray-50/50 flex flex-col min-w-0">
-          <div className="flex-1 overflow-hidden relative">
-            <Preview widgetId={widgetId} formValues={currentValues} />
-          </div>
-        </div>
+      {/* Right - Preview Area */}
+      <div className="flex-1 bg-[#0a0a0a] flex flex-col min-w-0">
+        <Preview widgetId={widgetId} formValues={currentValues} />
       </div>
+
+      <style jsx global>{`
+        .hide-scrollbar::-webkit-scrollbar {
+          display: none;
+        }
+        .hide-scrollbar {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
+        }
+      `}</style>
     </div>
   );
 }
