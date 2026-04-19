@@ -82,7 +82,7 @@ export const defaultTheme: WidgetTheme = {
   showBranding: true,
 
   // Design
-  accentColor: '#3CB993',
+  accentColor: '#3b8332',
   headerTextColor: '#000000',
   chatBackgroundColor: '#FFFFFF',
   botBubbleBgColor: '#5D5DDF',
@@ -98,7 +98,7 @@ export const defaultTheme: WidgetTheme = {
   logoUrl: '',
   fontSize: 14,
   avatarStyle: 'round',
-  primaryColor: '#3CB993', // Linked to accentColor
+  primaryColor: '#3b8332', // Linked to accentColor
   secondaryColor: '#FFFFFF', // Linked to chatBackgroundColor
   borderColor: '#E5E7EB',
   backgroundBlur: 10,
@@ -168,3 +168,6 @@ export const playfulTheme: WidgetTheme = {
   roundedCorners: 24,
   soundTheme: 'arcade-clicks',
 };
+
+
+

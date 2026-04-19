@@ -119,7 +119,7 @@ export default function WidgetsPage() {
       ) : (
         <div className="grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           {widgets.map((widget) => (
-            <div key={widget._id} className="group relative flex flex-col bg-card border border-border rounded-[32px] overflow-hidden hover:shadow-2xl transition-all duration-500 hover:-translate-y-1">
+            <div key={widget._id} className="group relative flex flex-col bg-card rounded-[32px] overflow-hidden shadow-sm hover:shadow-lg transition-all duration-500 hover:-translate-y-1">
               <div className="p-6 space-y-4">
                 <div className="flex items-center justify-between">
                   <div className={cn(

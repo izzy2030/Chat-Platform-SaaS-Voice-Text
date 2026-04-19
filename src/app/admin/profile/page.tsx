@@ -1,11 +1,12 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import * as z from 'zod';
 import { Loader2 } from 'lucide-react';
+import { useDebouncedAutosave } from '@/hooks/use-debounced-autosave';
 
 import { Button } from '@/components/ui/button';
 import {
@@ -40,6 +41,8 @@ export default function ProfilePage() {
   const { user, isLoaded } = useUser();
   const [isPasswordLoading, setIsPasswordLoading] = useState(false);
   const [isProfileLoading, setIsProfileLoading] = useState(false);
+  const [profileSavedAt, setProfileSavedAt] = useState<Date | null>(null);
+  const hasHydratedProfileRef = useRef(false);
 
   const {
     register: registerPassword,
@@ -57,21 +60,32 @@ export default function ProfilePage() {
   const {
     register: registerProfile,
     handleSubmit: handleSubmitProfile,
-    setValue: setProfileValue,
+    reset: resetProfile,
     watch,
+    trigger: triggerProfile,
+    formState: profileFormState,
     formState: { errors: profileErrors },
   } = useForm<ProfileFormData>({
     resolver: zodResolver(profileFormSchema),
+    defaultValues: {
+      displayName: '',
+      photoURL: '',
+    },
   });
 
   const currentPhotoURL = watch('photoURL');
+  const profileValues = watch();
 
   useEffect(() => {
-    if (user) {
-      setProfileValue('displayName', user?.fullName || '');
-      setProfileValue('photoURL', user?.imageUrl || '');
+    if (user && !hasHydratedProfileRef.current) {
+      const unsafeMetadata = user.unsafeMetadata as Record<string, unknown> | undefined;
+      resetProfile({
+        displayName: user.fullName || '',
+        photoURL: typeof unsafeMetadata?.profilePhotoUrl === 'string' ? unsafeMetadata.profilePhotoUrl : user.imageUrl || '',
+      });
+      hasHydratedProfileRef.current = true;
     }
-  }, [user, setProfileValue]);
+  }, [resetProfile, user]);
 
   const onPasswordSubmit = async (data: PasswordFormData) => {
     if (!user) return;
@@ -93,29 +107,67 @@ export default function ProfilePage() {
     }
   };
 
-  const onProfileSubmit = async (data: ProfileFormData) => {
+  const persistProfile = async (data: ProfileFormData, silent: boolean) => {
     if (!user) return;
     setIsProfileLoading(true);
     try {
       await user.update({
         firstName: data.displayName?.split(' ')[0],
         lastName: data.displayName?.split(' ').slice(1).join(' '),
+        unsafeMetadata: {
+          ...(user.unsafeMetadata as Record<string, unknown> | undefined),
+          profilePhotoUrl: data.photoURL || null,
+        },
       });
 
-      toast({
-        title: 'Profile updated',
-        description: 'Your profile information has been updated.',
-      });
+      if (!silent) {
+        toast({
+          title: 'Profile updated',
+          description: 'Your profile information has been updated.',
+        });
+      }
+      resetProfile(data);
+      setProfileSavedAt(new Date());
     } catch (error: any) {
-      toast({
-        variant: 'destructive',
-        title: 'Error updating profile',
-        description: error.message || 'Something went wrong.',
-      });
+      if (!silent) {
+        toast({
+          variant: 'destructive',
+          title: 'Error updating profile',
+          description: error.message || 'Something went wrong.',
+        });
+      }
+      throw error;
     } finally {
       setIsProfileLoading(false);
     }
   };
+
+  const onProfileSubmit = async (data: ProfileFormData) => {
+    await persistProfile(data, false);
+  };
+
+  const profileAutosave = useDebouncedAutosave<ProfileFormData>({
+    value: profileValues,
+    enabled: Boolean(isLoaded && user && hasHydratedProfileRef.current),
+    isDirty: profileFormState.isDirty,
+    delayMs: 900,
+    resetKey: user?.id,
+    onSave: async (nextValues) => {
+      const valid = await triggerProfile();
+      if (!valid) {
+        return;
+      }
+      await persistProfile(nextValues, true);
+    },
+    onError: (error: unknown) => {
+      const message = error instanceof Error ? error.message : 'Profile autosave failed.';
+      toast({
+        variant: 'destructive',
+        title: 'Profile Autosave Failed',
+        description: message,
+      });
+    },
+  });
 
   if (!isLoaded) {
     return (
@@ -195,6 +247,17 @@ export default function ProfilePage() {
                 {isProfileLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Sync Profile
               </Button>
+              <p className="text-xs text-muted-foreground">
+                {profileAutosave.status === 'saving'
+                  ? 'Autosaving profile...'
+                  : profileAutosave.status === 'pending'
+                    ? 'Changes detected'
+                    : profileAutosave.status === 'error'
+                      ? 'Autosave failed'
+                      : profileSavedAt
+                        ? `Saved at ${profileSavedAt.toLocaleTimeString()}`
+                        : 'Autosave enabled'}
+              </p>
             </form>
           </CardContent>
         </Card>

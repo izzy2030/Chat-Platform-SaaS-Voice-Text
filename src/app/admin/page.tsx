@@ -39,7 +39,6 @@ export default function AdminPage() {
 
   const stats = [
     { label: 'CONVERSATIONS', value: dashboardSummary?.stats.conversationCount ?? '—', icon: MessagesSquare, trend: 'LIVE', highlight: false },
-    { label: 'LIVE VISITORS', value: dashboardSummary?.stats.liveCount ?? '—', icon: Users, status: (dashboardSummary?.stats.liveCount ?? 0) > 0 ? 'online' : 'offline', highlight: true },
     { label: 'UNREAD THREADS', value: dashboardSummary?.stats.unreadCount ?? '—', icon: Send, trend: 'INBOX', highlight: false },
     { label: 'AVG RESPONSE', value: '—', icon: Clock, trend: '-3%', highlight: false },
     { label: 'PAGES SHARED', value: '0', icon: FileText, trend: '0%', highlight: false },
@@ -47,23 +46,15 @@ export default function AdminPage() {
   ];
 
   return (
-    <div className="flex-1 bg-[#F8FAFB] min-h-screen">
-      <div className="flex flex-col gap-4 p-6 max-w-[1600px] mx-auto w-full">
-        {/* Breadcrumbs & Header */}
+    <div className="flex flex-col gap-4 p-6 max-w-[1600px] mx-auto w-full">
+        {/* Header */}
         <div className="space-y-2">
-          <div className="flex items-center gap-1.5 text-[9px] font-black uppercase tracking-[0.2em] text-[#6D7A70]/60">
-            <span>Hydra Chat</span>
-            <span className="text-[#BCCABE]">/</span>
-            <span className="text-[#00B171]">DASHBOARD</span>
-          </div>
-          
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-3">
             <div className="space-y-1.5">
-              <h1 className="text-2xl font-black tracking-tight text-[#191C1D]">Good afternoon, {firstName}</h1>
-              <div className="flex items-center gap-2">
-                <Badge className="bg-[#EBFBF3] text-[#006D43] hover:bg-[#EBFBF3] border-none px-2.5 py-0.5 rounded-full text-[10px] font-black gap-1.5 shadow-sm">
-                  <span className="size-1.5 rounded-full bg-[#00B171] animate-pulse" />
-                  Widget Live
+              <h1 className="text-2xl font-black tracking-tight text-[#191C1D] dark:text-zinc-100">Good afternoon, {firstName}</h1>              <div className="flex items-center gap-2">
+                <Badge className="bg-[#f0f7ef] text-[#2a5d24] hover:bg-[#f0f7ef] border-none px-2.5 py-0.5 rounded-full text-[10px] font-black gap-1.5 shadow-sm">
+                  <span className="size-1.5 rounded-full bg-[#3b8332] animate-pulse" />
+                  Live
                 </Badge>
                 <Badge className="bg-[#FFF8E1] text-[#A27C00] hover:bg-[#FFF8E1] border-none px-2.5 py-0.5 rounded-full text-[10px] font-black gap-1.5 shadow-sm">
                   <SparklesIcon className="size-3" />
@@ -72,10 +63,12 @@ export default function AdminPage() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" className="rounded-xl h-9 px-4 text-xs font-black gap-2 shadow-premium bg-white border-none hover:bg-[#F2F4F5] transition-all active:scale-95">
-                <Copy className="size-3.5 text-[#6D7A70]" /> Copy Embed
-              </Button>
-              <Button variant="outline" className="rounded-xl h-9 px-4 text-xs font-black gap-2 shadow-premium bg-white border-none hover:bg-[#F2F4F5] transition-all active:scale-95">
+              <Button 
+                variant="outline" 
+                nativeButton={false}
+                render={<Link href="/admin/settings" />}
+                className="rounded-xl h-9 px-4 text-xs font-black gap-2 shadow-premium bg-white dark:bg-zinc-900 border-none hover:bg-[#F2F4F5] dark:hover:bg-zinc-800 transition-all active:scale-95"
+              >
                 <Settings className="size-3.5 text-[#6D7A70]" /> Settings
               </Button>
             </div>
@@ -84,43 +77,66 @@ export default function AdminPage() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-          {stats.map((stat) => (
-            <Card key={stat.label} className={cn(
-              "rounded-2xl border-none shadow-premium transition-all duration-300 hover:-translate-y-0.5",
-              stat.highlight ? "bg-[#EBFBF3] ring-1 ring-[#00B171]/10" : "bg-white"
-            )}>
-              <CardContent className="p-4 space-y-2">
-                <div className="flex items-center justify-between">
-                  <div className={cn(
-                    "size-8 rounded-lg flex items-center justify-center",
-                    stat.highlight ? "bg-[#00B171]/10 text-[#00B171]" : "bg-[#F2F4F5] text-[#BCCABE]"
-                  )}>
-                    <stat.icon className="size-4" />
+          {/* Main Conversation Stat */}
+          {(() => {
+            const Icon = stats[0].icon;
+            return (
+              <Card key={stats[0].label} className="transition-all duration-300 hover:-translate-y-0.5">
+                <CardContent className="p-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="size-8 rounded-lg flex items-center justify-center bg-muted text-muted-foreground">
+                      <Icon className="size-4" />
+                    </div>
                   </div>
-                  {stat.status === 'online' && <div className="absolute top-4 right-4 size-1.5 rounded-full bg-[#00B171] shadow-[0_0_8px_#00B171]" />}
-                </div>
-                <div className="space-y-0.5">
-                  <p className="text-[9px] font-black tracking-widest text-[#6D7A70]/60 uppercase">{stat.label}</p>
-                  <div className="flex items-baseline gap-1.5">
-                    <span className="text-xl font-black text-[#191C1D]">{stat.value}</span>
-                    {stat.trend && <span className="text-[9px] font-black text-[#00B171] opacity-60 tracking-tighter">{stat.trend}</span>}
+                  <div className="space-y-0.5">
+                    <p className="text-[9px] font-black tracking-widest text-[#6D7A70]/60 uppercase">{stats[0].label}</p>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-xl font-black text-foreground">{stats[0].value}</span>
+                      {stats[0].trend && <span className="text-[9px] font-black text-[#3b8332] opacity-60 tracking-tighter">{stats[0].trend}</span>}
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            );
+          })()}
+
+          {/* Rebuilt Live Visitors Card */}
+          <LiveVisitorsCard count={dashboardSummary?.stats.liveCount ?? '—'} />
+
+          {/* Rest of stats */}
+          {stats.slice(1).map((stat) => {
+            const Icon = stat.icon;
+            return (
+              <Card key={stat.label} className="transition-all duration-300 hover:-translate-y-0.5">
+                <CardContent className="p-4 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <div className="size-8 rounded-lg flex items-center justify-center bg-muted text-muted-foreground">
+                      <Icon className="size-4" />
+                    </div>
+                  </div>
+                  <div className="space-y-0.5">
+                    <p className="text-[9px] font-black tracking-widest text-[#6D7A70]/60 uppercase">{stat.label}</p>
+                    <div className="flex items-baseline gap-1.5">
+                      <span className="text-xl font-black text-foreground">{stat.value}</span>
+                      {stat.trend && <span className="text-[9px] font-black text-[#3b8332] opacity-60 tracking-tighter">{stat.trend}</span>}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
 
         {/* Main Content Area */}
         <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
           {/* Recent Conversations */}
-          <Card className="lg:col-span-3 rounded-2xl border-none shadow-premium bg-white overflow-hidden">
+          <Card className="lg:col-span-3 overflow-hidden">
             <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between">
-              <CardTitle className="text-lg font-black text-[#191C1D]">Recent Conversations</CardTitle>
+              <CardTitle className="text-lg font-black text-foreground">Recent Conversations</CardTitle>
               <Button
                 variant="ghost"
                 nativeButton={false}
-                className="text-[10px] font-black text-[#6D7A70] hover:text-[#00B171] gap-1 rounded-xl hover:bg-[#EBFBF3] px-3 h-8"
+                className="text-[10px] font-black text-[#6D7A70] hover:text-[#3b8332] gap-1 rounded-xl hover:bg-[#f0f7ef] px-3 h-8"
                 render={<Link href="/admin/conversations" />}
               >
                 See all <ArrowUpRight className="size-3" />
@@ -145,7 +161,7 @@ export default function AdminPage() {
                     <div className="flex items-center gap-3">
                       <div className={cn(
                         "size-2 rounded-full shadow-sm",
-                        conv.unreadForOwner ? "bg-[#00B171] shadow-[#00B171]/40" : "bg-[#BCCABE] shadow-black/5"
+                        conv.unreadForOwner ? "bg-[#3b8332] shadow-[#3b8332]/40" : "bg-[#BCCABE] shadow-black/5"
                       )} />
                       <div className="flex flex-col">
                         <span className="text-[9px] font-black text-[#6D7A70]/50 tracking-[0.03em]">
@@ -157,7 +173,7 @@ export default function AdminPage() {
                     
                     <div className="flex items-center gap-8">
                       <div className="flex items-center gap-2 w-28">
-                        <div className="size-7 rounded-lg bg-[#F2F4F5] flex items-center justify-center text-[#BCCABE] group-hover:bg-[#EBFBF3] group-hover:text-[#00B171] transition-colors">
+                        <div className="size-7 rounded-lg bg-[#F2F4F5] flex items-center justify-center text-[#BCCABE] group-hover:bg-[#f0f7ef] group-hover:text-[#3b8332] transition-colors">
                           {conv.channel === 'text' ? <MessageCircle className="size-3.5" /> : <PhoneCall className="size-3.5" />}
                         </div>
                         <span className="text-xs font-black text-[#6D7A70] capitalize">{conv.channel}</span>
@@ -175,27 +191,27 @@ export default function AdminPage() {
           {/* Right Column: AI Performance & Quick Actions */}
           <div className="lg:col-span-2 flex flex-col gap-4">
             {/* AI Performance Widget */}
-            <Card className="rounded-2xl border-none shadow-premium bg-white p-5 flex flex-col gap-4 overflow-visible">
-              <h3 className="text-[9px] font-black uppercase tracking-[0.15em] text-[#6D7A70]/50">AI Performance</h3>
+            <Card className="rounded-none sm:rounded-2xl p-5 flex flex-col gap-4 overflow-visible">
+              <h3 className="text-[9px] font-black uppercase tracking-[0.15em] text-muted-foreground">AI Performance</h3>
               <div className="flex items-center gap-4">
                 <div className="relative size-32 flex items-center justify-center">
                   <GlowingRadialChart 
-                    data={[{ name: "performance", value: 100, fill: "#00B171" }]}
+                    data={[{ name: "performance", value: 100, fill: "#3b8332" }]}
                     className="size-full"
                   />
                 </div>
                 <div className="flex-1 space-y-3">
                   {[
-                    { label: 'Resolved', value: '7', color: '#00B171' },
+                    { label: 'Resolved', value: '7', color: '#3b8332' },
                     { label: 'Escalated', value: '0', color: '#F59E0B' },
                     { label: 'Abandoned', value: '0', color: '#94A3B8' },
                   ].map((item) => (
                     <div key={item.label} className="flex items-center justify-between group">
                       <div className="flex items-center gap-2">
                         <div className="size-2 rounded-full" style={{ backgroundColor: item.color }} />
-                        <span className="text-[11px] font-bold text-[#6D7A70]">{item.label}</span>
+                        <span className="text-[11px] font-bold text-muted-foreground">{item.label}</span>
                       </div>
-                      <span className="text-xs font-black text-[#191C1D]">{item.value}</span>
+                      <span className="text-xs font-black text-foreground">{item.value}</span>
                     </div>
                   ))}
                 </div>
@@ -203,22 +219,22 @@ export default function AdminPage() {
             </Card>
 
             {/* Quick Actions Widget */}
-            <Card className="rounded-2xl border-none shadow-premium bg-white p-5 flex flex-col gap-6">
-              <h3 className="text-[9px] font-black uppercase tracking-[0.15em] text-[#6D7A70]/50">Quick Actions</h3>
+            <Card className="rounded-none sm:rounded-2xl p-5 flex flex-col gap-6">
+              <h3 className="text-[9px] font-black uppercase tracking-[0.15em] text-muted-foreground">Quick Actions</h3>
               <div className="grid grid-cols-2 gap-4">
-                <button className="flex flex-col items-center justify-center p-4 rounded-2xl bg-[#F8FAFB] hover:bg-[#EBFBF3] group transition-all duration-300 border border-[#ECEEEF]/50">
-                  <div className="size-10 rounded-xl bg-white flex items-center justify-center text-[#00B171] shadow-sm mb-3 group-hover:scale-110 transition-transform">
+                <button className="flex flex-col items-center justify-center p-4 rounded-2xl bg-muted/30 hover:bg-muted/50 group transition-all duration-300">
+                  <div className="size-10 rounded-xl bg-background flex items-center justify-center text-primary shadow-sm mb-3 group-hover:scale-110 transition-transform">
                     <ArrowUpRight className="size-5" />
                   </div>
-                  <span className="text-[11px] font-black text-[#191C1D]">Test Widget</span>
-                  <span className="text-[9px] text-[#6D7A70] mt-1 text-center leading-tight">Preview your AI chat</span>
+                  <span className="text-[11px] font-black text-foreground">Test Widget</span>
+                  <span className="text-[9px] text-muted-foreground mt-1 text-center leading-tight">Preview your AI chat</span>
                 </button>
-                <button className="flex flex-col items-center justify-center p-4 rounded-2xl bg-[#F8FAFB] hover:bg-[#EBFBF3] group transition-all duration-300 border border-[#ECEEEF]/50">
-                  <div className="size-10 rounded-xl bg-white flex items-center justify-center text-[#00B171] shadow-sm mb-3 group-hover:scale-110 transition-transform">
+                <button className="flex flex-col items-center justify-center p-4 rounded-2xl bg-muted/30 hover:bg-muted/50 group transition-all duration-300">
+                  <div className="size-10 rounded-xl bg-background flex items-center justify-center text-primary shadow-sm mb-3 group-hover:scale-110 transition-transform">
                     <PlusCircle className="size-5" />
                   </div>
-                  <span className="text-[11px] font-black text-[#191C1D]">Invite Team</span>
-                  <span className="text-[9px] text-[#6D7A70] mt-1 text-center leading-tight">Add team members</span>
+                  <span className="text-[11px] font-black text-foreground">Invite Team</span>
+                  <span className="text-[9px] text-muted-foreground mt-1 text-center leading-tight">Add team members</span>
                 </button>
               </div>
               <div className="grid grid-cols-2 gap-4 pt-2 border-t border-[#ECEEEF]/50">
@@ -232,13 +248,43 @@ export default function AdminPage() {
             </Card>
           </div>
         </div>
-      </div>
 
       {/* Floating Navigation */}
       <div className="fixed bottom-6 right-6 z-50">
         <div className="size-10 bg-slate-900 text-white rounded-full flex items-center justify-center shadow-xl cursor-pointer hover:scale-105 transition-transform font-black">N</div>
       </div>
     </div>
+  );
+}
+
+function LiveVisitorsCard({ count }: { count: number | string }) {
+  const isOnline = typeof count === 'number' ? count > 0 : count !== '—' && count !== '0';
+  
+  return (
+    <Card className="relative overflow-hidden transition-all duration-300 hover:-translate-y-0.5 group bg-primary/[0.03] dark:bg-primary/10">
+      {/* Background glow effect */}
+      <div className="absolute -right-4 -top-4 size-24 bg-primary/10 blur-3xl rounded-full" />
+      
+      <CardContent className="p-4 space-y-3 relative z-10">
+        <div className="flex items-center justify-between">
+          <div className="size-9 rounded-xl bg-primary/20 text-primary flex items-center justify-center shadow-sm">
+            <Users className="size-4" />
+          </div>
+          <div className="flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-primary/10 border border-primary/10">
+            <span className={cn("size-1.5 rounded-full bg-primary", isOnline && "animate-pulse shadow-[0_0_8px_var(--primary)]")} />
+            <span className="text-[8px] font-black uppercase tracking-tight text-primary">Live</span>
+          </div>
+        </div>
+        
+        <div className="space-y-0.5">
+          <p className="text-[9px] font-black tracking-[0.15em] text-muted-foreground/60 uppercase">Live Visitors</p>
+          <div className="flex items-baseline gap-2">
+            <span className="text-2xl font-black text-foreground tracking-tighter tabular-nums">{count}</span>
+            <span className="text-[10px] font-bold text-primary/50">Active now</span>
+          </div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -266,3 +312,4 @@ function SparklesIcon({ className }: { className?: string }) {
 function cn(...inputs: any[]) {
   return inputs.filter(Boolean).join(' ');
 }
+

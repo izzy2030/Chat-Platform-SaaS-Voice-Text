@@ -173,7 +173,7 @@ export function ChatWidgetComponent({
         particleCount: 100,
         spread: 70,
         origin: { y: 0.6 },
-        colors: [theme.accentColor || '#3CB993', '#ffffff', '#5D5DDF']
+        colors: [theme.accentColor || '#3b8332', '#ffffff', '#5D5DDF']
       });
     } else if (style === 'firework') {
       const duration = 3 * 1000;
@@ -586,11 +586,11 @@ export function ChatWidgetComponent({
           
           {/* Tabs Navigation */}
           <div className="px-4 pt-4 shrink-0">
-            <TabsList className="w-full grid grid-cols-2 bg-muted/50 rounded-xl p-1">
-              <TabsTrigger value="text" className="rounded-lg text-xs font-medium data-[state=active]:shadow-sm">
+            <TabsList className="w-full grid grid-cols-2 rounded-xl p-1" style={{ backgroundColor: theme.colorMode === 'dark' ? '#374151' : '#F3F4F6' }}>
+              <TabsTrigger value="text" className="rounded-lg text-xs font-medium data-[state=active]:shadow-sm transition-all" style={{ color: theme.colorMode === 'dark' ? '#D1D5DB' : '#4B5563' }}>
                 <MessageSquare className="w-3.5 h-3.5 mr-2" /> Text Chat
               </TabsTrigger>
-              <TabsTrigger value="voice" className="rounded-lg text-xs font-medium data-[state=active]:shadow-sm">
+              <TabsTrigger value="voice" className="rounded-lg text-xs font-medium data-[state=active]:shadow-sm transition-all" style={{ color: theme.colorMode === 'dark' ? '#D1D5DB' : '#4B5563' }}>
                 <Mic className="w-3.5 h-3.5 mr-2" /> Voice Call
               </TabsTrigger>
             </TabsList>
@@ -602,8 +602,8 @@ export function ChatWidgetComponent({
               {messages.map((msg) => (
                 <div key={msg.id} className={`flex items-start gap-2 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
                   {msg.sender === 'bot' && (
-                    <div className="h-8 w-8 rounded-full bg-muted flex-shrink-0 flex items-center justify-center">
-                      <Bot size={16} className="text-muted-foreground" />
+                    <div className="h-8 w-8 rounded-full flex-shrink-0 flex items-center justify-center" style={{ backgroundColor: theme.colorMode === 'dark' ? '#374151' : '#F3F4F6' }}>
+                      <Bot size={16} style={{ color: theme.colorMode === 'dark' ? '#9CA3AF' : '#6B7280' }} />
                     </div>
                   )}
                   <div
@@ -616,14 +616,14 @@ export function ChatWidgetComponent({
               ))}
               {isLoadingText && (
                 <div className="flex items-start gap-2 justify-start">
-                  <div className="h-8 w-8 rounded-full bg-muted flex-shrink-0 flex items-center justify-center">
-                    <Bot size={16} className="text-muted-foreground" />
+                  <div className="h-8 w-8 rounded-full flex-shrink-0 flex items-center justify-center" style={{ backgroundColor: theme.colorMode === 'dark' ? '#374151' : '#F3F4F6' }}>
+                    <Bot size={16} style={{ color: theme.colorMode === 'dark' ? '#9CA3AF' : '#6B7280' }} />
                   </div>
-                  <div className="rounded-2xl px-4 py-3 bg-muted/50">
-                    <div className="flex gap-1">
-                      <div className="h-1.5 w-1.5 bg-muted-foreground/40 rounded-full animate-bounce" />
-                      <div className="h-1.5 w-1.5 bg-muted-foreground/40 rounded-full animate-bounce delay-150" />
-                      <div className="h-1.5 w-1.5 bg-muted-foreground/40 rounded-full animate-bounce delay-300" />
+                  <div className="rounded-2xl px-4 py-3" style={botMessageStyle}>
+                    <div className="flex gap-1" style={{ opacity: 0.6 }}>
+                      <div className="h-1.5 w-1.5 rounded-full animate-bounce" style={{ backgroundColor: 'currentColor' }} />
+                      <div className="h-1.5 w-1.5 rounded-full animate-bounce delay-150" style={{ backgroundColor: 'currentColor' }} />
+                      <div className="h-1.5 w-1.5 rounded-full animate-bounce delay-300" style={{ backgroundColor: 'currentColor' }} />
                     </div>
                   </div>
                 </div>
@@ -638,7 +638,8 @@ export function ChatWidgetComponent({
                   placeholder={theme.placeholderText || "Type a message..."}
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
-                  className="flex-1 bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-0 h-9"
+                  className="flex-1 !bg-transparent border-0 px-0 h-9 outline-none shadow-none focus-visible:ring-0 focus-visible:ring-offset-0 dark:!bg-transparent placeholder:text-inherit placeholder:opacity-60"
+                  style={{ color: 'inherit', caretColor: 'currentColor' }}
                   disabled={isLoadingText}
                 />
                 <Button type="submit" size="icon" disabled={isLoadingText || !inputValue.trim()} className="rounded-full h-9 w-9 shrink-0 transition-transform active:scale-95" style={{ backgroundColor: theme.accentColor || theme.primaryColor, color: theme.userTextColor || '#fff' }}>
@@ -728,3 +729,6 @@ export function ChatWidgetComponent({
 function Badge({ children, className, variant }: { children: React.ReactNode, className?: string, variant?: string }) {
   return <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${className}`}>{children}</span>
 }
+
+
+

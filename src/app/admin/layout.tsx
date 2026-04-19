@@ -76,12 +76,10 @@ export default function AdminLayout({
   }
 
   return (
-    <SidebarProvider>
+    <SidebarProvider className="h-svh overflow-hidden">
       <AdminSidebar user={user} handleSignOut={handleSignOut} setTheme={setTheme} theme={theme} />
-      <SidebarInset className="h-screen overflow-hidden flex flex-col">
-        <div className="flex flex-col h-full overflow-y-auto">
-          {children}
-        </div>
+      <SidebarInset className="flex flex-col overflow-y-auto pretty-scrollbar transition-colors duration-300">
+        {children}
       </SidebarInset>
     </SidebarProvider>
   );
@@ -97,32 +95,32 @@ function AdminSidebar({ user, handleSignOut, setTheme, theme }: { user: any, han
   const initials = getInitials(email);
 
   const menuItems = [
-    { title: 'Dashboard', icon: LayoutDashboard, href: '/admin' },
-    { title: 'Widget', icon: MessageSquare, href: '/admin/widget' },
-    { title: 'Conversations', icon: MessagesSquare, href: '/admin/conversations' },
-    { title: 'Calls', icon: Phone, href: '/admin/calls' },
-    { title: 'Analytics', icon: BarChart3, href: '/admin/analytics' },
-    { title: 'Knowledge Base', icon: BookOpen, href: '/admin/knowledge-base' },
-    { title: 'Settings', icon: Settings, href: '/admin/settings' },
+    { title: 'Dashboard', icon: LayoutDashboard, href: '/admin', color: 'text-[#3b8332]' },
+    { title: 'Widget', icon: MessageSquare, href: '/admin/widget', color: 'text-purple-500' },
+    { title: 'Conversations', icon: MessagesSquare, href: '/admin/conversations', color: 'text-blue-500' },
+    { title: 'Calls', icon: Phone, href: '/admin/calls', color: 'text-emerald-500' },
+    { title: 'Analytics', icon: BarChart3, href: '/admin/analytics', color: 'text-amber-500' },
+    { title: 'Knowledge Base', icon: BookOpen, href: '/admin/knowledge-base', color: 'text-rose-500' },
+    { title: 'Settings', icon: Settings, href: '/admin/settings', color: 'text-slate-500' },
   ];
 
   return (
-    <Sidebar collapsible="icon" className="border-none bg-[#F8FAFB] dark:bg-zinc-950">
+    <Sidebar collapsible="icon" variant="inset" className="border-none">
       <SidebarHeader>
         <div className="flex items-center gap-2 px-4 py-4 transition-all duration-300">
-          <div className="flex items-center justify-center rounded-lg bg-[#00B171] p-1.5 size-8 shadow-sm shadow-[#00B171]/20">
+          <div className="flex items-center justify-center rounded-lg bg-[#3b8332] p-1.5 size-8 shadow-sm shadow-[#3b8332]/20">
             <div className="text-white font-black text-sm">H</div>
           </div>
           <div className="flex flex-col group-data-[collapsible=icon]:hidden">
             <span className="text-sm font-black tracking-tight text-[#191C1D] dark:text-white">Hydra Chat</span>
-            <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#6D7A70] leading-none">Dashboard</span>
+            <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#6D7A70] dark:text-zinc-400 leading-none">Dashboard</span>
           </div>
         </div>
       </SidebarHeader>
 
       <SidebarContent className="px-3">
         <SidebarGroup>
-          <SidebarGroupLabel className="px-2 text-[9px] font-bold uppercase tracking-[0.15em] text-[#6D7A70]/60 mb-1 group-data-[collapsible=icon]:hidden">Menu</SidebarGroupLabel>
+          <SidebarGroupLabel className="px-2 text-[9px] font-bold uppercase tracking-[0.15em] text-slate-500/60 mb-1 group-data-[collapsible=icon]:hidden">Menu</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu className="gap-0.5">
               {menuItems.map((item) => {
@@ -136,16 +134,16 @@ function AdminSidebar({ user, handleSignOut, setTheme, theme }: { user: any, han
                       className={cn(
                         "h-9 rounded-xl px-3 transition-all duration-200 group relative",
                         isActive 
-                          ? "bg-[#EBFBF3] text-[#006D43] font-black dark:bg-[#00B171]/10 dark:text-[#52DF9A]" 
-                          : "text-[#6D7A70] hover:bg-[#F2F4F5] hover:text-[#191C1D] dark:hover:bg-zinc-900 dark:hover:text-white"
+                          ? "bg-[#f0f7ef] dark:bg-[#3b8332]/10 text-[#2a5d24] dark:text-[#80c179] font-black" 
+                          : "text-slate-500 dark:text-zinc-400 hover:bg-[#F2F4F5] dark:hover:bg-zinc-900/50 hover:text-[#191C1D] dark:hover:text-white"
                       )}
                     >
                       <item.icon className={cn(
                         "size-4 transition-colors",
-                        isActive ? "text-[#00B171]" : "text-[#BCCABE] group-hover:text-[#6D7A70]"
+                        isActive ? "text-[#3b8332]" : cn("text-slate-400", item.color)
                       )} />
                       <span className="text-[13px]">{item.title}</span>
-                      {isActive && <div className="absolute right-2.5 size-1 rounded-full bg-[#00B171] ring-3 ring-[#EBFBF3] dark:ring-zinc-900" />}
+                      {isActive && <div className="absolute right-2.5 size-1 rounded-full bg-[#3b8332] ring-3 ring-[#f0f7ef] dark:ring-zinc-900" />}
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
@@ -156,25 +154,6 @@ function AdminSidebar({ user, handleSignOut, setTheme, theme }: { user: any, han
       </SidebarContent>
 
       <SidebarFooter className="p-3 gap-3">
-        {state === 'expanded' && (
-          <div className="relative group overflow-hidden rounded-2xl bg-[#00B171] p-4 text-white shadow-lg shadow-[#00B171]/20">
-            <div className="relative z-10 space-y-2">
-              <div className="flex size-8 items-center justify-center rounded-lg bg-white/20 backdrop-blur-md">
-                <Sparkles className="size-4" />
-              </div>
-              <div className="space-y-0.5">
-                <h4 className="font-black text-sm">Upgrade to Pro</h4>
-                <p className="text-[10px] text-white/80 font-medium leading-snug">Unlock advanced AI features & deep analytics.</p>
-              </div>
-              <Button size="sm" className="w-full h-9 rounded-lg font-bold bg-white text-[#006D43] hover:bg-white/90 shadow-sm transition-transform active:scale-95 border-none text-xs">
-                Pro Upgrade
-              </Button>
-            </div>
-            <div className="absolute -right-4 -top-4 size-20 bg-white/10 rounded-full blur-2xl group-hover:scale-150 transition-transform duration-1000" />
-            <div className="absolute -bottom-8 -left-8 size-24 bg-black/5 rounded-full blur-3xl" />
-          </div>
-        )}
-
         <div className="space-y-2 pt-3 border-t border-[#ECEEEF] dark:border-zinc-800">
           <SidebarMenu>
             <SidebarMenuItem>
@@ -189,13 +168,13 @@ function AdminSidebar({ user, handleSignOut, setTheme, theme }: { user: any, han
                 >
                   <Avatar className="h-8 w-8 border-2 border-white dark:border-zinc-800 shadow-sm">
                     <AvatarImage src={avatarUrl} />
-                    <AvatarFallback className="bg-[#baefcc] text-[#006D43] font-black text-xs">{initials}</AvatarFallback>
+                    <AvatarFallback className="bg-[#d4e7d1] text-[#2a5d24] dark:text-[#3b8332] font-black text-xs">{initials}</AvatarFallback>
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight ml-2 group-data-[collapsible=icon]:hidden">
                     <span className="truncate font-black text-xs text-[#191C1D] dark:text-white">{fullName}</span>
-                    <span className="truncate text-[9px] text-[#6D7A70] font-bold uppercase tracking-tighter">{email}</span>
+                    <span className="truncate text-[9px] text-slate-400 font-bold uppercase tracking-tighter">{email}</span>
                   </div>
-                  <ChevronRight className="ml-auto size-4 text-[#BCCABE] group-data-[collapsible=icon]:hidden" />
+                  <ChevronRight className="ml-auto size-4 text-[#BCCABE] dark:text-zinc-500 group-data-[collapsible=icon]:hidden" />
                 </DropdownMenuTrigger>
                 <DropdownMenuPositioner side="top" align="start" sideOffset={12}>
                   <DropdownMenuContent className="w-56 rounded-2xl p-2 shadow-2xl border-none bg-white dark:bg-zinc-900">
@@ -225,7 +204,7 @@ function AdminSidebar({ user, handleSignOut, setTheme, theme }: { user: any, han
               <SidebarMenuButton
                 onClick={toggleSidebar}
                 tooltip="Expand sidebar"
-                className="h-9 rounded-xl px-3 text-[#6D7A70] hover:bg-[#F2F4F5] hover:text-[#191C1D] dark:hover:bg-zinc-900 dark:hover:text-white transition-all duration-200 group"
+                className="h-9 rounded-xl px-3 text-slate-500 dark:text-zinc-400 hover:bg-[#F2F4F5] dark:hover:bg-zinc-900/50 hover:text-[#191C1D] dark:hover:text-white transition-all duration-200 group"
               >
                 <div className="relative size-4">
                   <ChevronsLeft className="size-4 absolute inset-0 transition-all duration-300 opacity-100 rotate-0 group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:-rotate-90" />
@@ -243,3 +222,4 @@ function AdminSidebar({ user, handleSignOut, setTheme, theme }: { user: any, han
 
 // Remove previously unused wrapper
 // function SidebarContentWrapper({ ... }) { ... }
+

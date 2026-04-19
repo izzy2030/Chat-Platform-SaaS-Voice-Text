@@ -48,7 +48,7 @@ export function GlowingRadialChart({
           background
           dataKey="value"
           cornerRadius={30}
-          className="drop-shadow-[0_0_8px_rgba(16,185,129,0.3)]"
+          className="drop-shadow-[0_0_8px_rgba(59,131,50,0.3)]"
         >
           {data.map((entry, index) => (
             <Cell 
@@ -78,3 +78,5 @@ export function GlowingRadialChart({
     </ChartContainer>
   );
 }
+
+

@@ -11,7 +11,7 @@ export default function SettingsPage() {
       
       <div className="mt-12 grid gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="h-64 rounded-[32px] border border-dashed border-muted-foreground/20 bg-muted/5 flex flex-col items-center justify-center p-8 text-center gap-4">
+          <div key={i} className="h-64 rounded-[32px] bg-muted/30 shadow-sm flex flex-col items-center justify-center p-8 text-center gap-4">
             <div className="w-12 h-12 rounded-2xl bg-muted/10 flex items-center justify-center">
               <div className="w-6 h-6 rounded-full border-2 border-muted-foreground/20 border-t-transparent animate-spin" />
             </div>
