@@ -473,7 +473,7 @@ export function ChatWidgetComponent({
                         size="lg"
                         color={theme.primaryColor as `#\${string}`}
                         state={stateToVisualizerState(voiceState)}
-                        analyserNode={audioProcessorRef.current?.processor as unknown as AnalyserNode}
+                        analyserNode={null}
                         themeMode={theme.colorMode as 'light' | 'dark'}
                         className="absolute inset-0 m-auto"
                       />
