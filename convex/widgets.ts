@@ -35,12 +35,13 @@ export const testWebhook = action({
         statusText: response.statusText,
         body: responseText.slice(0, 500),
       };
-    } catch (error: any) {
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
       return {
         success: false,
         status: 0,
         statusText: "Fetch Error",
-        body: error.message || String(error),
+        body: message,
       };
     }
   },
@@ -190,7 +191,7 @@ export const update = mutation({
     if (!widget || widget.userId !== userId) {
       throw new Error("Widget not found or unauthorized");
     }
-    const updates: Record<string, any> = {};
+    const updates: Record<string, string | boolean | number | string[] | object | undefined> = {};
     for (const [key, value] of Object.entries(fields)) {
       if (value !== undefined) {
         updates[key] = value;
@@ -204,7 +205,32 @@ export const updateTheme = mutation({
   args: {
     id: v.id("widgets"),
     userId: v.string(),
-    theme: v.any(),
+    theme: v.optional(
+      v.object({
+        headerTitle: v.optional(v.string()),
+        headerSubtitle: v.optional(v.string()),
+        welcomeMessage: v.optional(v.string()),
+        placeholderText: v.optional(v.string()),
+        botName: v.optional(v.string()),
+        showBranding: v.optional(v.boolean()),
+        accentColor: v.optional(v.string()),
+        headerTextColor: v.optional(v.string()),
+        chatBackgroundColor: v.optional(v.string()),
+        botBubbleBgColor: v.optional(v.string()),
+        botTextColor: v.optional(v.string()),
+        userTextColor: v.optional(v.string()),
+        inputBgColor: v.optional(v.string()),
+        inputTextColor: v.optional(v.string()),
+        inputBorderColor: v.optional(v.string()),
+        borderRadius: v.optional(v.string()),
+        fontFamily: v.optional(v.string()),
+        successConfetti: v.optional(v.union(v.literal("small-burst"), v.literal("firework"), v.literal("golden-rain"))),
+        bubbleColor: v.optional(v.string()),
+        bubbleIcon: v.optional(v.string()),
+        panelColor: v.optional(v.string()),
+        position: v.optional(v.union(v.literal("left"), v.literal("right"))),
+      })
+    ),
   },
   handler: async (ctx, args) => {
     const widget = await ctx.db.get(args.id);

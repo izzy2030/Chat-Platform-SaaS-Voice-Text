@@ -7,7 +7,13 @@ import { useEffect, useState, use } from 'react';
 // This page will be rendered inside the iframe on the external website
 export default function WidgetPage({ params }: { params: Promise<{ widgetId: string }> }) {
   const { widgetId } = use(params);
-  const [widgetConfig, setWidgetConfig] = useState<any>(null);
+  const [widgetConfig, setWidgetConfig] = useState<{
+    id: string;
+    webhook_url: string;
+    type?: 'text' | 'voice';
+    theme?: Record<string, unknown>;
+    brand?: Record<string, unknown>;
+  } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [sessionId] = useState(() => {
@@ -44,9 +50,10 @@ export default function WidgetPage({ params }: { params: Promise<{ widgetId: str
         }
         const { widget } = await res.json();
         setWidgetConfig(widget);
-      } catch (e: any) {
+      } catch (e: unknown) {
+        const message = e instanceof Error ? e.message : 'Failed to fetch widget configuration';
         console.error(e);
-        setError(e.message);
+        setError(message);
       } finally {
         setIsLoading(false);
       }

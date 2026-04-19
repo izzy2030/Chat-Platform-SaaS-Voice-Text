@@ -46,6 +46,7 @@ import { getInitials, cn } from '@/lib/utils';
 import { SidebarInset } from '@/components/ui/sidebar';
 import { useTheme } from 'next-themes';
 import { Sun, Moon } from 'lucide-react';
+import { ErrorBoundary } from '@/components/error-boundary';
 
 export default function AdminLayout({
   children,
@@ -76,12 +77,16 @@ export default function AdminLayout({
   }
 
   return (
-    <SidebarProvider className="h-svh overflow-hidden">
-      <AdminSidebar user={user} handleSignOut={handleSignOut} setTheme={setTheme} theme={theme} />
-      <SidebarInset className="flex flex-col overflow-y-auto pretty-scrollbar transition-colors duration-300">
-        {children}
-      </SidebarInset>
-    </SidebarProvider>
+    <ErrorBoundary>
+      <SidebarProvider className="h-svh overflow-hidden">
+        <AdminSidebar user={user} handleSignOut={handleSignOut} setTheme={setTheme} theme={theme} />
+        <ErrorBoundary>
+          <SidebarInset className="flex flex-col overflow-y-auto pretty-scrollbar transition-colors duration-300">
+            {children}
+          </SidebarInset>
+        </ErrorBoundary>
+      </SidebarProvider>
+    </ErrorBoundary>
   );
 }
 
