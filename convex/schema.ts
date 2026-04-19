@@ -7,6 +7,39 @@ export default defineSchema({
     userId: v.string(),
   }).index("by_userId", ["userId"]),
 
+  conversations: defineTable({
+    widgetId: v.id("widgets"),
+    userId: v.string(),
+    sessionId: v.string(),
+    channel: v.union(v.literal("text"), v.literal("voice")),
+    status: v.union(
+      v.literal("active"),
+      v.literal("ongoing"),
+      v.literal("resolved"),
+      v.literal("escalated")
+    ),
+    visitorLabel: v.string(),
+    visitorEmail: v.optional(v.string()),
+    pageUrl: v.optional(v.string()),
+    startedAt: v.number(),
+    lastMessageAt: v.number(),
+    lastMessagePreview: v.string(),
+    unreadForOwner: v.boolean(),
+    messageCount: v.number(),
+  })
+    .index("by_userId_and_lastMessageAt", ["userId", "lastMessageAt"])
+    .index("by_widgetId_and_sessionId", ["widgetId", "sessionId"])
+    .index("by_widgetId_and_lastMessageAt", ["widgetId", "lastMessageAt"]),
+
+  conversationMessages: defineTable({
+    conversationId: v.id("conversations"),
+    widgetId: v.id("widgets"),
+    sender: v.union(v.literal("visitor"), v.literal("agent")),
+    kind: v.union(v.literal("text"), v.literal("audio")),
+    body: v.string(),
+    createdAt: v.number(),
+  }).index("by_conversationId_and_createdAt", ["conversationId", "createdAt"]),
+
   widgets: defineTable({
     name: v.string(), // "Widget Title" in Content tab
     projectId: v.id("projects"),

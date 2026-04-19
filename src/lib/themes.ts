@@ -1,5 +1,56 @@
 
-import type { WidgetTheme } from '@/app/admin/theming/[widgetId]/page';
+export interface WidgetTheme {
+  logoUrl?: string;
+  headerTitle: string;
+  headerTitleColor?: string;
+  headerSubtext: string;
+  headerSubtextColor?: string;
+  fontFamily: string;
+  fontSize: number;
+  avatarStyle: 'round' | 'square';
+  primaryColor: string;
+  secondaryColor: string;
+  accentColor: string;
+  borderColor: string;
+  darkPrimaryColor?: string;
+  darkSecondaryColor?: string;
+  darkAccentColor?: string;
+  darkBorderColor?: string;
+  backgroundBlur: number;
+  colorMode: 'light' | 'dark' | 'auto';
+  bubbleMessage: string;
+  conversationStarters: string[];
+  idlePulse: boolean;
+  idlePulseStrength: number;
+  hoverRipple: boolean;
+  hoverRippleSize: number;
+  iconSpinOnHover: boolean;
+  idleNudgeSeconds: number;
+  bubbleSize: 'small' | 'normal' | 'large';
+  bubblePosition: 'bottom-left' | 'bottom-right';
+  openAnimation: 'scale-fade' | 'particle-burst' | 'slide-up' | 'flip-open';
+  openBackgroundBlur: boolean;
+  openAnimationSpeed: 'slow' | 'normal' | 'fast';
+  messageEntryStyle: 'bounce' | 'slide-in' | 'liquid-shimmer' | 'none';
+  shimmerIntensity: number;
+  typingIndicatorStyle: 'dots' | 'waveform' | 'orbiting';
+  sendButtonStyle: 'normal' | 'suck-in' | 'spark-burst';
+  sendButtonSound: boolean;
+  sendConfettiOnSuccess: boolean;
+  successConfetti: 'small-burst' | 'firework' | 'golden-rain';
+  couponRevealStyle: 'fade-in' | 'neon-typewriter';
+  celebrationDuration: number;
+  closeAnimation: 'shrink' | 'paper-plane' | 'drop-bounce';
+  winkAfterClose: boolean;
+  roundedCorners: number;
+  shadowIntensity: number;
+  borderThickness: number;
+  windowSize: 'small' | 'medium' | 'large';
+  soundEffects: boolean;
+  soundVolume: number;
+  soundTheme: 'soft-pops' | 'arcade-clicks' | 'garage';
+  hapticFeedback: boolean;
+}
 
 // Default theme state
 export const defaultTheme: WidgetTheme = {

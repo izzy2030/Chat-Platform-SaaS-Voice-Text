@@ -9,7 +9,7 @@ import Link from 'next/link';
 import { Loader2, Edit, Code, Eye, Palette, MessageSquare, Mic, Trash2, Folder, Activity, Copy, Plus, LineChart, Settings, Zap, Sparkles } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { ChatWidgetComponent } from '../widget/chat-widget';
-import type { WidgetTheme } from '@/app/admin/theming/[widgetId]/page';
+import type { WidgetTheme } from '@/lib/themes';
 import {
   Card,
   CardHeader,
@@ -352,6 +352,10 @@ export function WidgetList({ projectId }: { projectId?: string }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+    </div>
+  );
+}
+/AlertDialog>
     </div>
   );
 }

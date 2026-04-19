@@ -10,7 +10,21 @@ export default function WidgetPage({ params }: { params: Promise<{ widgetId: str
   const [widgetConfig, setWidgetConfig] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [sessionId] = useState(() => `session-${Date.now()}-${Math.random().toString(36).substring(2)}`);
+  const [sessionId] = useState(() => {
+    if (typeof window === 'undefined') {
+      return `session-${Date.now()}-${Math.random().toString(36).substring(2)}`;
+    }
+
+    const storageKey = `hydra-session-${widgetId}`;
+    const existingSessionId = window.sessionStorage.getItem(storageKey);
+    if (existingSessionId) {
+      return existingSessionId;
+    }
+
+    const nextSessionId = `session-${Date.now()}-${Math.random().toString(36).substring(2)}`;
+    window.sessionStorage.setItem(storageKey, nextSessionId);
+    return nextSessionId;
+  });
 
 
   useEffect(() => {

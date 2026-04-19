@@ -4,15 +4,17 @@ import * as React from 'react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Bot, Paperclip, SendHorizonal } from 'lucide-react';
+import { Bot, Paperclip, SendHorizonal, Mic } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
-import type { WidgetTheme } from '@/app/admin/theming/[widgetId]/page';
+import type { WidgetTheme } from '@/lib/themes';
 import { defaultTheme } from '@/lib/themes';
+import { useToast } from '@/hooks/use-toast';
 
 interface ChatWidgetProps {
   widgetConfig: {
     id: string;
     webhook_url: string;
+    type?: 'text' | 'voice';
     theme?: Partial<WidgetTheme>;
     // Legacy support
     brand?: {
@@ -28,19 +30,25 @@ interface Message {
   id: string;
   text: string;
   sender: 'user' | 'bot';
+  type?: 'text' | 'audio';
+  audioUrl?: string;
 }
 
 export function ChatWidgetComponent({
   widgetConfig,
   sessionId,
 }: ChatWidgetProps) {
+  const { toast } = useToast();
   const [messages, setMessages] = React.useState<Message[]>([]);
   const [inputValue, setInputValue] = React.useState('');
   const [isLoading, setIsLoading] = React.useState(false);
+  const [isRecording, setIsRecording] = React.useState(false);
   const [activeMode, setActiveMode] = React.useState<'light' | 'dark'>(
     widgetConfig.theme?.colorMode === 'dark' ? 'dark' : 'light'
   );
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
+  const mediaRecorderRef = React.useRef<MediaRecorder | null>(null);
+  const audioChunksRef = React.useRef<Blob[]>([]);
 
   // Sync activeMode with config and system preferences
   React.useEffect(() => {
@@ -61,9 +69,6 @@ export function ChatWidgetComponent({
   // Listen for manual overrides from the host page
   React.useEffect(() => {
     const handleMessage = (event: MessageEvent) => {
-      // Basic security check (optional, but good practice if you know the host origin)
-      // if (event.origin !== hostOrigin) return;
-
       if (event.data?.type === 'THEME_CHANGE' && (event.data.mode === 'light' || event.data.mode === 'dark')) {
         setActiveMode(event.data.mode);
       }
@@ -79,7 +84,6 @@ export function ChatWidgetComponent({
       ...widgetConfig.theme
     };
 
-    // If we're in dark mode, we apply the dark mode overrides
     if (activeMode === 'dark') {
       return {
         ...baseTheme,
@@ -102,7 +106,7 @@ export function ChatWidgetComponent({
     window.parent.postMessage('WIDGET_READY', '*');
   }, []);
 
-  // Handle initial message (from new theme or legacy field)
+  // Handle initial message
   React.useEffect(() => {
     const welcomeMessage = theme.bubbleMessage || widgetConfig.brand?.welcomeMessage;
     if (welcomeMessage) {
@@ -120,6 +124,101 @@ export function ChatWidgetComponent({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
+  const startRecording = async () => {
+    try {
+      if (typeof window === 'undefined' || !window.MediaRecorder) {
+        toast({
+          variant: 'destructive',
+          title: 'Not Supported',
+          description: 'Voice recording is not supported in this browser.',
+        });
+        return;
+      }
+
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
+        const audioUrl = URL.createObjectURL(audioBlob);
+        
+        const userMessage: Message = {
+          id: Date.now().toString(),
+          text: 'Voice message',
+          sender: 'user',
+          type: 'audio',
+          audioUrl: audioUrl,
+        };
+        
+        setMessages((prev) => [...prev, userMessage]);
+        
+        // In a real app, you would upload the blob and send the URL to the webhook
+        // For now we just simulate it
+        await handleVoiceMessage(audioBlob);
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch (err) {
+      console.error('Error accessing microphone:', err);
+      toast({
+        variant: 'destructive',
+        title: 'Microphone Error',
+        description: 'Could not access your microphone. Please check permissions.',
+      });
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+      setIsRecording(false);
+    }
+  };
+
+  const handleVoiceMessage = async (blob: Blob) => {
+    setIsLoading(true);
+    try {
+      // Convert blob to base64 for simulation if needed, or send as FormData
+      // For this prototype, we'll just send a notification to the webhook
+      const response = await fetch(widgetConfig.webhook_url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sessionId: sessionId,
+          action: 'voiceMessage',
+          // base64 would go here in a real impl
+        }),
+      });
+
+      if (!response.ok) throw new Error('Webhook failed');
+      const responseData = await response.json();
+
+      const botMessage: Message = {
+        id: 'bot-' + Date.now().toString(),
+        text: responseData.output || "I received your voice message.",
+        sender: 'bot',
+      };
+
+      setTimeout(() => {
+        setMessages((prev) => [...prev, botMessage]);
+      }, 500);
+    } catch (error) {
+      console.error('Failed to send voice message:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputValue.trim()) return;
@@ -128,6 +227,7 @@ export function ChatWidgetComponent({
       id: Date.now().toString(),
       text: inputValue,
       sender: 'user',
+      type: 'text',
     };
 
     setMessages((prev) => [...prev, userMessage]);
@@ -174,7 +274,7 @@ export function ChatWidgetComponent({
     }
   };
 
-  const [isTyping, setIsTyping] = React.useState(false); // Map to existing isLoading if needed
+  const isVoiceMode = widgetConfig.type === 'voice';
 
   // Inline styles from theme
   const widgetStyle: React.CSSProperties = {
@@ -201,7 +301,6 @@ export function ChatWidgetComponent({
 
   const userMessageStyle: React.CSSProperties = {
     backgroundColor: theme.primaryColor,
-    // A simple brightness check to determine text color
     color: parseInt(theme.primaryColor.substring(1, 3), 16) * 0.299 +
       parseInt(theme.primaryColor.substring(3, 5), 16) * 0.587 +
       parseInt(theme.primaryColor.substring(5, 7), 16) * 0.114 > 186
@@ -257,6 +356,8 @@ export function ChatWidgetComponent({
               >
                 {msg.sender === 'bot' ? (
                   <div dangerouslySetInnerHTML={{ __html: msg.text }} />
+                ) : msg.type === 'audio' ? (
+                  <audio src={msg.audioUrl} controls className="max-w-full h-8" />
                 ) : (
                   <p>{msg.text}</p>
                 )}
@@ -284,29 +385,88 @@ export function ChatWidgetComponent({
           <div ref={messagesEndRef} />
         </CardContent>
         <CardFooter className="p-2" style={{ borderTop: `${theme.borderThickness}px solid ${theme.borderColor}` }}>
-          <form
-            onSubmit={handleSendMessage}
-            className="flex w-full items-center gap-2"
-          >
-            <Button type="button" size="icon" variant="ghost">
-              <Paperclip className="h-5 w-5" />
-              <span className="sr-only">Attach file</span>
-            </Button>
-            <Input
-              type="text"
-              placeholder="Type a message..."
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-              className="flex-1 bg-transparent focus:ring-0 focus:ring-offset-0 border-0"
-              disabled={isLoading}
-            />
-            <Button type="submit" size="icon" disabled={isLoading} style={{ backgroundColor: theme.primaryColor, color: userMessageStyle.color }}>
-              <SendHorizonal className="h-5 w-5" />
-              <span className="sr-only">Send</span>
-            </Button>
-          </form>
+          {isVoiceMode && !isRecording ? (
+            <div className="flex w-full flex-col items-center gap-4 py-4 animate-in fade-in slide-in-from-bottom-2">
+               <Button 
+                type="button" 
+                size="lg" 
+                className="rounded-full w-20 h-20 shadow-lg hover:scale-105 transition-all"
+                style={{ backgroundColor: theme.primaryColor, color: userMessageStyle.color }}
+                onClick={startRecording}
+              >
+                <Mic className="h-8 w-8" />
+              </Button>
+              <p className="text-xs font-medium text-muted-foreground">Tap to speak</p>
+              <button 
+                type="button" 
+                className="text-xs text-primary underline"
+                onClick={() => widgetConfig.type = 'text'} // Local override for switching back
+              >
+                Switch to text
+              </button>
+            </div>
+          ) : isRecording ? (
+            <div className="flex w-full flex-col items-center gap-4 py-4 animate-in fade-in zoom-in-95">
+              <div className="flex items-center gap-1 h-12">
+                {[...Array(8)].map((_, i) => (
+                  <div 
+                    key={i} 
+                    className="w-1.5 bg-primary rounded-full animate-pulse" 
+                    style={{ 
+                      height: `${20 + Math.random() * 80}%`, 
+                      animationDelay: `${i * 0.1}s`,
+                      backgroundColor: theme.primaryColor
+                    }} 
+                  />
+                ))}
+              </div>
+              <Button 
+                type="button" 
+                variant="destructive"
+                className="rounded-full h-12 px-6 gap-2 shadow-md animate-pulse"
+                onClick={stopRecording}
+              >
+                <div className="h-3 w-3 rounded-full bg-white animate-ping" />
+                Stop Recording
+              </Button>
+            </div>
+          ) : (
+            <form
+              onSubmit={handleSendMessage}
+              className="flex w-full items-center gap-2"
+            >
+              <Button type="button" size="icon" variant="ghost">
+                <Paperclip className="h-5 w-5" />
+                <span className="sr-only">Attach file</span>
+              </Button>
+              <Input
+                type="text"
+                placeholder="Type a message..."
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                className="flex-1 bg-transparent focus:ring-0 focus:ring-offset-0 border-0"
+                disabled={isLoading}
+              />
+              {isVoiceMode && (
+                <Button 
+                  type="button" 
+                  size="icon" 
+                  variant="ghost" 
+                  onClick={startRecording}
+                  className="text-muted-foreground hover:text-primary"
+                >
+                  <Mic className="h-5 w-5" />
+                </Button>
+              )}
+              <Button type="submit" size="icon" disabled={isLoading} style={{ backgroundColor: theme.primaryColor, color: userMessageStyle.color }}>
+                <SendHorizonal className="h-5 w-5" />
+                <span className="sr-only">Send</span>
+              </Button>
+            </form>
+          )}
         </CardFooter>
       </Card>
     </div>
   );
 }
+
