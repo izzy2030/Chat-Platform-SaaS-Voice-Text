@@ -1,19 +1,79 @@
 'use client';
 
 import { useUser } from '@clerk/nextjs';
-import { useQuery } from 'convex/react';
+import { useQuery, useMutation } from 'convex/react';
 import { api } from 'convex/_generated/api';
 import Link from 'next/link';
-import { Plus, MessageSquare, Mic, Globe, Settings, ExternalLink } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { Plus, MessageSquare, Mic, Globe, Settings, ExternalLink, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useState } from 'react';
+import { toast } from '@/hooks/use-toast';
 
 export default function WidgetsPage() {
   const { user, isLoaded } = useUser();
+  const router = useRouter();
+  const [isCreating, setIsCreating] = useState(false);
+
   const widgets = useQuery(
     api.widgets.getByUserId,
     isLoaded && user ? { userId: user.id } : 'skip'
   );
+
+  const projects = useQuery(
+    api.projects.getByUserId,
+    isLoaded && user ? { userId: user.id } : 'skip'
+  );
+
+  const createWidget = useMutation(api.widgets.create);
+
+  const handleCreate = async () => {
+    if (!user) return;
+    
+    if (!projects || projects.length === 0) {
+      toast({
+        variant: 'destructive',
+        title: 'Project Required',
+        description: 'You need to create a project first before deploying a widget.',
+      });
+      return;
+    }
+
+    setIsCreating(true);
+    try {
+      const newWidgetId = await createWidget({
+        name: "New AI Node",
+        projectId: projects[0]._id, // Use the first project by default
+        type: "text",
+        webhookUrl: "",
+        allowedDomains: [],
+        userId: user.id,
+        theme: {
+          accentColor: "#e4ff04",
+          headerTextColor: "#ffffff",
+          chatBackgroundColor: "#18181b",
+          botBubbleBgColor: "#27272a",
+          botTextColor: "#e5e5e5",
+          userTextColor: "#ffffff",
+          inputBgColor: "#27272a",
+          inputTextColor: "#e5e5e5",
+          inputBorderColor: "#3f3f46",
+          borderRadius: "12px",
+          fontFamily: "Inter, sans-serif",
+        }
+      });
+      router.push(`/admin/widget/${newWidgetId}`);
+    } catch (err: any) {
+      console.error(err);
+      toast({
+        variant: 'destructive',
+        title: 'Error creating node',
+        description: err.message || 'An unexpected error occurred.',
+      });
+      setIsCreating(false);
+    }
+  };
 
   return (
     <div className="flex flex-col gap-8 p-8 max-w-7xl mx-auto w-full">
@@ -22,8 +82,13 @@ export default function WidgetsPage() {
           <h1 className="text-4xl font-bold tracking-tight">Communication Widgets</h1>
           <p className="text-lg text-muted-foreground font-medium">Deploy and manage your autonomous communication interfaces.</p>
         </div>
-        <Button className="rounded-2xl h-12 px-6 font-bold shadow-lg shadow-primary/20" render={<Link href="/admin/widget/create" />}>
-          <Plus className="mr-2 h-5 w-5" /> Deploy New Node
+        <Button 
+          onClick={handleCreate} 
+          disabled={isCreating || projects === undefined}
+          className="rounded-2xl h-12 px-6 font-bold shadow-lg shadow-primary/20"
+        >
+          {isCreating ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : <Plus className="mr-2 h-5 w-5" />}
+          Deploy New Node
         </Button>
       </div>
 
@@ -42,8 +107,13 @@ export default function WidgetsPage() {
             <h3 className="text-2xl font-bold">No active nodes</h3>
             <p className="text-muted-foreground">You haven't deployed any communication nodes yet. Start by creating your first widget.</p>
           </div>
-          <Button variant="outline" className="rounded-xl h-12 px-8 font-bold border-primary/20 hover:bg-primary/5" render={<Link href="/admin/widget/create" />}>
-            Get Started
+          <Button 
+            onClick={handleCreate} 
+            disabled={isCreating || projects === undefined}
+            variant="outline" 
+            className="rounded-xl h-12 px-8 font-bold border-primary/20 hover:bg-primary/5"
+          >
+            {isCreating ? <Loader2 className="mr-2 h-5 w-5 animate-spin" /> : 'Get Started'}
           </Button>
         </div>
       ) : (
