@@ -113,14 +113,21 @@ export function WidgetList({ projectId }: { projectId?: string }) {
     convexReady && isLoaded && user ? { userId: user.id } : 'skip'
   );
 
-  const allWidgets = useQuery(
-    projectId ? api.widgets.getByProjectId : api.widgets.getByUserId,
-    convexReady && isLoaded && user
-      ? projectId
-        ? { userId: user.id, projectId: projectId as any }
-        : { userId: user.id }
+  const projectWidgets = useQuery(
+    api.widgets.getByProjectId,
+    convexReady && isLoaded && user && projectId
+      ? { userId: user.id, projectId: projectId as any }
       : 'skip'
   );
+
+  const userWidgets = useQuery(
+    api.widgets.getByUserId,
+    convexReady && isLoaded && user && !projectId
+      ? { userId: user.id }
+      : 'skip'
+  );
+
+  const allWidgets = projectId ? projectWidgets : userWidgets;
 
   const [selectedWidget, setSelectedWidget] = useState<any | null>(null);
   const [isScriptModalOpen, setScriptModalOpen] = useState(false);
@@ -352,10 +359,6 @@ export function WidgetList({ projectId }: { projectId?: string }) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </div>
-  );
-}
-/AlertDialog>
     </div>
   );
 }

@@ -264,14 +264,9 @@ export default function BuilderPage({
             <h1 className="text-xl font-semibold text-foreground">Widget Builder</h1>
           </div>
           <div className="flex items-center gap-4">
-            {isAutoSaving && (
-              <span className="text-xs text-muted-foreground flex items-center font-medium animate-pulse">
-                <Loader2 className="h-3 w-3 animate-spin mr-1.5" /> Saving...
-              </span>
-            )}
             <Button 
               onClick={form.handleSubmit(onSubmit)} 
-              disabled={isLoading || isAutoSaving} 
+              disabled={isLoading} 
               className="bg-primary hover:bg-primary/90 text-primary-foreground font-semibold h-9 px-6 rounded-lg shadow-lg transition-all hover:scale-105"
             >
               {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : 'Save'}

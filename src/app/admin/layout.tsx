@@ -16,8 +16,8 @@ import {
   LogOut, 
   Sparkles,
   ChevronRight,
-  PanelLeftClose,
-  PanelRightClose
+  ChevronsLeft,
+  ChevronsRight,
 } from 'lucide-react';
 import { 
   Sidebar, 
@@ -221,14 +221,18 @@ function AdminSidebar({ user, handleSignOut, setTheme, theme }: { user: any, han
               </DropdownMenu>
             </SidebarMenuItem>
             
-            <SidebarMenuItem className="group-data-[collapsible=icon]:hidden">
-              <button 
-                onClick={toggleSidebar} 
-                className="w-full flex items-center gap-2 h-8 px-3 text-[#BCCABE] hover:text-[#6D7A70] transition-colors"
+            <SidebarMenuItem>
+              <SidebarMenuButton
+                onClick={toggleSidebar}
+                tooltip="Expand sidebar"
+                className="h-9 rounded-xl px-3 text-[#6D7A70] hover:bg-[#F2F4F5] hover:text-[#191C1D] dark:hover:bg-zinc-900 dark:hover:text-white transition-all duration-200 group"
               >
-                <LayoutDashboard className="size-4" />
-                <span className="text-[10px] font-black uppercase tracking-widest">Collapse Sidebar</span>
-              </button>
+                <div className="relative size-4">
+                  <ChevronsLeft className="size-4 absolute inset-0 transition-all duration-300 opacity-100 rotate-0 group-data-[collapsible=icon]:opacity-0 group-data-[collapsible=icon]:-rotate-90" />
+                  <ChevronsRight className="size-4 absolute inset-0 transition-all duration-300 opacity-0 rotate-90 group-data-[collapsible=icon]:opacity-100 group-data-[collapsible=icon]:rotate-0" />
+                </div>
+                <span className="text-[13px] group-data-[collapsible=icon]:hidden">Collapse</span>
+              </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
         </div>

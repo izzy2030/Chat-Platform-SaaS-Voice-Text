@@ -1,14 +1,22 @@
-
 'use client';
 import * as React from 'react';
+import { useMutation } from 'convex/react';
 import Image from 'next/image';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Bot, Paperclip, SendHorizonal, Mic } from 'lucide-react';
+import { Bot, Paperclip, SendHorizonal, Mic, MessageSquare, Loader2, AlertCircle, Sparkles } from 'lucide-react';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { api } from 'convex/_generated/api';
 import type { WidgetTheme } from '@/lib/themes';
 import { defaultTheme } from '@/lib/themes';
 import { useToast } from '@/hooks/use-toast';
+
+// Voice Agent Imports
+import { GoogleGenAI, Modality, Type, type LiveServerMessage, type Tool, type Content } from '@google/genai';
+import { AgentAudioVisualizerAura } from '@/components/agent-audio-visualizer-aura';
+import type { AgentVisualizerState } from '@/hooks/use-agent-audio-visualizer-aura';
+import { AudioPlayer, AudioProcessor } from '@/lib/agent-live-audio';
 
 interface ChatWidgetProps {
   widgetConfig: {
@@ -16,7 +24,6 @@ interface ChatWidgetProps {
     webhook_url: string;
     type?: 'text' | 'voice';
     theme?: Partial<WidgetTheme>;
-    // Legacy support
     brand?: {
       panelColor?: string;
       headerTitle?: string;
@@ -32,6 +39,47 @@ interface Message {
   sender: 'user' | 'bot';
   type?: 'text' | 'audio';
   audioUrl?: string;
+  durationMs?: number;
+}
+
+const AGENT_TIMEOUT_MS = 20_000;
+const GEMINI_MODEL = "gemini-3.1-flash-live-preview";
+const GEMINI_VOICE = "Zephyr";
+
+const SYSTEM_INSTRUCTION = `
+You are a helpful virtual assistant for our website.
+Your primary task is to answer user questions cheerfully and conversationally.
+Speak in a warm, natural accent and keep responses brief.
+When the user says goodbye, thanks you and indicates they're done, or clearly wants to end the conversation, use the endSession tool to close the session.
+`.trim();
+
+const GEMINI_TOOLS: Tool[] = [
+  {
+    functionDeclarations: [
+      {
+        name: "endSession",
+        description: "End the voice session. Use when the user says goodbye or the conversation is complete.",
+        parameters: { type: Type.OBJECT, properties: {} },
+      },
+    ],
+  },
+];
+
+type ConnectionState = "disconnected" | "connecting" | "connected" | "listening" | "speaking" | "thinking";
+
+type LiveSession = {
+  close: () => void;
+  sendRealtimeInput: (payload: { audio?: { data: string; mimeType: string }; text?: string }) => void;
+  sendToolResponse: (payload: { functionResponses: Array<{ id?: string; name?: string; response: Record<string, unknown> }> }) => void;
+};
+
+function stateToVisualizerState(state: ConnectionState): AgentVisualizerState {
+  if (state === "disconnected") return "disconnected";
+  if (state === "connecting") return "connecting";
+  if (state === "listening") return "listening";
+  if (state === "speaking") return "speaking";
+  if (state === "thinking") return "thinking";
+  return "idle";
 }
 
 export function ChatWidgetComponent({
@@ -39,25 +87,36 @@ export function ChatWidgetComponent({
   sessionId,
 }: ChatWidgetProps) {
   const { toast } = useToast();
+  
+  // Text Chat State
   const [messages, setMessages] = React.useState<Message[]>([]);
   const [inputValue, setInputValue] = React.useState('');
-  const [isLoading, setIsLoading] = React.useState(false);
-  const [isRecording, setIsRecording] = React.useState(false);
+  const [isLoadingText, setIsLoadingText] = React.useState(false);
+  const messagesEndRef = React.useRef<HTMLDivElement>(null);
+  const recordVisitorMessage = useMutation(api.conversations.recordVisitorMessage);
+  const recordAgentMessage = useMutation(api.conversations.recordAgentMessage);
+  
+  // Voice Agent State
+  const [voiceState, setVoiceState] = React.useState<ConnectionState>("disconnected");
+  const [timedOut, setTimedOut] = React.useState(false);
+  const sessionRef = React.useRef<LiveSession | null>(null);
+  const audioProcessorRef = React.useRef<AudioProcessor | null>(null);
+  const audioPlayerRef = React.useRef<AudioPlayer | null>(null);
+  const allowMicStreamingRef = React.useRef(false);
+  const geminiApiKey = process.env.NEXT_PUBLIC_GEMINI_API_KEY;
+
+  // Theme State
   const [activeMode, setActiveMode] = React.useState<'light' | 'dark'>(
     widgetConfig.theme?.colorMode === 'dark' ? 'dark' : 'light'
   );
-  const messagesEndRef = React.useRef<HTMLDivElement>(null);
-  const mediaRecorderRef = React.useRef<MediaRecorder | null>(null);
-  const audioChunksRef = React.useRef<Blob[]>([]);
+  
+  const visitorPageUrl = React.useMemo(() => typeof document !== 'undefined' ? document.referrer || undefined : undefined, []);
 
-  // Sync activeMode with config and system preferences
   React.useEffect(() => {
     const configMode = widgetConfig.theme?.colorMode || 'light';
-
     if (configMode === 'auto') {
       const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
       setActiveMode(mediaQuery.matches ? 'dark' : 'light');
-
       const handler = (e: MediaQueryListEvent) => setActiveMode(e.matches ? 'dark' : 'light');
       mediaQuery.addEventListener('change', handler);
       return () => mediaQuery.removeEventListener('change', handler);
@@ -66,57 +125,23 @@ export function ChatWidgetComponent({
     }
   }, [widgetConfig.theme?.colorMode]);
 
-  // Listen for manual overrides from the host page
-  React.useEffect(() => {
-    const handleMessage = (event: MessageEvent) => {
-      if (event.data?.type === 'THEME_CHANGE' && (event.data.mode === 'light' || event.data.mode === 'dark')) {
-        setActiveMode(event.data.mode);
-      }
-    };
-
-    window.addEventListener('message', handleMessage);
-    return () => window.removeEventListener('message', handleMessage);
-  }, []);
-
   const theme = React.useMemo(() => {
-    const baseTheme = {
-      ...defaultTheme,
-      ...widgetConfig.theme
-    };
-
+    const baseTheme = { ...defaultTheme, ...widgetConfig.theme };
     if (activeMode === 'dark') {
       return {
         ...baseTheme,
-        primaryColor: widgetConfig.theme?.darkPrimaryColor || baseTheme.darkPrimaryColor || baseTheme.primaryColor,
-        secondaryColor: widgetConfig.theme?.darkSecondaryColor || baseTheme.darkSecondaryColor || '#1F2937',
-        accentColor: widgetConfig.theme?.darkAccentColor || baseTheme.darkAccentColor || baseTheme.accentColor,
-        borderColor: widgetConfig.theme?.darkBorderColor || baseTheme.darkBorderColor || '#374151',
+        primaryColor: widgetConfig.theme?.darkPrimaryColor || baseTheme.primaryColor,
+        secondaryColor: widgetConfig.theme?.darkSecondaryColor || '#1F2937',
         colorMode: 'dark' as const,
       };
     }
-
-    return {
-      ...baseTheme,
-      colorMode: 'light' as const,
-    };
+    return { ...baseTheme, colorMode: 'light' as const };
   }, [widgetConfig.theme, activeMode]);
 
-  // Signal to the host that we are ready
-  React.useEffect(() => {
-    window.parent.postMessage('WIDGET_READY', '*');
-  }, []);
-
-  // Handle initial message
   React.useEffect(() => {
     const welcomeMessage = theme.bubbleMessage || widgetConfig.brand?.welcomeMessage;
     if (welcomeMessage) {
-      setMessages([
-        {
-          id: 'welcome',
-          text: welcomeMessage,
-          sender: 'bot',
-        },
-      ]);
+      setMessages([{ id: 'welcome', text: welcomeMessage, sender: 'bot' }]);
     }
   }, [theme.bubbleMessage, widgetConfig.brand?.welcomeMessage]);
 
@@ -124,349 +149,358 @@ export function ChatWidgetComponent({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  const startRecording = async () => {
-    try {
-      if (typeof window === 'undefined' || !window.MediaRecorder) {
-        toast({
-          variant: 'destructive',
-          title: 'Not Supported',
-          description: 'Voice recording is not supported in this browser.',
-        });
-        return;
-      }
+  // --- VOICE AGENT LOGIC ---
+  const disconnectVoice = React.useCallback(() => {
+    const session = sessionRef.current;
+    sessionRef.current = null;
+    allowMicStreamingRef.current = false;
+    audioProcessorRef.current?.stop();
+    audioProcessorRef.current = null;
+    audioPlayerRef.current?.stop();
+    audioPlayerRef.current = null;
+    session?.close();
+    setVoiceState("disconnected");
+    setTimedOut(false);
+  }, []);
 
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = [];
+  const cleanupDisconnectedSession = React.useCallback(() => {
+    sessionRef.current = null;
+    allowMicStreamingRef.current = false;
+    audioProcessorRef.current?.stop();
+    audioProcessorRef.current = null;
+    audioPlayerRef.current?.stop();
+    audioPlayerRef.current = null;
+    setVoiceState("disconnected");
+    setTimedOut(false);
+  }, []);
 
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
-      };
-
-      mediaRecorder.onstop = async () => {
-        const audioBlob = new Blob(audioChunksRef.current, { type: 'audio/wav' });
-        const audioUrl = URL.createObjectURL(audioBlob);
-        
-        const userMessage: Message = {
-          id: Date.now().toString(),
-          text: 'Voice message',
-          sender: 'user',
-          type: 'audio',
-          audioUrl: audioUrl,
-        };
-        
-        setMessages((prev) => [...prev, userMessage]);
-        
-        // In a real app, you would upload the blob and send the URL to the webhook
-        // For now we just simulate it
-        await handleVoiceMessage(audioBlob);
-      };
-
-      mediaRecorder.start();
-      setIsRecording(true);
-    } catch (err) {
-      console.error('Error accessing microphone:', err);
-      toast({
-        variant: 'destructive',
-        title: 'Microphone Error',
-        description: 'Could not access your microphone. Please check permissions.',
-      });
+  const connectVoice = React.useCallback(async () => {
+    if (!geminiApiKey) {
+      toast({ variant: 'destructive', title: 'API Key Missing', description: "NEXT_PUBLIC_GEMINI_API_KEY is not set." });
+      return;
     }
-  };
 
-  const stopRecording = () => {
-    if (mediaRecorderRef.current && isRecording) {
-      mediaRecorderRef.current.stop();
-      mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
-      setIsRecording(false);
-    }
-  };
-
-  const handleVoiceMessage = async (blob: Blob) => {
-    setIsLoading(true);
     try {
-      // Convert blob to base64 for simulation if needed, or send as FormData
-      // For this prototype, we'll just send a notification to the webhook
-      const response = await fetch(widgetConfig.webhook_url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId: sessionId,
-          action: 'voiceMessage',
-          // base64 would go here in a real impl
-        }),
+      setVoiceState("connecting");
+      setTimedOut(false);
+
+      const ai = new GoogleGenAI({ apiKey: geminiApiKey });
+      audioProcessorRef.current = new AudioProcessor();
+      audioPlayerRef.current = new AudioPlayer();
+
+      const sessionPromise = ai.live.connect({
+        model: GEMINI_MODEL,
+        callbacks: {
+          onopen: async () => {
+            setVoiceState("connected");
+            try {
+              allowMicStreamingRef.current = true;
+              await audioProcessorRef.current?.start((base64Data) => {
+                const session = sessionRef.current;
+                if (!session || !allowMicStreamingRef.current) return;
+                session.sendRealtimeInput({
+                  audio: { data: base64Data, mimeType: "audio/pcm;rate=16000" },
+                });
+              });
+              setVoiceState("listening");
+              sessionPromise.then((session) => {
+                setTimeout(() => {
+                  session.sendRealtimeInput({
+                    text: `Hello! ${theme.bubbleMessage || "I'm your AI assistant."} How can I help you today?`,
+                  });
+                }, 500);
+              });
+            } catch (error) {
+              toast({ variant: 'destructive', title: 'Mic Error', description: "Microphone failed to start." });
+              disconnectVoice();
+            }
+          },
+          onmessage: async (message: LiveServerMessage) => {
+            const base64Audio = message.serverContent?.modelTurn?.parts?.[0]?.inlineData?.data;
+            if (base64Audio) {
+              allowMicStreamingRef.current = false;
+              setVoiceState("speaking");
+              await audioPlayerRef.current?.playChunk(base64Audio);
+            }
+            if (message.serverContent?.inputTranscription?.text) {
+              setVoiceState("thinking");
+            }
+            if (message.toolCall?.functionCalls) {
+              for (const call of message.toolCall.functionCalls as any[]) {
+                if (call.name === "endSession") {
+                  sessionRef.current?.sendToolResponse({
+                    functionResponses: [{ id: call.id, name: call.name, response: { success: true } }],
+                  });
+                  disconnectVoice();
+                }
+              }
+            }
+            if (message.serverContent?.interrupted || message.serverContent?.turnComplete) {
+              allowMicStreamingRef.current = true;
+              if (message.serverContent?.interrupted) audioPlayerRef.current?.stop();
+              setVoiceState("listening");
+            }
+          },
+          onerror: (error: unknown) => {
+            toast({ variant: 'destructive', title: 'Live Error', description: "Gemini connection error." });
+            cleanupDisconnectedSession();
+          },
+          onclose: () => {
+            cleanupDisconnectedSession();
+          },
+        },
+        config: {
+          responseModalities: [Modality.AUDIO],
+          speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: GEMINI_VOICE } } },
+          systemInstruction: SYSTEM_INSTRUCTION,
+          tools: GEMINI_TOOLS,
+        },
       });
 
-      if (!response.ok) throw new Error('Webhook failed');
-      const responseData = await response.json();
-
-      const botMessage: Message = {
-        id: 'bot-' + Date.now().toString(),
-        text: responseData.output || "I received your voice message.",
-        sender: 'bot',
-      };
-
-      setTimeout(() => {
-        setMessages((prev) => [...prev, botMessage]);
-      }, 500);
+      sessionRef.current = (await sessionPromise) as LiveSession;
     } catch (error) {
-      console.error('Failed to send voice message:', error);
-    } finally {
-      setIsLoading(false);
+      toast({ variant: 'destructive', title: 'Connection Failed', description: "Could not establish voice connection." });
+      cleanupDisconnectedSession();
     }
-  };
+  }, [cleanupDisconnectedSession, disconnectVoice, geminiApiKey, theme.bubbleMessage, toast]);
 
+  React.useEffect(() => {
+    if (voiceState === "disconnected") return;
+    const timer = setTimeout(() => setTimedOut(true), AGENT_TIMEOUT_MS);
+    return () => clearTimeout(timer);
+  }, [voiceState]);
+
+  React.useEffect(() => () => disconnectVoice(), [disconnectVoice]);
+
+  // --- TEXT CHAT LOGIC ---
   const handleSendMessage = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inputValue.trim()) return;
 
-    const userMessage: Message = {
-      id: Date.now().toString(),
-      text: inputValue,
-      sender: 'user',
-      type: 'text',
-    };
-
+    const userMessage: Message = { id: Date.now().toString(), text: inputValue, sender: 'user', type: 'text' };
     setMessages((prev) => [...prev, userMessage]);
     setInputValue('');
-    setIsLoading(true);
+    setIsLoadingText(true);
+
+    void recordVisitorMessage({
+      widgetId: widgetConfig.id as any,
+      sessionId,
+      channel: 'text',
+      kind: 'text',
+      text: inputValue,
+      pageUrl: visitorPageUrl,
+    });
 
     try {
       const response = await fetch(widgetConfig.webhook_url, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          sessionId: sessionId,
-          action: 'sendMessage',
-          chatInput: inputValue,
-        }),
+        body: JSON.stringify({ sessionId, action: 'sendMessage', chatInput: inputValue }),
       });
 
-      if (!response.ok) {
-        throw new Error(`Webhook failed with status ${response.status}`);
-      }
-
+      if (!response.ok) throw new Error('Webhook failed');
       const responseData = await response.json();
+      const output = responseData.output || "Sorry, I didn't understand that.";
 
-      const botMessage: Message = {
-        id: 'bot-' + Date.now().toString(),
-        text: responseData.output || "Sorry, I didn't understand that.",
-        sender: 'bot',
-      };
+      const botMessage: Message = { id: 'bot-' + Date.now().toString(), text: output, sender: 'bot' };
+      void recordAgentMessage({
+        widgetId: widgetConfig.id as any,
+        sessionId,
+        channel: 'text',
+        kind: 'text',
+        text: output,
+        pageUrl: visitorPageUrl,
+      });
 
-      setTimeout(() => {
-        setMessages((prev) => [...prev, botMessage]);
-      }, 500);
-
+      setTimeout(() => setMessages((prev) => [...prev, botMessage]), 500);
     } catch (error) {
-      console.error('Failed to send message:', error);
-      const errorMessage: Message = {
-        id: 'error-' + Date.now().toString(),
-        text: 'Sorry, something went wrong. Please try again.',
-        sender: 'bot',
-      };
-      setMessages((prev) => [...prev, errorMessage]);
+      setMessages((prev) => [...prev, { id: 'error-' + Date.now().toString(), text: 'Sorry, something went wrong.', sender: 'bot' }]);
     } finally {
-      setIsLoading(false);
+      setIsLoadingText(false);
     }
   };
 
-  const isVoiceMode = widgetConfig.type === 'voice';
-
-  // Inline styles from theme
   const widgetStyle: React.CSSProperties = {
     backgroundColor: theme.secondaryColor,
     borderRadius: `${theme.roundedCorners}px`,
     boxShadow: `0 0 ${theme.shadowIntensity / 5}px rgba(0,0,0,${theme.shadowIntensity / 100})`,
-    border: `${theme.borderThickness}px solid ${theme.borderColor}`,
     fontFamily: theme.fontFamily,
     colorScheme: theme.colorMode === 'dark' ? 'dark' : 'light',
   };
 
-  const headerStyle: React.CSSProperties = {
-    fontFamily: theme.fontFamily,
-    borderBottom: `${theme.borderThickness}px solid ${theme.borderColor}`,
-  };
-
-  const messageStyle: React.CSSProperties = {
-    fontSize: `${theme.fontSize}px`,
-  };
-
-  const avatarStyle: React.CSSProperties = {
-    borderRadius: theme.avatarStyle === 'round' ? '9999px' : '4px',
-  };
-
   const userMessageStyle: React.CSSProperties = {
     backgroundColor: theme.primaryColor,
-    color: parseInt(theme.primaryColor.substring(1, 3), 16) * 0.299 +
-      parseInt(theme.primaryColor.substring(3, 5), 16) * 0.587 +
-      parseInt(theme.primaryColor.substring(5, 7), 16) * 0.114 > 186
-      ? '#000000' : '#FFFFFF',
+    color: '#FFFFFF',
   };
 
+  const isVoiceActive = voiceState !== "disconnected" && voiceState !== "connecting";
+
   return (
-    <div className="flex flex-col h-full bg-transparent">
-      <Card
-        className="flex flex-col h-full w-full border-0 shadow-none rounded-none overflow-hidden"
-        style={widgetStyle}
-      >
-        <CardHeader className="flex-shrink-0 flex flex-row items-center gap-3 p-4" style={headerStyle}>
-          {theme.logoUrl && (
-            <Image
-              src={theme.logoUrl}
-              alt="Logo"
-              width={40}
-              height={40}
-              className="h-10 w-10 object-cover"
-              style={avatarStyle}
-            />
-          )}
-          <div>
-            <h3 className="font-bold text-lg leading-tight" style={{ color: theme.headerTitleColor }}>{theme.headerTitle}</h3>
-            {theme.headerSubtext && (
-              <p className="text-sm text-muted-foreground" style={{ color: theme.headerSubtextColor }}>
-                {theme.headerSubtext}
-              </p>
+    <div className="flex flex-col h-full bg-transparent w-full">
+      <Card className="flex flex-col h-full w-full border border-border shadow-2xl rounded-2xl overflow-hidden" style={widgetStyle}>
+        
+        {/* Header */}
+        <CardHeader className="flex-shrink-0 p-4 border-b border-border/10">
+          <div className="flex items-center gap-3">
+            {theme.logoUrl ? (
+              <Image src={theme.logoUrl} alt="Logo" width={40} height={40} className="h-10 w-10 object-cover rounded-full" />
+            ) : (
+              <div className="h-10 w-10 rounded-full flex items-center justify-center text-white" style={{ backgroundColor: theme.primaryColor }}>
+                <Bot size={24} />
+              </div>
             )}
+            <div>
+              <h3 className="font-bold text-lg leading-tight" style={{ color: theme.headerTitleColor }}>{theme.headerTitle || "AI Assistant"}</h3>
+              <p className="text-xs text-muted-foreground" style={{ color: theme.headerSubtextColor }}>{theme.headerSubtext || "Online"}</p>
+            </div>
           </div>
         </CardHeader>
-        <CardContent className="flex-grow overflow-y-auto p-4 space-y-4" style={messageStyle}>
-          {messages.map((msg) => (
-            <div
-              key={msg.id}
-              className={`flex items-start gap-2 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'
-                }`}
-            >
-              {msg.sender === 'bot' && (
-                <div style={avatarStyle} className="h-8 w-8 bg-muted flex-shrink-0 flex items-center justify-center overflow-hidden">
-                  {theme.logoUrl ? (
-                    <Image src={theme.logoUrl} alt="Bot Avatar" width={32} height={32} className="h-full w-full object-cover" />
-                  ) : (
-                    <Bot size={20} className="text-muted-foreground" />
+
+        <Tabs defaultValue="text" className="flex-grow flex flex-col min-h-0 w-full" onValueChange={(val) => {
+          if (val === 'text' && voiceState !== 'disconnected') disconnectVoice();
+        }}>
+          
+          {/* Tabs Navigation */}
+          <div className="px-4 pt-4 shrink-0">
+            <TabsList className="w-full grid grid-cols-2 bg-muted/50 rounded-xl p-1">
+              <TabsTrigger value="text" className="rounded-lg text-xs font-medium data-[state=active]:shadow-sm">
+                <MessageSquare className="w-3.5 h-3.5 mr-2" /> Text Chat
+              </TabsTrigger>
+              <TabsTrigger value="voice" className="rounded-lg text-xs font-medium data-[state=active]:shadow-sm">
+                <Mic className="w-3.5 h-3.5 mr-2" /> Voice Call
+              </TabsTrigger>
+            </TabsList>
+          </div>
+
+          {/* TEXT TAB */}
+          <TabsContent value="text" className="flex-grow flex flex-col min-h-0 outline-none m-0 data-[state=active]:flex">
+            <CardContent className="flex-grow overflow-y-auto p-4 space-y-4">
+              {messages.map((msg) => (
+                <div key={msg.id} className={`flex items-start gap-2 ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}>
+                  {msg.sender === 'bot' && (
+                    <div className="h-8 w-8 rounded-full bg-muted flex-shrink-0 flex items-center justify-center">
+                      <Bot size={16} className="text-muted-foreground" />
+                    </div>
                   )}
+                  <div
+                    className={`max-w-[80%] rounded-2xl px-4 py-2.5 text-sm ${msg.sender === 'user' ? '' : 'bg-muted/50 text-foreground'}`}
+                    style={msg.sender === 'user' ? userMessageStyle : {}}
+                  >
+                    <p>{msg.text}</p>
+                  </div>
+                </div>
+              ))}
+              {isLoadingText && (
+                <div className="flex items-start gap-2 justify-start">
+                  <div className="h-8 w-8 rounded-full bg-muted flex-shrink-0 flex items-center justify-center">
+                    <Bot size={16} className="text-muted-foreground" />
+                  </div>
+                  <div className="rounded-2xl px-4 py-3 bg-muted/50">
+                    <div className="flex gap-1">
+                      <div className="h-1.5 w-1.5 bg-muted-foreground/40 rounded-full animate-bounce" />
+                      <div className="h-1.5 w-1.5 bg-muted-foreground/40 rounded-full animate-bounce delay-150" />
+                      <div className="h-1.5 w-1.5 bg-muted-foreground/40 rounded-full animate-bounce delay-300" />
+                    </div>
+                  </div>
                 </div>
               )}
-              <div
-                className={`max-w-xs rounded-lg px-3 py-2 text-sm md:max-w-md ${msg.sender === 'user' ? '' : 'bg-muted text-foreground'
-                  }`}
-                style={msg.sender === 'user' ? userMessageStyle : {}}
-              >
-                {msg.sender === 'bot' ? (
-                  <div dangerouslySetInnerHTML={{ __html: msg.text }} />
-                ) : msg.type === 'audio' ? (
-                  <audio src={msg.audioUrl} controls className="max-w-full h-8" />
-                ) : (
-                  <p>{msg.text}</p>
-                )}
-              </div>
-            </div>
-          ))}
-          {isLoading && (
-            <div className="flex items-start gap-2 justify-start">
-              <div style={avatarStyle} className="h-8 w-8 bg-muted flex-shrink-0 flex items-center justify-center overflow-hidden">
-                {theme.logoUrl ? (
-                  <Image src={theme.logoUrl} alt="Bot Avatar" width={32} height={32} className="h-full w-full object-cover" />
-                ) : (
-                  <Bot size={20} className="text-muted-foreground" />
-                )}
-              </div>
-              <div className="max-w-xs rounded-lg px-3 py-2 text-sm md:max-w-md bg-muted text-muted-foreground">
-                <div className="flex items-center gap-2">
-                  <div className="h-2 w-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.3s]"></div>
-                  <div className="h-2 w-2 bg-gray-400 rounded-full animate-bounce [animation-delay:-0.15s]"></div>
-                  <div className="h-2 w-2 bg-gray-400 rounded-full animate-bounce"></div>
-                </div>
-              </div>
-            </div>
-          )}
-          <div ref={messagesEndRef} />
-        </CardContent>
-        <CardFooter className="p-2" style={{ borderTop: `${theme.borderThickness}px solid ${theme.borderColor}` }}>
-          {isVoiceMode && !isRecording ? (
-            <div className="flex w-full flex-col items-center gap-4 py-4 animate-in fade-in slide-in-from-bottom-2">
-               <Button 
-                type="button" 
-                size="lg" 
-                className="rounded-full w-20 h-20 shadow-lg hover:scale-105 transition-all"
-                style={{ backgroundColor: theme.primaryColor, color: userMessageStyle.color }}
-                onClick={startRecording}
-              >
-                <Mic className="h-8 w-8" />
-              </Button>
-              <p className="text-xs font-medium text-muted-foreground">Tap to speak</p>
-              <button 
-                type="button" 
-                className="text-xs text-primary underline"
-                onClick={() => widgetConfig.type = 'text'} // Local override for switching back
-              >
-                Switch to text
-              </button>
-            </div>
-          ) : isRecording ? (
-            <div className="flex w-full flex-col items-center gap-4 py-4 animate-in fade-in zoom-in-95">
-              <div className="flex items-center gap-1 h-12">
-                {[...Array(8)].map((_, i) => (
-                  <div 
-                    key={i} 
-                    className="w-1.5 bg-primary rounded-full animate-pulse" 
-                    style={{ 
-                      height: `${20 + Math.random() * 80}%`, 
-                      animationDelay: `${i * 0.1}s`,
-                      backgroundColor: theme.primaryColor
-                    }} 
-                  />
-                ))}
-              </div>
-              <Button 
-                type="button" 
-                variant="destructive"
-                className="rounded-full h-12 px-6 gap-2 shadow-md animate-pulse"
-                onClick={stopRecording}
-              >
-                <div className="h-3 w-3 rounded-full bg-white animate-ping" />
-                Stop Recording
-              </Button>
-            </div>
-          ) : (
-            <form
-              onSubmit={handleSendMessage}
-              className="flex w-full items-center gap-2"
-            >
-              <Button type="button" size="icon" variant="ghost">
-                <Paperclip className="h-5 w-5" />
-                <span className="sr-only">Attach file</span>
-              </Button>
-              <Input
-                type="text"
-                placeholder="Type a message..."
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                className="flex-1 bg-transparent focus:ring-0 focus:ring-offset-0 border-0"
-                disabled={isLoading}
-              />
-              {isVoiceMode && (
-                <Button 
-                  type="button" 
-                  size="icon" 
-                  variant="ghost" 
-                  onClick={startRecording}
-                  className="text-muted-foreground hover:text-primary"
-                >
-                  <Mic className="h-5 w-5" />
+              <div ref={messagesEndRef} />
+            </CardContent>
+
+            <CardFooter className="p-3 shrink-0 border-t border-border/10">
+              <form onSubmit={handleSendMessage} className="flex w-full items-center gap-2 bg-background/50 border border-border/40 rounded-full pl-4 pr-1.5 py-1.5">
+                <Input
+                  type="text"
+                  placeholder={theme.placeholderText || "Type a message..."}
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  className="flex-1 bg-transparent border-0 focus-visible:ring-0 focus-visible:ring-offset-0 px-0 h-9"
+                  disabled={isLoadingText}
+                />
+                <Button type="submit" size="icon" disabled={isLoadingText || !inputValue.trim()} className="rounded-full h-9 w-9 shrink-0 transition-transform active:scale-95" style={{ backgroundColor: theme.primaryColor, color: '#fff' }}>
+                  <SendHorizonal className="h-4 w-4" />
                 </Button>
+              </form>
+            </CardFooter>
+          </TabsContent>
+
+          {/* VOICE TAB */}
+          <TabsContent value="voice" className="flex-grow flex flex-col outline-none m-0 data-[state=active]:flex overflow-hidden relative">
+            <div className="absolute inset-0 z-0 flex items-center justify-center opacity-30 pointer-events-none">
+              <div className="h-[300px] w-[300px] rounded-full blur-[80px]" style={{ backgroundColor: theme.primaryColor }} />
+            </div>
+            
+            <div className="flex-grow flex flex-col items-center justify-center p-6 z-10 relative">
+              {!isVoiceActive ? (
+                <div className="flex flex-col items-center justify-center text-center space-y-8 mt-[-20px]">
+                  <div className="relative">
+                    <div className="absolute inset-0 animate-ping rounded-full opacity-20" style={{ backgroundColor: theme.primaryColor }} />
+                    <div className="h-24 w-24 rounded-full flex items-center justify-center shadow-xl backdrop-blur-md border border-white/10" style={{ backgroundColor: `${theme.primaryColor}20` }}>
+                      <Mic size={36} style={{ color: theme.primaryColor }} />
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2">
+                    <h2 className="text-2xl font-bold text-foreground tracking-tight">Live Voice Agent</h2>
+                    <p className="text-sm text-muted-foreground px-4 leading-relaxed">
+                      Tap connect to speak naturally with {theme.botName || "our AI Assistant"}.
+                    </p>
+                  </div>
+
+                  <Button
+                    disabled={voiceState === "connecting"}
+                    onClick={connectVoice}
+                    className="rounded-full h-12 px-8 font-bold shadow-lg transition-transform active:scale-95"
+                    style={{ backgroundColor: theme.primaryColor, color: '#fff' }}
+                  >
+                    {voiceState === "connecting" ? (
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Connecting...</>
+                    ) : (
+                      <><Sparkles className="w-4 h-4 mr-2" /> Connect to Call</>
+                    )}
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex flex-col items-center justify-center h-full w-full space-y-12">
+                  {timedOut ? (
+                    <div className="flex flex-col items-center gap-3 text-center text-amber-500">
+                      <AlertCircle size={32} />
+                      <span className="text-sm font-bold uppercase tracking-widest">Agent Not Responding</span>
+                    </div>
+                  ) : (
+                    <div className="flex flex-col items-center justify-center relative w-full h-[250px]">
+                      <AgentAudioVisualizerAura
+                        size="lg"
+                        color={theme.primaryColor as `#\${string}`}
+                        state={stateToVisualizerState(voiceState)}
+                        analyserNode={audioProcessorRef.current?.processor as unknown as AnalyserNode}
+                        themeMode={theme.colorMode as 'light' | 'dark'}
+                        className="absolute inset-0 m-auto"
+                      />
+                      <Badge variant="outline" className="absolute bottom-[-30px] bg-background/50 backdrop-blur-md tracking-widest uppercase text-[10px] font-bold px-3 py-1">
+                        {voiceState}
+                      </Badge>
+                    </div>
+                  )}
+
+                  <Button
+                    variant="destructive"
+                    onClick={disconnectVoice}
+                    className="rounded-full h-12 px-8 font-bold mt-auto shadow-lg"
+                  >
+                    End Call
+                  </Button>
+                </div>
               )}
-              <Button type="submit" size="icon" disabled={isLoading} style={{ backgroundColor: theme.primaryColor, color: userMessageStyle.color }}>
-                <SendHorizonal className="h-5 w-5" />
-                <span className="sr-only">Send</span>
-              </Button>
-            </form>
-          )}
-        </CardFooter>
+            </div>
+          </TabsContent>
+
+        </Tabs>
       </Card>
     </div>
   );
 }
 
+function Badge({ children, className, variant }: { children: React.ReactNode, className?: string, variant?: string }) {
+  return <span className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 ${className}`}>{children}</span>
+}

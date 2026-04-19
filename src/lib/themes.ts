@@ -19,6 +19,8 @@ export interface WidgetTheme {
   backgroundBlur: number;
   colorMode: 'light' | 'dark' | 'auto';
   bubbleMessage: string;
+  placeholderText?: string;
+  botName?: string;
   conversationStarters: string[];
   idlePulse: boolean;
   idlePulseStrength: number;

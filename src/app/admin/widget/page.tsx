@@ -147,10 +147,10 @@ export default function WidgetsPage() {
               </div>
               
               <div className="mt-auto p-4 bg-muted/5 flex items-center gap-2">
-                <Button variant="ghost" className="flex-1 rounded-xl h-10 text-xs font-bold hover:bg-primary/10 hover:text-primary transition-colors" render={<Link href={`/admin/widget/${widget._id}`} />}>
+                <Button variant="ghost" nativeButton={false} className="flex-1 rounded-xl h-10 text-xs font-bold hover:bg-primary/10 hover:text-primary transition-colors" render={<Link href={`/admin/widget/${widget._id}`} />}>
                   <Settings className="w-3.5 h-3.5 mr-2" /> Configure
                 </Button>
-                <Button variant="ghost" className="aspect-square rounded-xl h-10 p-0 hover:bg-primary/10 hover:text-primary transition-colors" render={<Link href={`/widget/${widget._id}`} target="_blank" />}>
+                <Button variant="ghost" nativeButton={false} className="aspect-square rounded-xl h-10 p-0 hover:bg-primary/10 hover:text-primary transition-colors" render={<Link href={`/widget/${widget._id}`} target="_blank" />}>
                   <ExternalLink className="w-3.5 h-3.5" />
                 </Button>
               </div>

@@ -66,6 +66,8 @@ async function getOrCreateConversation(
     lastMessagePreview: "",
     unreadForOwner: false,
     messageCount: 0,
+    totalDurationMs: 0,
+    recordingCount: 0,
   });
 
   const conversation = await ctx.db.get(conversationId);
@@ -86,6 +88,8 @@ async function appendMessage(
     kind: Doc<"conversationMessages">["kind"];
     body: string;
     pageUrl?: string;
+    audioStorageId?: Id<"_storage">;
+    durationMs?: number;
   }
 ) {
   const { conversation } = await getOrCreateConversation(ctx, args);
@@ -97,6 +101,8 @@ async function appendMessage(
     sender: args.sender,
     kind: args.kind,
     body: args.body,
+    audioStorageId: args.audioStorageId,
+    durationMs: args.durationMs,
     createdAt,
   });
 
@@ -107,6 +113,8 @@ async function appendMessage(
     unreadForOwner: args.sender === "visitor",
     status: args.sender === "visitor" ? "active" : "ongoing",
     messageCount: conversation.messageCount + 1,
+    totalDurationMs: conversation.totalDurationMs + (args.durationMs ?? 0),
+    recordingCount: conversation.recordingCount + (args.kind === "audio" ? 1 : 0),
     pageUrl: args.pageUrl ?? conversation.pageUrl,
   });
 
@@ -163,11 +171,49 @@ export const getById = query({
       .order("asc")
       .take(200);
 
+    const messagesWithUrls = await Promise.all(
+      messages.map(async (message) => ({
+        ...message,
+        audioUrl: message.audioStorageId
+          ? await ctx.storage.getUrl(message.audioStorageId)
+          : null,
+      }))
+    );
+
     return {
       ...conversation,
       widgetName: widget?.name ?? "Unknown Widget",
-      messages,
+      messages: messagesWithUrls,
     };
+  },
+});
+
+export const listCallsByUser = query({
+  args: {
+    userId: v.string(),
+    limit: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
+    const limit = Math.min(Math.max(args.limit ?? 100, 1), 200);
+    const conversations = await ctx.db
+      .query("conversations")
+      .withIndex("by_userId_and_channel_and_lastMessageAt", (q) =>
+        q.eq("userId", args.userId).eq("channel", "voice")
+      )
+      .order("desc")
+      .take(limit);
+
+    const widgetMap = new Map<Id<"widgets">, Doc<"widgets"> | null>();
+    for (const conversation of conversations) {
+      if (!widgetMap.has(conversation.widgetId)) {
+        widgetMap.set(conversation.widgetId, await ctx.db.get(conversation.widgetId));
+      }
+    }
+
+    return conversations.map((conversation) => ({
+      ...conversation,
+      widgetName: widgetMap.get(conversation.widgetId)?.name ?? "Unknown Widget",
+    }));
   },
 });
 
@@ -210,6 +256,8 @@ export const recordVisitorMessage = mutation({
     kind: messageKindValidator,
     text: v.string(),
     pageUrl: v.optional(v.string()),
+    audioStorageId: v.optional(v.id("_storage")),
+    durationMs: v.optional(v.number()),
   },
   handler: async (ctx, args) => {
     return await appendMessage(ctx, {
@@ -220,6 +268,8 @@ export const recordVisitorMessage = mutation({
       kind: args.kind,
       body: args.text,
       pageUrl: args.pageUrl,
+      audioStorageId: args.audioStorageId,
+      durationMs: args.durationMs,
     });
   },
 });
@@ -243,6 +293,20 @@ export const recordAgentMessage = mutation({
       body: args.text,
       pageUrl: args.pageUrl,
     });
+  },
+});
+
+export const generateAudioUploadUrl = mutation({
+  args: {
+    widgetId: v.id("widgets"),
+  },
+  handler: async (ctx, args) => {
+    const widget = await ctx.db.get(args.widgetId);
+    if (!widget) {
+      throw new Error("Widget not found");
+    }
+
+    return await ctx.storage.generateUploadUrl();
   },
 });
 

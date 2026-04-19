@@ -26,8 +26,11 @@ export default defineSchema({
     lastMessagePreview: v.string(),
     unreadForOwner: v.boolean(),
     messageCount: v.number(),
+    totalDurationMs: v.number(),
+    recordingCount: v.number(),
   })
     .index("by_userId_and_lastMessageAt", ["userId", "lastMessageAt"])
+    .index("by_userId_and_channel_and_lastMessageAt", ["userId", "channel", "lastMessageAt"])
     .index("by_widgetId_and_sessionId", ["widgetId", "sessionId"])
     .index("by_widgetId_and_lastMessageAt", ["widgetId", "lastMessageAt"]),
 
@@ -37,6 +40,8 @@ export default defineSchema({
     sender: v.union(v.literal("visitor"), v.literal("agent")),
     kind: v.union(v.literal("text"), v.literal("audio")),
     body: v.string(),
+    audioStorageId: v.optional(v.id("_storage")),
+    durationMs: v.optional(v.number()),
     createdAt: v.number(),
   }).index("by_conversationId_and_createdAt", ["conversationId", "createdAt"]),
 

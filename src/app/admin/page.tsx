@@ -1,6 +1,9 @@
 'use client';
 
 import { useUser } from '@clerk/nextjs';
+import { useQuery } from 'convex/react';
+import { formatDistanceToNow } from 'date-fns';
+import Link from 'next/link';
 import { 
   MessagesSquare, 
   Users, 
@@ -20,30 +23,27 @@ import {
   BarChart3,
   BookOpen
 } from 'lucide-react';
+import { api } from 'convex/_generated/api';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { GlowingRadialChart } from '@/components/ui/glowing-radial-chart';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 export default function AdminPage() {
-  const { user } = useUser();
+  const { user, isLoaded } = useUser();
   const firstName = user?.firstName || 'Israel';
+  const dashboardSummary = useQuery(
+    api.conversations.getDashboardSummary,
+    isLoaded && user ? { userId: user.id } : 'skip'
+  );
 
   const stats = [
-    { label: 'CONVERSATIONS', value: '11', icon: MessagesSquare, trend: '+12%', highlight: false },
-    { label: 'LIVE VISITORS', value: '3', icon: Users, status: 'online', highlight: true },
-    { label: 'MESSAGES SENT', value: '4', icon: Send, trend: '+2%', highlight: false },
+    { label: 'CONVERSATIONS', value: dashboardSummary?.stats.conversationCount ?? '—', icon: MessagesSquare, trend: 'LIVE', highlight: false },
+    { label: 'LIVE VISITORS', value: dashboardSummary?.stats.liveCount ?? '—', icon: Users, status: (dashboardSummary?.stats.liveCount ?? 0) > 0 ? 'online' : 'offline', highlight: true },
+    { label: 'UNREAD THREADS', value: dashboardSummary?.stats.unreadCount ?? '—', icon: Send, trend: 'INBOX', highlight: false },
     { label: 'AVG RESPONSE', value: '—', icon: Clock, trend: '-3%', highlight: false },
     { label: 'PAGES SHARED', value: '0', icon: FileText, trend: '0%', highlight: false },
-    { label: 'SATISFACTION', value: '64%', icon: ThumbsUp, trend: '+5%', highlight: false },
-  ];
-
-  const recentConversations = [
-    { id: 'f5eadeec', type: 'Text', time: 'ABOUT 2 HOURS AGO', status: 'online', path: '/dashboard/...' },
-    { id: 'Voice ca', type: 'Voice', time: 'ABOUT 2 HOURS AGO', status: 'offline', path: '' },
-    { id: 'f5eadeec', type: 'Text', time: 'ABOUT 2 HOURS AGO', status: 'online', path: '/dashboard/...' },
-    { id: 'Voice ca', type: 'Voice', time: 'ABOUT 4 HOURS AGO', status: 'offline', path: '' },
-    { id: 'Voice ca', type: 'Voice', time: 'ABOUT 4 HOURS AGO', status: 'offline', path: '' },
+    { label: 'RESOLVED', value: dashboardSummary?.stats.resolvedCount ?? '—', icon: ThumbsUp, trend: 'DONE', highlight: false },
   ];
 
   return (
@@ -117,35 +117,56 @@ export default function AdminPage() {
           <Card className="lg:col-span-3 rounded-2xl border-none shadow-premium bg-white overflow-hidden">
             <CardHeader className="p-4 pb-2 flex flex-row items-center justify-between">
               <CardTitle className="text-lg font-black text-[#191C1D]">Recent Conversations</CardTitle>
-              <Button variant="ghost" className="text-[10px] font-black text-[#6D7A70] hover:text-[#00B171] gap-1 rounded-xl hover:bg-[#EBFBF3] px-3 h-8">
+              <Button
+                variant="ghost"
+                nativeButton={false}
+                className="text-[10px] font-black text-[#6D7A70] hover:text-[#00B171] gap-1 rounded-xl hover:bg-[#EBFBF3] px-3 h-8"
+                render={<Link href="/admin/conversations" />}
+              >
                 See all <ArrowUpRight className="size-3" />
               </Button>
             </CardHeader>
-            <CardContent className="pointer-events-none p-0">
+            <CardContent className="p-0">
               <div className="flex flex-col">
-                {recentConversations.map((conv, i) => (
-                  <div key={i} className="flex items-center justify-between px-4 py-3 hover:bg-[#F8FAFB] transition-colors border-t border-[#ECEEEF]/50 first:border-0 group pointer-events-auto cursor-pointer">
+                {dashboardSummary === undefined ? (
+                  [...Array(5)].map((_, index) => (
+                    <div key={index} className="h-[70px] border-t border-[#ECEEEF]/50 first:border-0 animate-pulse bg-[linear-gradient(90deg,_rgba(248,250,251,1)_0%,_rgba(242,244,245,1)_50%,_rgba(248,250,251,1)_100%)]" />
+                  ))
+                ) : dashboardSummary.recentConversations.length === 0 ? (
+                  <div className="px-4 py-10 text-center text-sm font-medium text-[#6D7A70]">
+                    No conversations yet. New visitor chats will appear here.
+                  </div>
+                ) : dashboardSummary.recentConversations.map((conv) => (
+                  <Link
+                    key={conv._id}
+                    href="/admin/conversations"
+                    className="flex items-center justify-between px-4 py-3 hover:bg-[#F8FAFB] transition-colors border-t border-[#ECEEEF]/50 first:border-0 group cursor-pointer"
+                  >
                     <div className="flex items-center gap-3">
                       <div className={cn(
                         "size-2 rounded-full shadow-sm",
-                        conv.status === 'online' ? "bg-[#00B171] shadow-[#00B171]/40" : "bg-[#BCCABE] shadow-black/5"
+                        conv.unreadForOwner ? "bg-[#00B171] shadow-[#00B171]/40" : "bg-[#BCCABE] shadow-black/5"
                       )} />
                       <div className="flex flex-col">
-                        <span className="text-[9px] font-black text-[#6D7A70]/50 tracking-[0.03em]">{conv.time}</span>
-                        <span className="text-sm font-bold tracking-tight text-[#191C1D]">{conv.id}</span>
+                        <span className="text-[9px] font-black text-[#6D7A70]/50 tracking-[0.03em]">
+                          {formatDistanceToNow(new Date(conv.lastMessageAt), { addSuffix: true }).toUpperCase()}
+                        </span>
+                        <span className="text-sm font-bold tracking-tight text-[#191C1D]">{conv.visitorLabel}</span>
                       </div>
                     </div>
                     
                     <div className="flex items-center gap-8">
                       <div className="flex items-center gap-2 w-28">
                         <div className="size-7 rounded-lg bg-[#F2F4F5] flex items-center justify-center text-[#BCCABE] group-hover:bg-[#EBFBF3] group-hover:text-[#00B171] transition-colors">
-                          {conv.type === 'Text' ? <MessageCircle className="size-3.5" /> : <PhoneCall className="size-3.5" />}
+                          {conv.channel === 'text' ? <MessageCircle className="size-3.5" /> : <PhoneCall className="size-3.5" />}
                         </div>
-                        <span className="text-xs font-black text-[#6D7A70]">{conv.type} ...</span>
+                        <span className="text-xs font-black text-[#6D7A70] capitalize">{conv.channel}</span>
                       </div>
-                      <span className="hidden xl:block text-[10px] font-bold text-[#BCCABE] tracking-tighter w-20 truncate">{conv.path}</span>
+                      <span className="hidden xl:block text-[10px] font-bold text-[#BCCABE] tracking-tighter w-40 truncate">
+                        {conv.pageUrl || conv.widgetName}
+                      </span>
                     </div>
-                  </div>
+                  </Link>
                 ))}
               </div>
             </CardContent>
