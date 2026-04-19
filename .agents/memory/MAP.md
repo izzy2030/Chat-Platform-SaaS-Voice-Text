@@ -16,12 +16,13 @@ _Analyzed codebase with GoAtlas intelligence engine._
 | chunks | 1160 | Application module |
 | ui | 194 | Application module |
 | types | 16 | TypeScript type definitions |
-| [widgetId] | 12 | Application module |
-| admin | 10 | Application module |
-| theming | 6 | Application module |
-| hooks | 4 | Custom React hooks |
+| [widgetId] | 12 | Unified Widget Studio & Editor |
+| admin | 10 | Admin Dashboard Hub |
+| hooks | 4 | Custom React hooks (incl. audio visualizer) |
 | profile | 3 | Application module |
 | projects | 3 | Application module |
+| components | - | Added shader toy and audio visualizers |
+| lib | - | Added live audio processing |
 
 ## Architecture Insights
 
