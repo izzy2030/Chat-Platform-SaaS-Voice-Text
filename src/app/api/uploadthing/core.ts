@@ -27,6 +27,31 @@ export const uploadRouter = {
         fileUrl: file.ufsUrl,
       };
     }),
+  knowledgeBaseDocument: f({
+    blob: {
+      maxFileCount: 1,
+      maxFileSize: "16MB",
+    },
+  })
+    .input(
+      z.object({
+        knowledgeBaseId: z.string(),
+        userId: z.string(),
+      })
+    )
+    .middleware(async ({ input }) => {
+      return { ...input };
+    })
+    .onUploadComplete(async ({ file, metadata }) => {
+      return {
+        knowledgeBaseId: metadata.knowledgeBaseId,
+        userId: metadata.userId,
+        fileKey: file.key,
+        fileUrl: file.ufsUrl,
+        fileName: file.name,
+        mimeType: file.type,
+      };
+    }),
 } satisfies FileRouter;
 
 export type UploadRouter = typeof uploadRouter;

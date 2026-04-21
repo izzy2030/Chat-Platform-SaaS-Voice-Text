@@ -76,6 +76,23 @@ export const getById = query({
   },
 });
 
+export const getPublicConfig = query({
+  args: { id: v.id("widgets") },
+  handler: async (ctx, args) => {
+    const widget = await ctx.db.get(args.id);
+    if (!widget) return null;
+    return {
+      id: widget._id,
+      webhookUrl: widget.webhookUrl,
+      type: widget.type,
+      theme: widget.theme,
+      brand: widget.brand,
+      config: widget.config,
+      knowledgeBaseId: widget.knowledgeBaseId,
+    };
+  },
+});
+
 export const getTheme = query({
   args: { id: v.id("widgets"), userId: v.string() },
   handler: async (ctx, args) => {
@@ -89,6 +106,7 @@ export const create = mutation({
   args: {
     name: v.string(),
     projectId: v.id("projects"),
+    knowledgeBaseId: v.optional(v.id("knowledgeBases")),
     type: v.union(v.literal("text"), v.literal("voice")),
     webhookUrl: v.string(),
     allowedDomains: v.array(v.string()),
@@ -134,6 +152,8 @@ export const create = mutation({
         webhookSecret: v.optional(v.string()),
         defaultLanguage: v.optional(v.union(v.literal("EN"), v.literal("ES"))),
         recordingRetentionDays: v.optional(v.number()),
+        aiModel: v.optional(v.string()),
+        systemPrompt: v.optional(v.string()),
       })
     ),
   },
@@ -148,6 +168,7 @@ export const update = mutation({
     userId: v.string(),
     name: v.optional(v.string()),
     projectId: v.optional(v.id("projects")),
+    knowledgeBaseId: v.optional(v.id("knowledgeBases")),
     type: v.optional(v.union(v.literal("text"), v.literal("voice"))),
     webhookUrl: v.optional(v.string()),
     allowedDomains: v.optional(v.array(v.string())),
@@ -182,6 +203,8 @@ export const update = mutation({
         webhookSecret: v.optional(v.string()),
         defaultLanguage: v.optional(v.union(v.literal("EN"), v.literal("ES"))),
         recordingRetentionDays: v.optional(v.number()),
+        aiModel: v.optional(v.string()),
+        systemPrompt: v.optional(v.string()),
       })
     ),
   },

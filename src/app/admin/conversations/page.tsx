@@ -7,6 +7,7 @@ import { formatDistanceToNow } from "date-fns";
 import {
   Bot,
   Globe,
+  Loader2,
   MessageSquare,
   PhoneCall,
   Search,
@@ -16,6 +17,7 @@ import {
 
 import { api } from "convex/_generated/api";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
   Select,
@@ -55,6 +57,8 @@ export default function ConversationsPage() {
     isLoaded && user ? { userId: user.id, limit: 150 } : "skip"
   );
   const markAsRead = useMutation(api.conversations.markAsRead);
+  const updateStatus = useMutation(api.conversations.updateStatus);
+  const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
 
   const filteredConversations = useMemo(() => {
     if (!conversationList) {
@@ -116,10 +120,27 @@ export default function ConversationsPage() {
   const unreadCount = conversationList?.filter((item) => item.unreadForOwner).length ?? 0;
   const escalatedCount = conversationList?.filter((item) => item.status === "escalated").length ?? 0;
 
+  const handleResolveConversation = async () => {
+    if (!user || !activeConversation?._id) {
+      return;
+    }
+
+    setIsUpdatingStatus(true);
+    try {
+      await updateStatus({
+        userId: user.id,
+        conversationId: activeConversation._id,
+        status: "resolved",
+      });
+    } finally {
+      setIsUpdatingStatus(false);
+    }
+  };
+
   return (
-    <div className="min-h-full p-4 md:p-5 lg:p-6 bg-transparent">
+    <div className="min-h-full bg-[radial-gradient(circle_at_top_left,_rgba(59,131,50,0.08),_transparent_22%),linear-gradient(180deg,_rgba(247,248,245,0.88)_0%,_rgba(255,255,255,1)_40%)] p-4 md:p-5 lg:p-6">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-5">
-        <section className="rounded-[28px] bg-card shadow-sm">
+        <section className="rounded-[30px] border border-[#E4EBE1] bg-white/92 shadow-[0_20px_60px_-42px_rgba(24,28,29,0.3)]">
           <div className="flex flex-col gap-5 p-5 md:p-6">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
               <div className="space-y-2">
@@ -190,7 +211,7 @@ export default function ConversationsPage() {
         </section>
 
         <section className="grid gap-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(320px,0.9fr)]">
-          <div className="overflow-hidden rounded-[28px] bg-card shadow-sm">
+          <div className="overflow-hidden rounded-[30px] border border-[#E4EBE1] bg-white/92 shadow-[0_20px_60px_-42px_rgba(24,28,29,0.3)]">
             <div className="flex items-center justify-between border-b border-[#ECF0ED] dark:border-zinc-800 px-4 py-3">
               <div>
                 <h2 className="text-sm font-black uppercase tracking-[0.18em] text-[#6D7A70] dark:text-zinc-400">
@@ -284,28 +305,40 @@ export default function ConversationsPage() {
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-[28px] bg-card shadow-sm">
+          <div className="overflow-hidden rounded-[30px] bg-[#1C2320] text-white shadow-[0_24px_70px_-34px_rgba(28,35,32,0.8)]">
             {activeConversation ? (
               <div className="flex h-full flex-col">
-                <div className="border-b border-[#ECF0ED] dark:border-zinc-800 px-4 py-4">
+                <div className="border-b border-white/10 px-4 py-4">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="space-y-1">
                       <div className="flex flex-wrap items-center gap-2">
-                        <h2 className="text-lg font-black text-[#191C1D] dark:text-zinc-100">
+                        <h2 className="text-lg font-black text-white">
                           {activeConversation.visitorLabel}
                         </h2>
                         <StatusBadge status={activeConversation.status} />
                       </div>
-                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-semibold text-[#7A877F]">
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-semibold text-white/58">
                         <span>{activeConversation.widgetName}</span>
                         <span className="text-[#B5BEB8]">•</span>
                         <span>Started {formatRelative(activeConversation.startedAt)}</span>
                       </div>
                     </div>
+                    {activeConversation.status !== "resolved" && activeConversation.status !== "escalated" ? (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        disabled={isUpdatingStatus}
+                        onClick={handleResolveConversation}
+                        className="h-9 rounded-2xl border-white/10 bg-white/6 px-4 text-[11px] font-black uppercase tracking-[0.16em] text-white shadow-none hover:bg-white/10"
+                      >
+                        {isUpdatingStatus ? <Loader2 className="mr-2 size-3.5 animate-spin" /> : null}
+                        Close Conversation
+                      </Button>
+                    ) : null}
                   </div>
                 </div>
 
-                <div className="grid gap-3 border-b border-[#ECF0ED] dark:border-zinc-800 bg-[#FBFCFB] dark:bg-zinc-900/50 p-4 text-sm text-[#536059] dark:text-zinc-300 md:grid-cols-2">
+                <div className="grid gap-3 border-b border-white/10 bg-white/5 p-4 text-sm text-white md:grid-cols-2">
                   <DetailRow label="Channel" value={activeConversation.channel} icon={activeConversation.channel === "voice" ? PhoneCall : MessageSquare} />
                   <DetailRow label="Visitor" value={activeConversation.visitorEmail ?? activeConversation.visitorLabel} icon={User} />
                   <DetailRow label="Current Page" value={activeConversation.pageUrl ?? "Unknown page"} icon={Globe} />
@@ -314,15 +347,22 @@ export default function ConversationsPage() {
 
                 <div className="flex flex-1 flex-col gap-3 p-4">
                   <div className="flex items-center justify-between">
-                    <h3 className="text-xs font-black uppercase tracking-[0.18em] text-[#6D7A70] dark:text-zinc-400">
+                    <h3 className="text-xs font-black uppercase tracking-[0.18em] text-white/58">
                       Transcript
                     </h3>
-                    <span className="text-[11px] font-semibold text-[#8B978F] dark:text-zinc-500">
-                      Latest activity {formatRelative(activeConversation.lastMessageAt)}
-                    </span>
+                    <div className="text-right">
+                      <span className="block text-[11px] font-semibold text-white/58">
+                        Latest activity {formatRelative(activeConversation.lastMessageAt)}
+                      </span>
+                      {activeConversation.resolutionReason ? (
+                          <span className="block text-[10px] font-semibold text-white/46">
+                          {formatResolutionReason(activeConversation.resolutionReason)}
+                        </span>
+                      ) : null}
+                    </div>
                   </div>
 
-                  <div className="flex flex-1 flex-col gap-2 rounded-[24px] bg-[#F5F8F6] dark:bg-zinc-800/60 p-3">
+                  <div className="flex flex-1 flex-col gap-2 rounded-[24px] bg-white/5 p-3">
                     {activeConversation.messages.map((message) => (
                       <div
                         key={message._id}
@@ -363,8 +403,8 @@ export default function ConversationsPage() {
             ) : (
               <div className="flex min-h-[420px] items-center justify-center p-8 text-center">
                 <div className="space-y-2">
-                  <h3 className="text-lg font-black text-[#191C1D] dark:text-zinc-100">Pick a conversation to inspect</h3>
-                  <p className="text-sm leading-6 text-[#7E8B83] dark:text-zinc-400">
+                  <h3 className="text-lg font-black text-white">Pick a conversation to inspect</h3>
+                  <p className="text-sm leading-6 text-white/62">
                     Visitor metadata and transcript details will appear here.
                   </p>
                 </div>
@@ -393,7 +433,7 @@ function CompactMetric({
   };
 
   return (
-    <div className="rounded-[20px] bg-muted/50 px-4 py-3">
+    <div className="rounded-[22px] border border-[#E4EBE1] bg-white/82 px-4 py-3">
       <div className={cn("mb-2 flex size-8 items-center justify-center rounded-2xl", toneClasses[tone])}>
         <MessageSquare className="size-4" />
       </div>
@@ -432,13 +472,13 @@ function DetailRow({
   icon: React.ComponentType<{ className?: string }>;
 }) {
   return (
-    <div className="flex items-start gap-3 rounded-2xl bg-muted/30 p-3">
-      <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-2xl bg-[#F4F7F5] dark:bg-zinc-800 text-[#66746C] dark:text-zinc-400">
+    <div className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/6 p-3">
+      <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-white/70">
         <Icon className="size-4" />
       </div>
       <div className="min-w-0">
-        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#90A096]">{label}</p>
-        <p className="mt-1 break-words text-sm font-semibold text-[#31423B] dark:text-zinc-200">{value}</p>
+        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-white/46">{label}</p>
+        <p className="mt-1 break-words text-sm font-semibold text-white">{value}</p>
       </div>
     </div>
   );
@@ -446,5 +486,15 @@ function DetailRow({
 
 function formatRelative(value: number) {
   return formatDistanceToNow(new Date(value), { addSuffix: true });
+}
+
+function formatResolutionReason(reason: "manual" | "auto_inactive" | "auto_greeting") {
+  const labels = {
+    manual: "Closed manually",
+    auto_inactive: "Auto-closed after inactivity",
+    auto_greeting: "Auto-closed after greeting-only inactivity",
+  } as const;
+
+  return labels[reason];
 }
 

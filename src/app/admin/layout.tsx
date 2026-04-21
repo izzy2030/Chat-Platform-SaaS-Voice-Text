@@ -10,7 +10,6 @@ import {
   MessageSquare, 
   MessagesSquare, 
   Phone, 
-  BarChart3, 
   BookOpen, 
   Settings, 
   LogOut, 
@@ -104,7 +103,6 @@ function AdminSidebar({ user, handleSignOut, setTheme, theme }: { user: any, han
     { title: 'Widget', icon: MessageSquare, href: '/admin/widget', color: 'text-purple-500' },
     { title: 'Conversations', icon: MessagesSquare, href: '/admin/conversations', color: 'text-blue-500' },
     { title: 'Calls', icon: Phone, href: '/admin/calls', color: 'text-emerald-500' },
-    { title: 'Analytics', icon: BarChart3, href: '/admin/analytics', color: 'text-amber-500' },
     { title: 'Knowledge Base', icon: BookOpen, href: '/admin/knowledge-base', color: 'text-rose-500' },
     { title: 'Settings', icon: Settings, href: '/admin/settings', color: 'text-slate-500' },
   ];

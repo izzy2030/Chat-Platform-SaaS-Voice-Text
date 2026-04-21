@@ -107,9 +107,9 @@ export default function CallsPage() {
   const totalDurationMs = calls?.reduce((sum, call) => sum + call.totalDurationMs, 0) ?? 0;
 
   return (
-    <div className="min-h-full p-4 md:p-5 lg:p-6 bg-transparent">
+    <div className="min-h-full bg-[radial-gradient(circle_at_top_left,_rgba(59,131,50,0.08),_transparent_22%),linear-gradient(180deg,_rgba(247,248,245,0.88)_0%,_rgba(255,255,255,1)_40%)] p-4 md:p-5 lg:p-6">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-5">
-        <section className="rounded-[28px] bg-card shadow-sm">
+        <section className="rounded-[30px] border border-[#E4EBE1] bg-white/92 shadow-[0_20px_60px_-42px_rgba(24,28,29,0.3)]">
           <div className="flex flex-col gap-5 p-5 md:p-6">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
               <div className="space-y-2">
@@ -164,7 +164,7 @@ export default function CallsPage() {
         </section>
 
         <section className="grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,1fr)]">
-          <div className="overflow-hidden rounded-[28px] bg-card shadow-sm">
+          <div className="overflow-hidden rounded-[30px] border border-[#E4EBE1] bg-white/92 shadow-[0_20px_60px_-42px_rgba(24,28,29,0.3)]">
             <div className="flex items-center justify-between border-b border-[#ECF0ED] dark:border-zinc-800 px-4 py-3">
               <div>
                 <h2 className="text-sm font-black uppercase tracking-[0.18em] text-[#6D7A70] dark:text-zinc-400">
@@ -254,18 +254,18 @@ export default function CallsPage() {
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-[28px] bg-card shadow-sm">
+          <div className="overflow-hidden rounded-[30px] bg-[#1C2320] text-white shadow-[0_24px_70px_-34px_rgba(28,35,32,0.8)]">
             {activeCall ? (
               <div className="flex h-full flex-col">
-                <div className="border-b border-[#ECF0ED] dark:border-zinc-800 px-4 py-4">
+                <div className="border-b border-white/10 px-4 py-4">
                   <div className="space-y-1">
                     <div className="flex flex-wrap items-center gap-2">
-                      <h2 className="text-lg font-black text-[#191C1D] dark:text-zinc-100">
+                      <h2 className="text-lg font-black text-white">
                         {activeCall.visitorLabel}
                       </h2>
                       <StatusBadge status={activeCall.status} />
                     </div>
-                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-semibold text-[#7A877F]">
+                    <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-semibold text-white/58">
                       <span>{activeCall.widgetName}</span>
                       <span className="text-[#B5BEB8]">•</span>
                       <span>{activeCall.recordingCount} clips</span>
@@ -275,7 +275,7 @@ export default function CallsPage() {
                   </div>
                 </div>
 
-                <div className="grid gap-3 border-b border-[#ECF0ED] dark:border-zinc-800 bg-[#FBFCFB] dark:bg-zinc-900/50 p-4 text-sm text-[#536059] dark:text-zinc-300 md:grid-cols-2">
+                <div className="grid gap-3 border-b border-white/10 bg-white/5 p-4 text-sm text-white md:grid-cols-2">
                   <DetailRow label="Channel" value="voice" icon={PhoneCall} />
                   <DetailRow label="Visitor" value={activeCall.visitorEmail ?? activeCall.visitorLabel} icon={User} />
                   <DetailRow label="Current Page" value={activeCall.pageUrl ?? "Unknown page"} icon={Globe} />
@@ -284,32 +284,32 @@ export default function CallsPage() {
 
                 <div className="flex flex-1 flex-col gap-4 p-4">
                   <div>
-                    <h3 className="text-xs font-black uppercase tracking-[0.18em] text-[#6D7A70] dark:text-zinc-400">
+                    <h3 className="text-xs font-black uppercase tracking-[0.18em] text-white/58">
                       Recordings
                     </h3>
-                    <p className="mt-1 text-[11px] font-medium text-[#8B978F] dark:text-zinc-500">
+                    <p className="mt-1 text-[11px] font-medium text-white/52">
                       Stored voice clips from this audio session.
                     </p>
                   </div>
 
                   <div className="flex flex-col gap-3">
                     {activeCall.messages.filter((message) => message.kind === "audio").length === 0 ? (
-                      <div className="rounded-[20px] border border-dashed border-[#DCE4DF] dark:border-zinc-800 bg-[#F8FAF9] p-4 text-sm font-medium text-[#6D7A70] dark:text-zinc-400">
+                      <div className="rounded-[20px] border border-dashed border-white/10 bg-white/5 p-4 text-sm font-medium text-white/62">
                         No audio clips were stored for this call yet.
                       </div>
                     ) : (
                       activeCall.messages
                         .filter((message) => message.kind === "audio")
                         .map((message) => (
-                          <div key={message._id} className="rounded-[20px] bg-muted/30 p-4">
+                          <div key={message._id} className="rounded-[20px] bg-white/5 p-4">
                             <div className="mb-3 flex items-center justify-between gap-3">
                               <div className="flex items-center gap-2">
-                                <div className="flex size-9 items-center justify-center rounded-2xl bg-white dark:bg-zinc-900 text-[#3b8332] shadow-sm">
+                                <div className="flex size-9 items-center justify-center rounded-2xl bg-white text-[#3b8332] shadow-sm">
                                   <AudioLines className="size-4" />
                                 </div>
                                 <div>
-                                  <p className="text-sm font-black text-[#191C1D] dark:text-zinc-100">Voice Recording</p>
-                                  <p className="text-[11px] font-semibold text-[#7A877F]">
+                                  <p className="text-sm font-black text-white">Voice Recording</p>
+                                  <p className="text-[11px] font-semibold text-white/52">
                                     {formatRelative(message.createdAt)}
                                   </p>
                                 </div>
@@ -323,7 +323,7 @@ export default function CallsPage() {
                                 <source src={message.audioUrl} />
                               </audio>
                             ) : (
-                              <p className="text-xs font-medium text-[#7E8B83] dark:text-zinc-400">
+                              <p className="text-xs font-medium text-white/58">
                                 {message.expiresAt && message.expiresAt <= Date.now()
                                   ? "This recording has expired."
                                   : "Recording upload unavailable for this clip."}
@@ -344,7 +344,7 @@ export default function CallsPage() {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-7 gap-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider text-[#3b8332] dark:text-emerald-500 hover:bg-[#f0f7ef] dark:bg-[#3b8332]/10 hover:text-[#3b8332] dark:text-emerald-500"
+                      className="h-7 gap-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider text-[#A7D49C] hover:bg-white/10 hover:text-white"
                         onClick={() => {
                           const content = activeCall.messages
                             .map((m) => {
@@ -368,7 +368,7 @@ export default function CallsPage() {
                       </Button>
                     )}
                   </div>
-                  <div className="mt-3 flex flex-col gap-2 rounded-[24px] bg-[#F5F8F6] dark:bg-zinc-800/60 p-3">
+                  <div className="mt-3 flex flex-col gap-2 rounded-[24px] bg-white/5 p-3">
                     {activeCall.messages.map((message) => (
                       <div
                         key={message._id}
@@ -416,8 +416,8 @@ export default function CallsPage() {
             ) : (
               <div className="flex min-h-[420px] items-center justify-center p-8 text-center">
                 <div className="space-y-2">
-                  <h3 className="text-lg font-black text-[#191C1D] dark:text-zinc-100">Pick a call to inspect</h3>
-                  <p className="text-sm leading-6 text-[#7E8B83] dark:text-zinc-400">
+                  <h3 className="text-lg font-black text-white">Pick a call to inspect</h3>
+                  <p className="text-sm leading-6 text-white/62">
                     Recording playback and transcript details will appear here.
                   </p>
                 </div>
@@ -446,7 +446,7 @@ function Metric({
   };
 
   return (
-    <div className="rounded-[20px] bg-muted/50 px-4 py-3">
+    <div className="rounded-[22px] border border-[#E4EBE1] bg-white/82 px-4 py-3">
       <div className={cn("mb-2 flex size-8 items-center justify-center rounded-2xl", toneClasses[tone])}>
         <PhoneCall className="size-4" />
       </div>
@@ -485,13 +485,13 @@ function DetailRow({
   icon: React.ComponentType<{ className?: string }>;
 }) {
   return (
-    <div className="flex items-start gap-3 rounded-2xl bg-muted/30 p-3">
-      <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-2xl bg-[#F4F7F5] dark:bg-zinc-800 text-[#66746C] dark:text-zinc-400">
+    <div className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/6 p-3">
+      <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-white/70">
         <Icon className="size-4" />
       </div>
       <div className="min-w-0">
-        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-[#90A096]">{label}</p>
-        <p className="mt-1 break-words text-sm font-semibold text-[#31423B] dark:text-zinc-200">{value}</p>
+        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-white/46">{label}</p>
+        <p className="mt-1 break-words text-sm font-semibold text-white">{value}</p>
       </div>
     </div>
   );

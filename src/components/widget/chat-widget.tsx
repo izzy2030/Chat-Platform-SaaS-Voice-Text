@@ -29,7 +29,10 @@ interface ChatWidgetProps {
     config?: {
       defaultLanguage?: 'EN' | 'ES';
       recordingRetentionDays?: number;
+      aiModel?: string;
+      systemPrompt?: string;
     };
+    knowledgeBaseId?: string;
   };
   sessionId: string;
 }
@@ -156,6 +159,7 @@ export function ChatWidgetComponent({
     visitorPageUrl,
     theme,
     recordingRetentionDays: widgetConfig.config?.recordingRetentionDays,
+    systemPrompt: widgetConfig.config?.systemPrompt,
     apiKey: geminiApiKey,
     recordVisitorMessage: async (args) => { void recordVisitorMessage(args as Parameters<typeof recordVisitorMessage>[0]); },
     recordAgentMessage: async (args) => { void recordAgentMessage(args as Parameters<typeof recordAgentMessage>[0]); },
@@ -181,15 +185,38 @@ export function ChatWidgetComponent({
     });
 
     try {
-      const response = await fetch(widgetConfig.webhook_url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId, action: 'sendMessage', chatInput: inputValue }),
-      });
+      let output: string;
 
-      if (!response.ok) throw new Error('Webhook failed');
-      const responseData = await response.json();
-      const output = responseData.output || "Sorry, I didn't understand that.";
+      if (widgetConfig.webhook_url) {
+        const response = await fetch(widgetConfig.webhook_url, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sessionId, action: 'sendMessage', chatInput: inputValue }),
+        });
+
+        if (!response.ok) throw new Error('Webhook failed');
+        const responseData = await response.json();
+        output = responseData.output || "Sorry, I didn't understand that.";
+      } else {
+        const chatHistory = messages.map((m) => ({
+          role: m.sender === 'user' ? 'user' : 'bot',
+          text: m.text,
+        }));
+
+        const response = await fetch('/api/chat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            widgetId: widgetConfig.id,
+            message: inputValue,
+            history: chatHistory,
+          }),
+        });
+
+        if (!response.ok) throw new Error('Chat API failed');
+        const responseData = await response.json();
+        output = responseData.output || "Sorry, I didn't understand that.";
+      }
 
       const botMessage: Message = { id: 'bot-' + Date.now().toString(), text: output, sender: 'bot' };
       void recordAgentMessage({

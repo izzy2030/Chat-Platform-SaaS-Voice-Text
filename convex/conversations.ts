@@ -1,4 +1,5 @@
 import { v } from "convex/values";
+import { getEffectiveConversationState } from "../src/lib/conversation-status";
 
 import { Doc, Id } from "./_generated/dataModel";
 import { mutation, query, MutationCtx } from "./_generated/server";
@@ -127,6 +128,21 @@ async function appendMessage(
   return conversation._id;
 }
 
+function decorateConversationStatus<T extends Doc<"conversations">>(conversation: T) {
+  const { status, resolutionReason } = getEffectiveConversationState({
+    status: conversation.status,
+    lastMessageAt: conversation.lastMessageAt,
+    lastMessagePreview: conversation.lastMessagePreview,
+    messageCount: conversation.messageCount,
+  });
+
+  return {
+    ...conversation,
+    status,
+    resolutionReason,
+  };
+}
+
 export const listByUser = query({
   args: {
     userId: v.string(),
@@ -150,7 +166,7 @@ export const listByUser = query({
     return conversations.map((conversation) => {
       const widget = widgetMap.get(conversation.widgetId);
       return {
-        ...conversation,
+        ...decorateConversationStatus(conversation),
         widgetName: widget?.name ?? "Unknown Widget",
       };
     });
@@ -178,7 +194,7 @@ export const getById = query({
       .take(200);
 
     return {
-      ...conversation,
+      ...decorateConversationStatus(conversation),
       widgetName: widget?.name ?? "Unknown Widget",
       messages: messages.map((message) => ({
         ...message,
@@ -211,7 +227,7 @@ export const listCallsByUser = query({
     }
 
     return conversations.map((conversation) => ({
-      ...conversation,
+      ...decorateConversationStatus(conversation),
       widgetName: widgetMap.get(conversation.widgetId)?.name ?? "Unknown Widget",
     }));
   },
@@ -233,14 +249,18 @@ export const getDashboardSummary = query({
       }
     }
 
+    const effectiveConversations = recentConversations.map((conversation) =>
+      decorateConversationStatus(conversation)
+    );
+
     return {
       stats: {
-        conversationCount: recentConversations.length,
-        liveCount: recentConversations.filter((conversation) => conversation.status === "active").length,
-        unreadCount: recentConversations.filter((conversation) => conversation.unreadForOwner).length,
-        resolvedCount: recentConversations.filter((conversation) => conversation.status === "resolved").length,
+        conversationCount: effectiveConversations.length,
+        liveCount: effectiveConversations.filter((conversation) => conversation.status === "active").length,
+        unreadCount: effectiveConversations.filter((conversation) => conversation.unreadForOwner).length,
+        resolvedCount: effectiveConversations.filter((conversation) => conversation.status === "resolved").length,
       },
-      recentConversations: recentConversations.slice(0, 6).map((conversation) => ({
+      recentConversations: effectiveConversations.slice(0, 6).map((conversation) => ({
         ...conversation,
         widgetName: widgetMap.get(conversation.widgetId)?.name ?? "Unknown Widget",
       })),

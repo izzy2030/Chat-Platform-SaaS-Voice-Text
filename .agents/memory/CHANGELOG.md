@@ -2,6 +2,10 @@
 
 > Recent structural changes to this project.
 
+- **2026-04-20**: Wired the text widget to the Gemini-backed `/api/chat` path, including widget-selected `aiModel` support from Convex config.
+- **2026-04-20**: Added a horizontally scrollable Widget Studio tab rail and a new `System Prompt` tab that saves `config.systemPrompt`.
+- **2026-04-20**: Unified text and voice agent prompt fallback logic so a custom system prompt overrides built-ins, while blank values fall back to default instructions.
+- **2026-04-20**: Added derived conversation auto-resolution without cron: greeting-only threads auto-close after 2 minutes, other inactive threads after 15 minutes, plus a manual close button in the admin conversation detail view.
 - **2026-04-19**: Removed "Copy Embed" button from main dashboard and linked "Settings" button to `/admin/settings`.
 - **2026-04-19**: Removed unnecessary "Hydra Chat / DASHBOARD" breadcrumbs from the main dashboard top to save vertical space.
 - **2026-04-19**: Color-coded sidebar icons with distinct semantic colors (Emerald, Purple, Blue, Green, Amber, Rose, Slate) for better visual identification.

@@ -33,6 +33,9 @@ SaaS voice chat platform built with Next.js and Convex. The app exposes an admin
 - Conversations page is a live inbox-style log of visitor text chats.
 - Calls page is a live log of voice sessions with transcripts, recording counts, playback metadata, and CSV/TXT export.
 - Widget Studio lives at `/admin/widget/[widgetId]` and is fully styled with a high-fidelity mobile preview.
+- Top-level admin pages now share a more premium surface language built from white primary cards, pale green support surfaces, and selective dark contrast blocks.
+- Settings page is now a real `Brand & Workspace` screen rather than a placeholder, with brand kit, brand voice, workspace identity, assistant defaults, and a live preview rail.
+- A reusable repo-local design skill documenting this UI approach now exists at `.agents/skills/admin-ui-surface-language/SKILL.md`.
 - Voice recordings now mix visitor and AI audio before `MediaRecorder` capture.
 - Voice transcripts are saved live to Convex during the interaction.
 - TypeScript issues around the UploadThing router were already addressed.
@@ -46,11 +49,13 @@ SaaS voice chat platform built with Next.js and Convex. The app exposes an admin
 - `lucide-react` here exports `Waves`, not `Waveform`.
 - Repo-wide typecheck still has unrelated noise in `next.config.ts` and admin theming, so backend work may need `npx convex dev --once --typecheck disable`.
 - For the Gemini Live visualizer, pass `analyserNode={null}` to `AgentAudioVisualizerAura`.
+- Current repo typecheck failure is specifically a missing analytics route reference in `.next/types/validator.ts` pointing at `src/app/admin/analytics/page.js`.
 
 ## Current Work
 
 - Verifying mixed audio recording quality in a live browser environment.
 - Refining the voice UI to better show when the agent is thinking versus speaking.
+- Establishing a reusable premium admin UI system and propagating it across the main admin surfaces.
 
 ## Next Task
 

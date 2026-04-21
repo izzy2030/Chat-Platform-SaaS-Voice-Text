@@ -13,6 +13,8 @@ export default function WidgetPage({ params }: { params: Promise<{ widgetId: str
     type?: 'text' | 'voice';
     theme?: Record<string, unknown>;
     brand?: Record<string, unknown>;
+    config?: Record<string, unknown>;
+    knowledgeBaseId?: string;
   } | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);

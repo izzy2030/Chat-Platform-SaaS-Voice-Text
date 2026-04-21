@@ -8,7 +8,7 @@ import { useEffect, useState, use } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useQuery, useMutation, useAction } from 'convex/react';
 import { api } from 'convex/_generated/api';
-import { Loader2, Type, Palette, Code, Check, Copy, Globe, FlaskConical, Clock, Sparkles, ArrowLeft } from 'lucide-react';
+import { Loader2, Type, Palette, Code, Check, Copy, Globe, FlaskConical, Clock, Sparkles, ArrowLeft, Database, Plus, X, ExternalLink, Wrench, Cpu, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -21,18 +21,18 @@ import {
 import { Input } from '@/components/ui/input';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import { toast } from '@/hooks/use-toast';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ScrollArea } from '@/components/ui/scroll-area';
 import { ChatWidgetComponent } from '@/components/widget/chat-widget';
 import Link from 'next/link';
 import { useDebouncedAutosave } from '@/hooks/use-debounced-autosave';
 import confetti from 'canvas-confetti';
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
 
 const widgetSchema = z.object({
-  // Content Tab
   name: z.string().min(1, 'Widget Title is required'),
   webhookUrl: z.string().url('Invalid Webhook URL').or(z.string().length(0)),
   recordingRetentionDays: z.number().min(1).max(365),
@@ -41,6 +41,9 @@ const widgetSchema = z.object({
   placeholderText: z.string().optional(),
   botName: z.string().optional(),
   showBranding: z.boolean().default(true),
+  knowledgeBaseId: z.string().optional(),
+  aiModel: z.string().optional(),
+  systemPrompt: z.string().optional(),
 
   // Design Tab
   accentColor: z.string().optional(),
@@ -154,6 +157,11 @@ export default function BuilderPage({
   const [copiedIframe, setCopiedIframe] = useState(false);
   const [copiedKey, setCopiedKey] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<Date | null>(null);
+  const [showCreateKb, setShowCreateKb] = useState(false);
+  const [newKbName, setNewKbName] = useState('');
+  const [newKbUrl, setNewKbUrl] = useState('');
+  const [isCreatingKb, setIsCreatingKb] = useState(false);
+  const tabRailRef = React.useRef<HTMLDivElement>(null);
   const hasHydratedRef = React.useRef(false);
   const { user, isLoaded } = useUser();
 
@@ -161,6 +169,14 @@ export default function BuilderPage({
     api.widgets.getById,
     isLoaded && user ? { id: widgetId as any, userId: user.id } : 'skip'
   );
+  
+  const knowledgeBases = useQuery(
+    api.knowledgeBases.listByUser,
+    isLoaded && user ? { userId: user.id } : 'skip'
+  );
+
+  const createKnowledgeBase = useMutation(api.knowledgeBases.createWebsiteDraft);
+  const recrawlWebsite = useAction(api.knowledgeBaseActions.recrawlWebsite);
   
   const updateWidget = useMutation(api.widgets.update);
   const runTestWebhook = useAction(api.widgets.testWebhook);
@@ -176,7 +192,10 @@ export default function BuilderPage({
       botName: 'AI Assistant',
       showBranding: true,
       recordingRetentionDays: 60,
-      
+      knowledgeBaseId: '',
+      aiModel: '',
+      systemPrompt: '',
+
       accentColor: '#3b8332',
       headerTextColor: '#000000',
       chatBackgroundColor: '#ffffff',
@@ -203,8 +222,11 @@ export default function BuilderPage({
         userId: user.id,
         name: data.name,
         webhookUrl: data.webhookUrl,
+        knowledgeBaseId: data.knowledgeBaseId ? (data.knowledgeBaseId as any) : undefined,
         config: {
           recordingRetentionDays: data.recordingRetentionDays,
+          aiModel: data.aiModel || undefined,
+          systemPrompt: data.systemPrompt?.trim() || undefined,
         },
         theme: {
           headerTitle: data.name,
@@ -287,6 +309,9 @@ export default function BuilderPage({
         fontFamily: widget.theme?.fontFamily || 'Inter, sans-serif',
         successConfetti: widget.theme?.successConfetti || 'small-burst',
         recordingRetentionDays: widget.config?.recordingRetentionDays ?? 60,
+        knowledgeBaseId: widget.knowledgeBaseId || '',
+        aiModel: widget.config?.aiModel || '',
+        systemPrompt: widget.config?.systemPrompt || '',
       };
       form.reset(initialValues);
       autosave.markPersisted(initialValues);
@@ -351,6 +376,36 @@ export default function BuilderPage({
     navigator.clipboard.writeText(text);
     setter(true);
     setTimeout(() => setter(false), 2000);
+  };
+
+  const scrollTabRail = (direction: 'left' | 'right') => {
+    tabRailRef.current?.scrollBy({
+      left: direction === 'left' ? -180 : 180,
+      behavior: 'smooth',
+    });
+  };
+
+  const handleCreateKb = async () => {
+    if (!user || !widget || !newKbName.trim() || !newKbUrl.trim()) return;
+    setIsCreatingKb(true);
+    try {
+      const result = await createKnowledgeBase({
+        userId: user.id,
+        projectId: widget.projectId,
+        name: newKbName.trim(),
+        websiteUrl: newKbUrl.trim(),
+      });
+      form.setValue('knowledgeBaseId', result.knowledgeBaseId, { shouldDirty: true });
+      recrawlWebsite({ knowledgeBaseId: result.knowledgeBaseId, userId: user.id });
+      setShowCreateKb(false);
+      setNewKbName('');
+      setNewKbUrl('');
+      toast({ title: 'Knowledge Base Created', description: 'Crawling website in the background...' });
+    } catch (error: any) {
+      toast({ variant: 'destructive', title: 'Error', description: error.message });
+    } finally {
+      setIsCreatingKb(false);
+    }
   };
 
   if (widget === undefined) {
@@ -437,17 +492,48 @@ export default function BuilderPage({
         </div>
 
         <Tabs defaultValue="content" className="flex flex-col flex-1 min-h-0 w-full px-6 pt-4">
-          <TabsList className="w-full bg-muted/50 border border-border/20 rounded-[10px_3px_10px_3px] p-1 h-auto grid grid-cols-3 mb-6">
-            <TabsTrigger value="content" className="rounded-[8px_2px_8px_2px] text-[10px] py-1.5 data-[state=active]:bg-background data-[state=active]:text-foreground text-muted-foreground/60 font-bold uppercase tracking-wider shadow-none transition-all">
-              Content
-            </TabsTrigger>
-            <TabsTrigger value="design" className="rounded-[8px_2px_8px_2px] text-[10px] py-1.5 data-[state=active]:bg-background data-[state=active]:text-foreground text-muted-foreground/60 font-bold uppercase tracking-wider shadow-none transition-all">
-              Design
-            </TabsTrigger>
-            <TabsTrigger value="embed" className="rounded-[8px_2px_8px_2px] text-[10px] py-1.5 data-[state=active]:bg-background data-[state=active]:text-foreground text-muted-foreground/60 font-bold uppercase tracking-wider shadow-none transition-all">
-              Embed
-            </TabsTrigger>
-          </TabsList>
+          <div className="mb-6 flex items-center gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 shrink-0 rounded-full border-border/50 bg-background/80 text-muted-foreground hover:text-foreground"
+              onClick={() => scrollTabRail('left')}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <div
+              ref={tabRailRef}
+              className="flex-1 overflow-x-auto scroll-smooth hide-scrollbar"
+            >
+              <TabsList className="inline-flex min-w-max bg-muted/50 border border-border/20 rounded-[10px_3px_10px_3px] p-1 h-auto">
+                <TabsTrigger value="content" className="min-w-[92px] rounded-[8px_2px_8px_2px] text-[10px] py-1.5 data-[state=active]:bg-background data-[state=active]:text-foreground text-muted-foreground/60 font-bold uppercase tracking-wider shadow-none transition-all">
+                  Content
+                </TabsTrigger>
+                <TabsTrigger value="design" className="min-w-[92px] rounded-[8px_2px_8px_2px] text-[10px] py-1.5 data-[state=active]:bg-background data-[state=active]:text-foreground text-muted-foreground/60 font-bold uppercase tracking-wider shadow-none transition-all">
+                  Design
+                </TabsTrigger>
+                <TabsTrigger value="tools" className="min-w-[92px] rounded-[8px_2px_8px_2px] text-[10px] py-1.5 data-[state=active]:bg-background data-[state=active]:text-foreground text-muted-foreground/60 font-bold uppercase tracking-wider shadow-none transition-all">
+                  Tools
+                </TabsTrigger>
+                <TabsTrigger value="embed" className="min-w-[92px] rounded-[8px_2px_8px_2px] text-[10px] py-1.5 data-[state=active]:bg-background data-[state=active]:text-foreground text-muted-foreground/60 font-bold uppercase tracking-wider shadow-none transition-all">
+                  Embed
+                </TabsTrigger>
+                <TabsTrigger value="system-prompt" className="min-w-[120px] rounded-[8px_2px_8px_2px] text-[10px] py-1.5 data-[state=active]:bg-background data-[state=active]:text-foreground text-muted-foreground/60 font-bold uppercase tracking-wider shadow-none transition-all">
+                  System Prompt
+                </TabsTrigger>
+              </TabsList>
+            </div>
+            <Button
+              type="button"
+              variant="outline"
+              size="icon"
+              className="h-8 w-8 shrink-0 rounded-full border-border/50 bg-background/80 text-muted-foreground hover:text-foreground"
+              onClick={() => scrollTabRail('right')}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
 
           <div className="flex-1 overflow-y-auto pretty-scrollbar -mx-6 px-6">
             <Form {...form}>
@@ -793,6 +879,215 @@ export default function BuilderPage({
                   </div>
                 </TabsContent>
 
+                {/* TOOLS TAB */}
+                <TabsContent value="tools" className="mt-0 space-y-6 outline-none">
+                  <FormField
+                    control={form.control}
+                    name="aiModel"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel className="text-[10px] text-muted-foreground/70 font-bold uppercase tracking-wider">
+                          <span className="flex items-center gap-1.5">
+                            <Cpu className="h-3 w-3" />
+                            AI Model
+                          </span>
+                        </FormLabel>
+                        <Select value={field.value || ''} onValueChange={(val) => field.onChange(val)}>
+                          <FormControl>
+                            <SelectTrigger className="h-9 rounded-lg border-border/60 bg-background text-[13px] text-foreground shadow-none">
+                              <SelectValue placeholder="Select a model" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="gemini-2.5-flash" className="text-[13px]">
+                              <span className="flex flex-col">
+                                <span>Gemini 2.5 Flash</span>
+                                <span className="text-[9px] text-muted-foreground">Balanced speed and quality</span>
+                              </span>
+                            </SelectItem>
+                            <SelectItem value="gemini-3-flash-preview" className="text-[13px]">
+                              <span className="flex flex-col">
+                                <span>Gemini 3 Flash</span>
+                                <span className="text-[9px] text-muted-foreground">Latest preview, fast responses</span>
+                              </span>
+                            </SelectItem>
+                            <SelectItem value="gemini-3.1-flash-lite-preview" className="text-[13px]">
+                              <span className="flex flex-col">
+                                <span>Gemini 3.1 Flash-Lite</span>
+                                <span className="text-[9px] text-muted-foreground">Lightweight, fastest responses</span>
+                              </span>
+                            </SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <p className="text-[9px] text-muted-foreground/40 italic px-1">
+                          The Gemini model used to generate responses.
+                        </p>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  <div className="border-t border-border pt-6">
+                    <div className="flex items-center justify-between mb-4">
+                      <Label className="text-[10px] text-muted-foreground/70 font-bold uppercase tracking-wider">
+                        <span className="flex items-center gap-1.5">
+                          <Wrench className="h-3 w-3" />
+                          Connected Tools
+                        </span>
+                      </Label>
+                      <Select>
+                        <SelectTrigger className="h-7 w-auto px-2 rounded-md border border-dashed border-border/60 bg-background text-[10px] text-muted-foreground shadow-none">
+                          <Plus className="h-3 w-3 mr-1" />
+                          <span className="font-bold uppercase tracking-wider">Add Tool</span>
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="placeholder-coming-soon" disabled className="text-[13px] text-muted-foreground italic">
+                            More tools coming soon...
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <FormField
+                      control={form.control}
+                      name="knowledgeBaseId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <div className="flex items-center justify-between mb-1">
+                            <FormLabel className="text-[10px] text-muted-foreground/70 font-bold uppercase tracking-wider mb-0">
+                              <span className="flex items-center gap-1.5">
+                                <Database className="h-3 w-3" />
+                                Knowledge Base
+                              </span>
+                            </FormLabel>
+                            <div className="flex items-center gap-1">
+                              {field.value && (
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="sm"
+                                  className="h-6 px-1.5 text-[9px] font-bold uppercase tracking-wider text-rose-500 hover:bg-rose-500/5 hover:text-rose-500 transition-colors"
+                                  onClick={() => field.onChange('')}
+                                >
+                                  <X className="mr-0.5 h-2.5 w-2.5" />
+                                  Clear
+                                </Button>
+                              )}
+                              <Link
+                                href="/admin/knowledge-base"
+                                target="_blank"
+                                className="h-6 px-1.5 inline-flex items-center text-[9px] font-bold uppercase tracking-wider text-muted-foreground hover:text-foreground transition-colors"
+                              >
+                                <ExternalLink className="mr-0.5 h-2.5 w-2.5" />
+                                Manage
+                              </Link>
+                            </div>
+                          </div>
+                          <FormControl>
+                            <div className="flex gap-2">
+                              <Select
+                                value={field.value || '__none__'}
+                                onValueChange={(val) => field.onChange(val === '__none__' ? '' : val)}
+                              >
+                                <SelectTrigger className="h-9 flex-1 rounded-lg border-border/60 bg-background text-[13px] text-foreground shadow-none">
+                                  <SelectValue placeholder={knowledgeBases === undefined ? 'Loading...' : 'Select a knowledge base'} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="__none__" className="text-[13px] text-muted-foreground">
+                                    None
+                                  </SelectItem>
+                                  {knowledgeBases?.map((kb) => (
+                                    <SelectItem key={kb._id} value={kb._id} className="text-[13px]">
+                                      <span className="flex items-center gap-2">
+                                        {kb.name}
+                                        <span className={`text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded ${
+                                          kb.status === 'ready'
+                                            ? 'bg-emerald-500/10 text-emerald-600'
+                                            : kb.status === 'crawling'
+                                              ? 'bg-amber-500/10 text-amber-600'
+                                              : kb.status === 'error'
+                                                ? 'bg-rose-500/10 text-rose-600'
+                                                : 'bg-muted text-muted-foreground'
+                                        }`}>
+                                          {kb.status}
+                                        </span>
+                                        {kb.pageStats && (
+                                          <span className="text-[9px] text-muted-foreground">
+                                            {kb.pageStats.pagesIndexed} pages
+                                          </span>
+                                        )}
+                                      </span>
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <Dialog open={showCreateKb} onOpenChange={setShowCreateKb}>
+                                <DialogTrigger
+                                  className="h-9 w-9 shrink-0 rounded-lg border border-border/60 inline-flex items-center justify-center text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+                                  disabled={!widget}
+                                >
+                                  <Plus className="h-4 w-4" />
+                                </DialogTrigger>
+                                <DialogContent className="sm:max-w-[425px]">
+                                  <DialogHeader>
+                                    <DialogTitle className="text-sm font-bold uppercase tracking-wider">Create Knowledge Base</DialogTitle>
+                                  </DialogHeader>
+                                  <div className="space-y-4 py-4">
+                                    <div className="space-y-2">
+                                      <Label className="text-[10px] text-muted-foreground/70 font-bold uppercase tracking-wider">Name</Label>
+                                      <Input
+                                        value={newKbName}
+                                        onChange={(e) => setNewKbName(e.target.value)}
+                                        placeholder="My Business KB"
+                                        className="h-9 rounded-lg border-border/60 bg-background text-[13px]"
+                                      />
+                                    </div>
+                                    <div className="space-y-2">
+                                      <Label className="text-[10px] text-muted-foreground/70 font-bold uppercase tracking-wider">Website URL</Label>
+                                      <Input
+                                        value={newKbUrl}
+                                        onChange={(e) => setNewKbUrl(e.target.value)}
+                                        placeholder="https://example.com"
+                                        className="h-9 rounded-lg border-border/60 bg-background text-[13px]"
+                                      />
+                                      <p className="text-[9px] text-muted-foreground/40 italic px-1">
+                                        The site will be crawled to build your knowledge base.
+                                      </p>
+                                    </div>
+                                  </div>
+                                  <DialogFooter>
+                                    <Button
+                                      type="button"
+                                      onClick={handleCreateKb}
+                                      disabled={isCreatingKb || !newKbName.trim() || !newKbUrl.trim()}
+                                      className="h-8 rounded-lg bg-foreground text-background px-4 text-[11px] font-bold uppercase tracking-wider"
+                                    >
+                                      {isCreatingKb ? (
+                                        <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                                      ) : (
+                                        <Sparkles className="mr-2 h-3 w-3" />
+                                      )}
+                                      Create & Crawl
+                                    </Button>
+                                  </DialogFooter>
+                                </DialogContent>
+                              </Dialog>
+                            </div>
+                          </FormControl>
+                          {field.value && knowledgeBases?.find((kb) => kb._id === field.value) && (
+                            <p className="text-[9px] text-muted-foreground/50 px-1 mt-1">
+                              Linked: {knowledgeBases.find((kb) => kb._id === field.value)!.name}
+                              {' '}&middot;{' '}
+                              {knowledgeBases.find((kb) => kb._id === field.value)!.pageStats?.pagesIndexed ?? 0} indexed pages
+                            </p>
+                          )}
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </TabsContent>
+
                 {/* EMBED TAB */}
                 <TabsContent value="embed" className="mt-0 space-y-6 outline-none">
                   <div className="space-y-1.5">
@@ -848,6 +1143,51 @@ export default function BuilderPage({
                       </pre>
                     </div>
                   </div>
+                </TabsContent>
+
+                <TabsContent value="system-prompt" className="mt-0 space-y-6 outline-none">
+                  <div className="rounded-[18px] border border-border/50 bg-muted/20 p-4 space-y-2">
+                    <div className="flex items-start gap-3">
+                      <div className="mt-0.5 flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-foreground text-background">
+                        <FileText className="h-4 w-4" />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-foreground/80">Shared Agent Prompt</p>
+                        <p className="text-[12px] leading-5 text-muted-foreground">
+                          This prompt controls both the text agent and the voice agent. Leave it blank to use the built-in default behavior.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <FormField
+                    control={form.control}
+                    name="systemPrompt"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex items-center justify-between">
+                          <FormLabel className="text-[10px] text-muted-foreground/70 font-bold uppercase tracking-wider">
+                            Prompt Instructions
+                          </FormLabel>
+                          <span className="text-[9px] text-muted-foreground/50">
+                            {field.value?.trim().length ? `${field.value.trim().length} chars` : 'Using built-in prompt'}
+                          </span>
+                        </div>
+                        <FormControl>
+                          <Textarea
+                            {...field}
+                            value={field.value ?? ''}
+                            placeholder={`Example:\nYou are the front-desk assistant for our business.\nAnswer clearly, ask follow-up questions when needed, and keep a polished, upbeat tone.`}
+                            className="min-h-[240px] resize-y rounded-[18px] border-border/60 bg-background px-4 py-3 text-[13px] leading-6 shadow-none"
+                          />
+                        </FormControl>
+                        <p className="text-[10px] text-muted-foreground/50 leading-5 px-1">
+                          When this field has content, it overrides the built-in prompt. Knowledge base context will still be attached automatically for text chat when available.
+                        </p>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </TabsContent>
               </form>
             </Form>

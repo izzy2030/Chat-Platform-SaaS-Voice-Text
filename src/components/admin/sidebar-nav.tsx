@@ -52,29 +52,29 @@ export function SidebarNav() {
   return (
     <Sidebar collapsible="icon" className="border-r border-white/5">
       <SidebarHeader>
-        <div className="flex items-center gap-3 px-2 py-4">
-          <div className="flex aspect-square size-9 items-center justify-center rounded-xl bg-primary shadow-lg shadow-primary/20">
-            <Zap className="size-5 text-white fill-white" />
+        <div className="flex items-center gap-2 px-2 py-3">
+          <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-primary shadow">
+            <Zap className="size-4 text-white fill-white" />
           </div>
           <div className="grid flex-1 text-left text-sm leading-tight">
-            <span className="truncate font-display font-bold text-lg tracking-tight">Antigravity</span>
-            <span className="truncate text-[10px] uppercase font-bold tracking-widest text-primary">Core Node</span>
+            <span className="truncate font-bold text-sm tracking-tight">Antigravity</span>
+            <span className="truncate text-[9px] uppercase font-semibold tracking-wide text-primary">Core</span>
           </div>
         </div>
       </SidebarHeader>
       <SidebarContent>
         <SidebarGroup>
-          <SidebarGroupLabel className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Platform</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-[9px] font-semibold uppercase tracking-widest text-gray-500">Platform</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu className="gap-2">
+            <SidebarMenu className="gap-1">
               <SidebarMenuItem>
                 <SidebarMenuButton
                   render={<Link href="/admin" />}
                   tooltip="Dashboard"
                   isActive={pathname === '/admin'}
-                  className="h-10 transition-all duration-200"
+                  className="h-9 transition-all duration-200"
                 >
-                  <LayoutDashboard size={18} />
+                  <LayoutDashboard size={16} />
                   <span className="font-medium">Dashboard</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -83,9 +83,9 @@ export function SidebarNav() {
                   render={<Link href="/admin/projects" />}
                   tooltip="Projects"
                   isActive={pathname === '/admin/projects'}
-                  className="h-10 transition-all duration-200"
+                  className="h-9 transition-all duration-200"
                 >
-                  <Folder size={18} />
+                  <Folder size={16} />
                   <span className="font-medium">Projects</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -94,9 +94,9 @@ export function SidebarNav() {
                   render={<Link href="/admin/widget/create" />}
                   tooltip="Create Agent"
                   isActive={pathname === '/admin/widget/create'}
-                  className="h-10 transition-all duration-200"
+                  className="h-9 transition-all duration-200"
                 >
-                  <PlusCircle size={18} />
+                  <PlusCircle size={16} />
                   <span className="font-medium">Create Agent</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -105,17 +105,17 @@ export function SidebarNav() {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel className="text-[10px] font-bold uppercase tracking-widest text-gray-500">Settings</SidebarGroupLabel>
+          <SidebarGroupLabel className="text-[9px] font-semibold uppercase tracking-widest text-gray-500">Settings</SidebarGroupLabel>
           <SidebarGroupContent>
-            <SidebarMenu className="gap-2">
+            <SidebarMenu className="gap-1">
               <SidebarMenuItem>
                 <SidebarMenuButton
                   render={<Link href="/admin/profile" />}
                   tooltip="Profile"
                   isActive={pathname === '/admin/profile'}
-                  className="h-10 transition-all duration-200"
+                  className="h-9 transition-all duration-200"
                 >
-                  <User size={18} />
+                  <User size={16} />
                   <span className="font-medium">Profile</span>
                 </SidebarMenuButton>
               </SidebarMenuItem>
@@ -123,16 +123,16 @@ export function SidebarNav() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-      <SidebarFooter className="p-4 gap-4">
+      <SidebarFooter className="p-3 gap-3">
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
               onClick={toggleSidebar}
               tooltip={state === 'expanded' ? 'Collapse' : 'Expand'}
-              className="bg-white/5 hover:bg-white/10 rounded-lg justify-center transition-colors"
+              className="bg-white/5 hover:bg-white/10 rounded justify-center transition-colors"
             >
-              {state === 'expanded' ? <PanelLeftClose size={18} /> : <PanelRightClose size={18} />}
-              <span>{state === 'expanded' ? 'Compact Mode' : ''}</span>
+              {state === 'expanded' ? <PanelLeftClose size={16} /> : <PanelRightClose size={16} />}
+              <span>{state === 'expanded' ? 'Compact' : ''}</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -146,36 +146,36 @@ export function SidebarNav() {
                 render={
                   <SidebarMenuButton
                     size="lg"
-                    className="data-[state=open]:bg-white/5 hover:bg-white/5 transition-colors rounded-xl"
+                    className="data-[state=open]:bg-white/5 hover:bg-white/5 transition-colors rounded-lg"
                   />
                 }
               >
-                <Avatar className="h-9 w-9 rounded-lg border border-white/10">
+                <Avatar className="h-8 w-8 rounded border border-white/10">
                   <AvatarImage
                     src={user?.imageUrl || ''}
                     alt={user?.fullName || ''}
                   />
-                  <AvatarFallback className="rounded-lg bg-primary/20 text-primary font-bold">
+                  <AvatarFallback className="rounded bg-primary/20 text-primary font-semibold text-xs">
                     {getInitials(user?.emailAddresses?.[0]?.emailAddress)}
                   </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight ml-2">
-                  <span className="truncate font-bold">
+                  <span className="truncate font-medium text-xs">
                     {user?.fullName || 'Operator'}
                   </span>
-                  <span className="truncate text-[10px] text-gray-500 uppercase tracking-tighter">
+                  <span className="truncate text-[9px] text-gray-500">
                     {user?.emailAddresses?.[0]?.emailAddress || ''}
                   </span>
                 </div>
-                <Settings className="ml-auto size-4 text-gray-400" />
+                <Settings className="ml-auto size-3.5 text-gray-400" />
               </DropdownMenuTrigger>
-              <DropdownMenuPositioner side="top" align="start" sideOffset={12}>
+              <DropdownMenuPositioner side="top" align="start" sideOffset={8}>
                 <DropdownMenuContent
-                  className="w-[--available-width] min-w-56 glass border-white/10 p-2"
+                  className="w-[--available-width] min-w-48 glass border-white/10 p-1.5"
                 >
-                  <DropdownMenuItem onClick={handleSignOut} className="rounded-lg text-red-400 focus:text-red-400 focus:bg-red-400/10 cursor-pointer">
-                    <LogOut className="mr-2 h-4 w-4" />
-                    Terminate Session
+                  <DropdownMenuItem onClick={handleSignOut} className="rounded text-red-400 focus:text-red-400 focus:bg-red-400/10 cursor-pointer">
+                    <LogOut className="mr-2 h-3.5 w-3.5" />
+                    Log out
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenuPositioner>

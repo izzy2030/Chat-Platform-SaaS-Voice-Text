@@ -70,24 +70,24 @@ function ScriptTagDialog({ widget, open, onOpenChange }: { widget: any | null, o
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px] glass border-white/10">
+      <DialogContent className="sm:max-w-[450px] glass border-white/10">
         <DialogHeader>
-          <DialogTitle>Embed Your AI Agent</DialogTitle>
+          <DialogTitle>Embed Agent</DialogTitle>
           <DialogDescription>
-            Integrate this agent into your platform by adding this script before your closing body tag.
+            Add this script before your closing body tag.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="bg-black/40 border border-white/5 rounded-lg p-4 my-4 font-mono text-xs overflow-x-auto">
+        <div className="bg-black/40 border border-white/5 rounded p-3 my-3 font-mono text-xs overflow-x-auto">
           <code>{scriptTag}</code>
         </div>
 
-        <DialogFooter className="gap-3">
-          <DialogClose render={<Button variant="ghost" />}>
+        <DialogFooter className="gap-2">
+          <DialogClose render={<Button variant="ghost" size="sm" />}>
             Close
           </DialogClose>
-          <Button onClick={handleCopy} className="bg-primary text-white font-bold px-6">
-            <Copy className="mr-2 h-4 w-4" /> Copy Script
+          <Button onClick={handleCopy} size="sm" className="bg-primary text-white font-semibold">
+            <Copy className="mr-1.5 h-3.5 w-3.5" /> Copy
           </Button>
         </DialogFooter>
       </DialogContent>
@@ -149,102 +149,107 @@ export function WidgetList({ projectId }: { projectId?: string }) {
   const renderWidgetCard = (widget: any) => (
     <div
       key={widget._id}
-      className="group bg-card hover:bg-card/80 rounded-2xl shadow-md hover:shadow-xl transition-all duration-300 border border-border/70 overflow-hidden flex flex-col"
+      className="group bg-card hover:bg-card/80 rounded-lg transition-all duration-300 border border-border/70 overflow-hidden flex flex-col"
     >
-      <div className="p-6 pb-5 flex flex-col gap-5 flex-1">
+      <div className="p-4 pb-3 flex flex-col gap-3 flex-1">
         <div className="flex justify-between items-start">
           <div className="space-y-0.5">
-            <h3 className="text-xl font-bold tracking-tight text-foreground">
+            <h3 className="text-base font-semibold tracking-tight text-foreground">
               {widget.name}
             </h3>
-            <p className="font-mono text-[10px] text-muted-foreground uppercase tracking-[0.15em]">
-              AGENT ID: {String(widget._id).slice(0, 8)}...
+            <p className="font-mono text-[9px] text-muted-foreground uppercase tracking-[0.1em]">
+              {String(widget._id).slice(0, 8)}...
             </p>
           </div>
-          <div className="bg-muted/50 px-3 py-1.5 rounded-full flex items-center gap-1.5 border border-border/70">
-            {widget.type === 'voice' ? <Mic size={14} className="text-foreground" /> : <MessageSquare size={14} className="text-foreground" />}
-            <span className="text-xs font-semibold text-foreground">{widget.type === 'voice' ? 'Voice Agent' : 'Chat Agent'}</span>
+          <div className="bg-muted/50 px-2 py-1 rounded-full flex items-center gap-1.5 border border-border/70">
+            {widget.type === 'voice' ? <Mic size={12} className="text-foreground" /> : <MessageSquare size={12} className="text-foreground" />}
+            <span className="text-xs font-medium text-foreground">{widget.type === 'voice' ? 'Voice' : 'Chat'}</span>
           </div>
         </div>
 
-        <div className="bg-muted/30 rounded-xl p-3 flex items-center gap-4 border border-border/60">
-          <div className="w-12 h-12 bg-background rounded-lg shadow-sm border border-border/70 flex items-center justify-center shrink-0">
-            <LineChart className="text-primary w-6 h-6" />
+        <div className="bg-muted/30 rounded-lg p-2.5 flex items-center gap-3 border border-border/60">
+          <div className="w-8 h-8 bg-background rounded border border-border/70 flex items-center justify-center shrink-0">
+            <LineChart className="text-primary w-4 h-4" />
           </div>
-          <div className="space-y-0.5">
-            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.1em]">Current Status</p>
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.4)] animate-pulse" />
-              <p className="font-bold text-foreground text-sm">Active & Operational</p>
+          <div className="space-y-0">
+            <p className="text-[9px] font-medium text-muted-foreground uppercase tracking-[0.1em]">Status</p>
+            <div className="flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+              <p className="font-medium text-foreground text-xs">Active</p>
             </div>
           </div>
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-4 gap-2">
           <Button
             variant="outline"
+            size="sm"
             nativeButton={false}
             render={<Link href={`/admin/theming/${widget._id}`} />}
-            className="h-20 flex-col gap-2 rounded-xl border-border/80 hover:border-primary/30 hover:bg-primary/5 hover:text-primary transition-all group/btn"
+            className="h-14 flex-col gap-1 rounded-lg border-border/80 hover:border-primary/30 hover:bg-primary/5 hover:text-primary transition-all group/btn"
           >
-            <Palette className="w-5 h-5 text-muted-foreground group-hover/btn:text-primary transition-colors" />
-            <span className="font-semibold text-sm">Designer</span>
+            <Palette className="w-4 h-4 text-muted-foreground group-hover/btn:text-primary transition-colors" />
+            <span className="font-medium text-xs">Design</span>
           </Button>
 
           <Button
             variant="outline"
+            size="sm"
             nativeButton={false}
             render={<Link href={`/admin/widget/${widget._id}`} />}
-            className="h-20 flex-col gap-2 rounded-xl border-border/80 hover:border-primary/30 hover:bg-primary/5 hover:text-primary transition-all group/btn"
+            className="h-14 flex-col gap-1 rounded-lg border-border/80 hover:border-primary/30 hover:bg-primary/5 hover:text-primary transition-all group/btn"
           >
-            <Settings className="w-5 h-5 text-muted-foreground group-hover/btn:text-primary transition-colors" />
-            <span className="font-semibold text-sm">Configure</span>
+            <Settings className="w-4 h-4 text-muted-foreground group-hover/btn:text-primary transition-colors" />
+            <span className="font-medium text-xs">Config</span>
           </Button>
 
           <Button
             variant="outline"
-            className="h-20 flex-col gap-2 rounded-xl border-border/80 hover:border-primary/30 hover:bg-primary/5 hover:text-primary transition-all group/btn"
+            size="sm"
+            className="h-14 flex-col gap-1 rounded-lg border-border/80 hover:border-primary/30 hover:bg-primary/5 hover:text-primary transition-all group/btn"
             onClick={() => {
               setSelectedWidget(widget);
               setTestModalOpen(true);
             }}
           >
-            <Eye className="w-5 h-5 text-muted-foreground group-hover/btn:text-primary transition-colors" />
-            <span className="font-semibold text-sm">Preview</span>
+            <Eye className="w-4 h-4 text-muted-foreground group-hover/btn:text-primary transition-colors" />
+            <span className="font-medium text-xs">Preview</span>
           </Button>
 
           <Button
             variant="outline"
-            className="h-20 flex-col gap-2 rounded-xl border-border/80 hover:border-primary/30 hover:bg-primary/5 hover:text-primary transition-all group/btn"
+            size="sm"
+            className="h-14 flex-col gap-1 rounded-lg border-border/80 hover:border-primary/30 hover:bg-primary/5 hover:text-primary transition-all group/btn"
             onClick={() => {
               setSelectedWidget(widget);
               setScriptModalOpen(true);
             }}
           >
-            <Code className="w-5 h-5 text-muted-foreground group-hover/btn:text-primary transition-colors" />
-            <span className="font-semibold text-sm">Embed</span>
+            <Code className="w-4 h-4 text-muted-foreground group-hover/btn:text-primary transition-colors" />
+            <span className="font-medium text-xs">Embed</span>
           </Button>
         </div>
 
         <Button
           variant="ghost"
-          className="h-12 w-full bg-red-500/5 text-red-600 hover:bg-red-500/10 hover:text-red-700 rounded-xl font-semibold"
+          size="sm"
+          className="w-full bg-red-500/5 text-red-600 hover:bg-red-500/10 hover:text-red-700 rounded-lg font-medium"
           onClick={() => {
             setWidgetToDelete(widget);
             setDeleteConfirmOpen(true);
           }}
         >
-          <Trash2 size={16} className="mr-2" /> Remove Agent
+          <Trash2 size={14} className="mr-1.5" /> Remove
         </Button>
       </div>
 
-      <div className="bg-muted/15 px-6 py-4 border-t border-border/60 flex justify-between items-center mt-auto">
-        <p className="text-xs font-medium text-muted-foreground">
-          Last updated {formatDistanceToNow(new Date(widget._creationTime), { addSuffix: true })}
+      <div className="bg-muted/15 px-4 py-2.5 border-t border-border/60 flex justify-between items-center mt-auto">
+        <p className="text-[10px] font-medium text-muted-foreground">
+          {formatDistanceToNow(new Date(widget._creationTime), { addSuffix: true })}
         </p>
-        <Avatar className="w-7 h-7 rounded-lg border border-border/50">
+        <Avatar className="w-6 h-6 rounded border border-border/50">
           <AvatarImage src={user?.imageUrl || ''} />
-          <AvatarFallback className="rounded-lg bg-primary/10 text-primary text-[9px] font-bold">
+          <AvatarFallback className="rounded-lg bg-primary/10 text-primary text-[8px] font-semibold">
             {user?.fullName?.substring(0, 2).toUpperCase() || user?.emailAddresses?.[0]?.emailAddress?.substring(0, 2).toUpperCase() || '??'}
           </AvatarFallback>
         </Avatar>
@@ -254,39 +259,39 @@ export function WidgetList({ projectId }: { projectId?: string }) {
 
   return (
     <div className="w-full">
-      <section className="pb-4">
-        <div className="flex justify-between items-center mb-6">
+      <section className="pb-2">
+        <div className="flex justify-between items-center mb-4">
           <div>
-            <h1 className="text-4xl font-bold text-foreground mb-1 tracking-tightest">Agents</h1>
-            <p className="text-sm text-muted-foreground font-medium">Deployment center for your communication nodes.</p>
+            <h1 className="text-2xl font-bold text-foreground tracking-tight">Agents</h1>
+            <p className="text-sm text-muted-foreground font-medium">Deploy and manage your communication nodes.</p>
           </div>
-          <Button size="lg" nativeButton={false} className="bg-primary hover:bg-primary/90 text-white font-bold h-11 px-6 shadow-xl shadow-primary/20 rounded-lg transition-all hover:scale-105 active:scale-95" render={<Link href="/admin/widget/create" />}>
-            <Plus size={18} className="mr-2" /> Deploys New Agent
+          <Button size="sm" nativeButton={false} className="bg-primary hover:bg-primary/90 text-white font-semibold rounded-lg" render={<Link href="/admin/widget/create" />}>
+            <Plus size={14} className="mr-1.5" /> Deploy
           </Button>
         </div>
 
         {!isLoaded ? (
-          <div className="flex justify-center py-20">
-            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+          <div className="flex justify-center py-12">
+            <Loader2 className="h-6 w-6 animate-spin text-primary" />
           </div>
         ) : (
-          <div className="flex flex-col gap-12">
+          <div className="flex flex-col gap-6">
             {(projects ?? []).map((project) => (
-              <div key={project._id} className="space-y-6">
-                <div className="flex items-center gap-3 pb-3 border-b border-border/50">
-                  <div className="bg-primary/10 p-2 rounded-lg flex items-center justify-center border border-primary/20">
-                    <Folder size={18} className="text-primary fill-primary/20" />
+              <div key={project._id} className="space-y-3">
+                <div className="flex items-center gap-2 pb-2 border-b border-border/50">
+                  <div className="bg-primary/10 p-1.5 rounded flex items-center justify-center border border-primary/20">
+                    <Folder size={14} className="text-primary fill-primary/20" />
                   </div>
-                  <h2 className="text-lg font-bold text-foreground uppercase tracking-[0.2em]">{project.name}</h2>
+                  <h2 className="text-sm font-semibold text-foreground uppercase tracking-[0.15em]">{project.name}</h2>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   {widgetsByProject[project._id]?.map(renderWidgetCard)}
                   {(!widgetsByProject[project._id] || widgetsByProject[project._id].length === 0) && (
-                    <div className="col-span-full py-20 border-2 border-dashed border-border/50 rounded-2xl flex flex-col items-center justify-center bg-muted/20">
-                      <p className="text-lg text-muted-foreground/50 mb-6 font-medium">No active nodes in this project.</p>
-                      <Button variant="outline" size="lg" nativeButton={false} className="rounded-xl px-8" render={<Link href="/admin/widget/create" />}>
-                        Deploy Initial Node
+                    <div className="col-span-full py-10 border-2 border-dashed border-border/50 rounded-lg flex flex-col items-center justify-center bg-muted/20">
+                      <p className="text-sm text-muted-foreground/50 mb-4 font-medium">No agents in this project.</p>
+                      <Button variant="outline" size="sm" nativeButton={false} className="rounded-lg" render={<Link href="/admin/widget/create" />}>
+                        Deploy Agent
                       </Button>
                     </div>
                   )}
@@ -295,16 +300,16 @@ export function WidgetList({ projectId }: { projectId?: string }) {
             ))}
 
             {(projects ?? []).length === 0 && (
-              <Card className="glass py-16 flex flex-col items-center justify-center gap-6 text-center border-white/5">
-                <div style={{ width: '80px', height: '80px' }} className="bg-primary/10 rounded-lg flex items-center justify-center mb-2 animate-float">
-                  <Folder size={40} className="text-primary" />
+              <Card className="py-12 flex flex-col items-center justify-center gap-4 text-center border-white/5">
+                <div className="bg-primary/10 p-3 rounded-lg flex items-center justify-center">
+                  <Folder size={24} className="text-primary" />
                 </div>
                 <div>
-                  <h2 className="text-2xl font-bold mb-1">Platform Initialized</h2>
-                  <p className="text-lg text-muted-foreground">Create your first project to begin deploying AI agents.</p>
+                  <h2 className="text-base font-semibold mb-1">No projects yet</h2>
+                  <p className="text-sm text-muted-foreground">Create a project to start deploying agents.</p>
                 </div>
-                <Button size="lg" nativeButton={false} className="bg-primary font-bold px-8 h-12" render={<Link href="/admin/projects" />}>
-                  Create Your First Project
+                <Button size="sm" nativeButton={false} className="bg-primary font-semibold rounded-lg" render={<Link href="/admin/projects" />}>
+                  Create Project
                 </Button>
               </Card>
             )}
@@ -330,22 +335,22 @@ export function WidgetList({ projectId }: { projectId?: string }) {
       <AlertDialog open={isDeleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
         <AlertDialogContent className="bg-card border-border">
           <AlertDialogHeader>
-            <AlertDialogTitle>Decommission Agent?</AlertDialogTitle>
+            <AlertDialogTitle>Remove agent?</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently decommission <span className="font-bold text-red-500">{widgetToDelete?.name}</span>.
-              All production traffic to this agent will be terminated immediately. This cannot be undone.
+              This will remove <span className="font-semibold text-red-500">{widgetToDelete?.name}</span>.
+              This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel render={<Button variant="ghost" />}>
+            <AlertDialogCancel render={<Button variant="ghost" size="sm" />}>
               Cancel
             </AlertDialogCancel>
-            <AlertDialogAction render={<Button variant="destructive" />}>
+            <AlertDialogAction render={<Button variant="destructive" size="sm" />}>
               <span onClick={async () => {
                 if (!widgetToDelete || !user) return;
                 try {
                   await deleteWidget({ id: widgetToDelete._id, userId: user.id });
-                  toast({ title: 'Agent decommissioned.' });
+                  toast({ title: 'Agent removed.' });
                 } catch (err: any) {
                   toast({ variant: 'destructive', title: 'Error', description: err.message });
                 } finally {
@@ -353,7 +358,7 @@ export function WidgetList({ projectId }: { projectId?: string }) {
                   setWidgetToDelete(null);
                 }
               }}>
-                Confirm Termination
+                Remove
               </span>
             </AlertDialogAction>
           </AlertDialogFooter>

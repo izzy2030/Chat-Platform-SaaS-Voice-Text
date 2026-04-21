@@ -10,6 +10,8 @@
 
 import type * as conversations from "../conversations.js";
 import type * as crons from "../crons.js";
+import type * as knowledgeBaseActions from "../knowledgeBaseActions.js";
+import type * as knowledgeBases from "../knowledgeBases.js";
 import type * as projects from "../projects.js";
 import type * as recordingCleanup from "../recordingCleanup.js";
 import type * as recordingCleanupActions from "../recordingCleanupActions.js";
@@ -24,6 +26,8 @@ import type {
 declare const fullApi: ApiFromModules<{
   conversations: typeof conversations;
   crons: typeof crons;
+  knowledgeBaseActions: typeof knowledgeBaseActions;
+  knowledgeBases: typeof knowledgeBases;
   projects: typeof projects;
   recordingCleanup: typeof recordingCleanup;
   recordingCleanupActions: typeof recordingCleanupActions;

@@ -28,14 +28,14 @@ export function Dashboard() {
 
   return (
     <div className="flex min-h-screen w-full flex-col">
-      <header className="sticky top-0 flex h-16 items-center gap-4 border-b bg-background px-4 md:px-6">
-        <nav className="hidden flex-col gap-6 text-lg font-medium md:flex md:flex-row md:items-center md:gap-5 md:text-sm lg:gap-6">
+      <header className="sticky top-0 flex h-14 items-center gap-3 border-b bg-background px-4">
+        <nav className="hidden flex-col gap-5 text-sm font-medium md:flex md:flex-row md:items-center md:gap-4">
           <Link
             href="/admin"
-            className="flex items-center gap-2 text-lg font-semibold md:text-base"
+            className="flex items-center gap-2 text-base font-semibold"
           >
-            <BotMessageSquareIcon className="h-6 w-6" />
-            <span className="sr-only">Chat Widget Factory</span>
+            <BotMessageSquareIcon className="h-5 w-5" />
+            <span className="sr-only">Antigravity</span>
           </Link>
           <Link
             href="/admin"
@@ -44,10 +44,10 @@ export function Dashboard() {
             Dashboard
           </Link>
         </nav>
-        <div className="flex w-full items-center gap-4 md:ml-auto md:gap-2 lg:gap-4">
+        <div className="flex w-full items-center gap-3 md:ml-auto">
           <div className="ml-auto flex-1 sm:flex-initial">
-            <Button className="rounded-full bg-indigo-600 hover:bg-indigo-700 text-white" nativeButton={false} render={<Link href="/admin/widget/create" />}>
-              Create Widget
+            <Button size="sm" className="bg-primary hover:bg-primary/90 text-white rounded-lg" nativeButton={false} render={<Link href="/admin/widget/create" />}>
+              Create Agent
             </Button>
           </div>
           <DropdownMenu>
@@ -82,7 +82,7 @@ export function Dashboard() {
           </DropdownMenu>
         </div>
       </header>
-      <main className="flex flex-1 flex-col gap-4 p-4 md:gap-8 md:p-8">
+      <main className="flex flex-1 flex-col gap-4 p-4 md:p-6">
         <WidgetList />
       </main>
     </div>
@@ -94,8 +94,8 @@ function BotMessageSquareIcon(props: React.SVGProps<SVGSVGElement>) {
     <svg
       {...props}
       xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
+      width="20"
+      height="20"
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"

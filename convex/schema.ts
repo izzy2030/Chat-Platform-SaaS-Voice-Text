@@ -7,6 +7,112 @@ export default defineSchema({
     userId: v.string(),
   }).index("by_userId", ["userId"]),
 
+  knowledgeBases: defineTable({
+    projectId: v.id("projects"),
+    userId: v.string(),
+    name: v.string(),
+    businessName: v.optional(v.string()),
+    locationName: v.optional(v.string()),
+    websiteUrl: v.optional(v.string()),
+    vertical: v.optional(v.string()),
+    status: v.union(
+      v.literal("draft"),
+      v.literal("crawling"),
+      v.literal("ready"),
+      v.literal("error")
+    ),
+    published: v.boolean(),
+    lastCrawledAt: v.optional(v.number()),
+    publishedAt: v.optional(v.number()),
+    crawlStatusMessage: v.optional(v.string()),
+    sourceCount: v.number(),
+    extractedFacts: v.optional(
+      v.object({
+        businessName: v.optional(v.string()),
+        phone: v.optional(v.string()),
+        email: v.optional(v.string()),
+        address: v.optional(v.string()),
+        hours: v.optional(v.string()),
+        summary: v.optional(v.string()),
+      })
+    ),
+    manualFacts: v.optional(
+      v.object({
+        businessName: v.optional(v.string()),
+        phone: v.optional(v.string()),
+        email: v.optional(v.string()),
+        address: v.optional(v.string()),
+        hours: v.optional(v.string()),
+        summary: v.optional(v.string()),
+      })
+    ),
+  })
+    .index("by_userId_and_name", ["userId", "name"])
+    .index("by_projectId_and_name", ["projectId", "name"]),
+
+  knowledgeBaseSources: defineTable({
+    knowledgeBaseId: v.id("knowledgeBases"),
+    userId: v.string(),
+    type: v.union(v.literal("website"), v.literal("file"), v.literal("text")),
+    label: v.string(),
+    status: v.union(
+      v.literal("idle"),
+      v.literal("crawling"),
+      v.literal("ready"),
+      v.literal("error")
+    ),
+    websiteUrl: v.optional(v.string()),
+    textContent: v.optional(v.string()),
+    fileName: v.optional(v.string()),
+    mimeType: v.optional(v.string()),
+    uploadthingFileKey: v.optional(v.string()),
+    uploadthingUrl: v.optional(v.string()),
+    extractedText: v.optional(v.string()),
+    lastSyncedAt: v.optional(v.number()),
+    errorMessage: v.optional(v.string()),
+    pageCount: v.number(),
+  })
+    .index("by_knowledgeBaseId", ["knowledgeBaseId"])
+    .index("by_userId_and_type", ["userId", "type"]),
+
+  knowledgeBaseChunks: defineTable({
+    knowledgeBaseId: v.id("knowledgeBases"),
+    sourceId: v.id("knowledgeBaseSources"),
+    chunkIndex: v.number(),
+    sectionTitle: v.optional(v.string()),
+    text: v.string(),
+    charCount: v.number(),
+    embeddingStatus: v.union(
+      v.literal("pending"),
+      v.literal("ready"),
+      v.literal("error")
+    ),
+    pinecodeId: v.optional(v.string()),
+    updatedAt: v.number(),
+  })
+    .index("by_knowledgeBaseId_and_chunkIndex", ["knowledgeBaseId", "chunkIndex"])
+    .index("by_sourceId_and_chunkIndex", ["sourceId", "chunkIndex"]),
+
+  knowledgeBasePages: defineTable({
+    knowledgeBaseId: v.id("knowledgeBases"),
+    sourceId: v.id("knowledgeBaseSources"),
+    url: v.string(),
+    title: v.optional(v.string()),
+    summary: v.optional(v.string()),
+    contentSnippet: v.optional(v.string()),
+    included: v.boolean(),
+    crawlStatus: v.union(
+      v.literal("indexed"),
+      v.literal("excluded"),
+      v.literal("error")
+    ),
+    discoveredAt: v.number(),
+    crawledAt: v.number(),
+  })
+    .index("by_knowledgeBaseId_and_crawledAt", ["knowledgeBaseId", "crawledAt"])
+    .index("by_knowledgeBaseId_and_url", ["knowledgeBaseId", "url"])
+    .index("by_sourceId_and_crawledAt", ["sourceId", "crawledAt"]),
+
   conversations: defineTable({
     widgetId: v.id("widgets"),
     userId: v.string(),
@@ -53,6 +159,7 @@ export default defineSchema({
   widgets: defineTable({
     name: v.string(), // "Widget Title" in Content tab
     projectId: v.id("projects"),
+    knowledgeBaseId: v.optional(v.id("knowledgeBases")),
     type: v.union(v.literal("text"), v.literal("voice")),
     webhookUrl: v.string(),
     allowedDomains: v.array(v.string()),
@@ -103,6 +210,8 @@ export default defineSchema({
         webhookSecret: v.optional(v.string()),
         defaultLanguage: v.optional(v.union(v.literal("EN"), v.literal("ES"))),
         recordingRetentionDays: v.optional(v.number()),
+        aiModel: v.optional(v.string()),
+        systemPrompt: v.optional(v.string()),
       })
     ),
   })

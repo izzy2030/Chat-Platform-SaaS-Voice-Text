@@ -4,6 +4,7 @@ import * as React from "react";
 import { GoogleGenAI, Modality, Type, type LiveServerMessage, type Tool } from "@google/genai";
 import { AudioPlayer, AudioProcessor } from "@/lib/agent-live-audio";
 import { uploadFiles } from "@/lib/uploadthing";
+import { resolveVoiceSystemInstruction } from "@/lib/widget-agent-prompt";
 import confetti from "canvas-confetti";
 import type { WidgetTheme } from "@/lib/themes";
 
@@ -11,13 +12,6 @@ const AGENT_TIMEOUT_MS = 20_000;
 const GEMINI_MODEL = "gemini-3.1-flash-live-preview";
 const GEMINI_VOICE = "Zephyr";
 const RECORDING_RETENTION_DAYS = 60;
-
-const SYSTEM_INSTRUCTION = `
-You are a helpful virtual assistant for our website.
-Your primary task is to answer user questions cheerfully and conversationally.
-Speak in a warm, natural accent and keep responses brief.
-When the user says goodbye, thanks you and indicates they're done, or clearly wants to end the conversation, use the endSession tool to close the session.
-`.trim();
 
 const GEMINI_TOOLS: Tool[] = [
   {
@@ -50,6 +44,7 @@ interface UseVoiceAgentOptions {
   visitorPageUrl: string | undefined;
   theme: WidgetTheme;
   recordingRetentionDays?: number;
+  systemPrompt?: string;
   apiKey: string | null;
   recordVisitorMessage: (args: { widgetId: string; sessionId: string; channel: string; kind: string; text: string; pageUrl?: string }) => Promise<unknown>;
   recordAgentMessage: (args: { widgetId: string; sessionId: string; channel: string; kind: string; text: string; pageUrl?: string }) => Promise<unknown>;
@@ -62,6 +57,7 @@ export function useVoiceAgent({
   visitorPageUrl,
   theme,
   recordingRetentionDays,
+  systemPrompt,
   apiKey,
   recordVisitorMessage,
   recordAgentMessage,
@@ -315,7 +311,7 @@ export function useVoiceAgent({
         config: {
           responseModalities: [Modality.AUDIO],
           speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: GEMINI_VOICE } } },
-          systemInstruction: SYSTEM_INSTRUCTION,
+          systemInstruction: resolveVoiceSystemInstruction(systemPrompt),
           tools: GEMINI_TOOLS,
         },
       });
@@ -325,7 +321,7 @@ export function useVoiceAgent({
       toast({ variant: "destructive", title: "Connection Failed", description: "Could not establish voice connection." });
       cleanupDisconnectedSession();
     }
-  }, [apiKey, cleanupDisconnectedSession, disconnectVoice, startCallRecording, theme.bubbleMessage, toast, triggerCelebration, widgetId, sessionId, visitorPageUrl, recordVisitorMessage, recordAgentMessage]);
+  }, [apiKey, cleanupDisconnectedSession, disconnectVoice, startCallRecording, systemPrompt, theme.bubbleMessage, toast, triggerCelebration, widgetId, sessionId, visitorPageUrl, recordVisitorMessage, recordAgentMessage]);
 
   React.useEffect(() => {
     if (voiceState === "disconnected") return;

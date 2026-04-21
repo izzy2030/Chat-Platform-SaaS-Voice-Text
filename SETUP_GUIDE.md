@@ -29,6 +29,25 @@
 
 Your Convex deployment is already configured. Make sure `NEXT_PUBLIC_CONVEX_URL` is set in `.env.local`.
 
+## Firecrawl Setup (for Knowledge Base)
+
+The knowledge base feature uses Firecrawl to crawl websites.
+
+1. **Get Firecrawl API Key**: 
+   - Sign up at [firecrawl.dev](https://firecrawl.dev)
+   - Copy your API key from the dashboard
+
+2. **Set Convex Environment Variable**:
+   ```bash
+   npx convex env set FIRECRAWL_API_KEY your_key_here
+   ```
+
+3. **Self-hosting (Optional)**:
+   If you are self-hosting Firecrawl, also set the base URL:
+   ```bash
+   npx convex env set FIRECRAWL_BASE_URL http://your-firecrawl-instance:3002
+   ```
+
 ## Test Your Setup
 
 Once you've added the credentials:
