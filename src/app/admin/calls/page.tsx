@@ -107,9 +107,9 @@ export default function CallsPage() {
   const totalDurationMs = calls?.reduce((sum, call) => sum + call.totalDurationMs, 0) ?? 0;
 
   return (
-    <div className="min-h-full bg-[radial-gradient(circle_at_top_left,_rgba(59,131,50,0.08),_transparent_22%),linear-gradient(180deg,_rgba(247,248,245,0.88)_0%,_rgba(255,255,255,1)_40%)] p-4 md:p-5 lg:p-6">
+    <div className="min-h-full bg-[radial-gradient(circle_at_top_left,_rgba(59,131,50,0.08),_transparent_22%),linear-gradient(180deg,_rgba(247,248,245,0.88)_0%,_rgba(255,255,255,1)_40%)] dark:bg-[radial-gradient(circle_at_top_left,_rgba(59,131,50,0.04),_transparent_22%),linear-gradient(180deg,_rgba(9,9,11,1)_0%,_rgba(9,9,11,0.98)_40%)] p-4 md:p-5 lg:p-6">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-5">
-        <section className="rounded-[30px] border border-[#E4EBE1] bg-white/92 shadow-[0_20px_60px_-42px_rgba(24,28,29,0.3)]">
+        <section className="rounded-[30px] border border-[#E4EBE1] dark:border-zinc-800 bg-white/92 dark:bg-zinc-900/92 shadow-[0_20px_60px_-42px_rgba(24,28,29,0.3)]">
           <div className="flex flex-col gap-5 p-5 md:p-6">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
               <div className="space-y-2">
@@ -164,7 +164,7 @@ export default function CallsPage() {
         </section>
 
         <section className="grid gap-5 xl:grid-cols-[minmax(0,1.15fr)_minmax(360px,1fr)]">
-          <div className="overflow-hidden rounded-[30px] border border-[#E4EBE1] bg-white/92 shadow-[0_20px_60px_-42px_rgba(24,28,29,0.3)]">
+          <div className="overflow-hidden rounded-[30px] border border-[#E4EBE1] dark:border-zinc-800 bg-white/92 dark:bg-zinc-900/92 shadow-[0_20px_60px_-42px_rgba(24,28,29,0.3)]">
             <div className="flex items-center justify-between border-b border-[#ECF0ED] dark:border-zinc-800 px-4 py-3">
               <div>
                 <h2 className="text-sm font-black uppercase tracking-[0.18em] text-[#6D7A70] dark:text-zinc-400">
@@ -188,7 +188,7 @@ export default function CallsPage() {
                   </div>
                   <div className="space-y-1">
                     <h3 className="text-lg font-black text-[#191C1D] dark:text-zinc-100">No voice calls match those filters</h3>
-                    <p className="max-w-md text-sm leading-6 text-[#7E8B83] dark:text-zinc-400">
+                    <p className="max-w-md text-sm leading-6 text-[#7E8B83] dark:text-zinc-500">
                       Once visitors use the voice agent, their sessions and recordings will appear here.
                     </p>
                   </div>
@@ -231,17 +231,17 @@ export default function CallsPage() {
                             {call.lastMessagePreview || "Voice interaction recorded"}
                           </p>
 
-                          <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-semibold text-[#7A877F]">
+                          <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] font-semibold text-[#7A877F] dark:text-zinc-500">
                             <span>{formatRelative(call.lastMessageAt)}</span>
-                            <span className="text-[#B5BEB8]">•</span>
+                            <span className="text-[#B5BEB8] dark:text-zinc-600">•</span>
                             <span>{call.recordingCount} recordings</span>
-                            <span className="text-[#B5BEB8]">•</span>
+                            <span className="text-[#B5BEB8] dark:text-zinc-600">•</span>
                             <span>{formatDuration(call.totalDurationMs)}</span>
-                            <span className="text-[#B5BEB8]">•</span>
+                            <span className="text-[#B5BEB8] dark:text-zinc-600">•</span>
                             <span className="truncate">{call.widgetName}</span>
                           </div>
 
-                          <div className="mt-1 flex items-center gap-2 overflow-hidden text-[11px] font-semibold text-[#809086]">
+                          <div className="mt-1 flex items-center gap-2 overflow-hidden text-[11px] font-semibold text-[#809086] dark:text-zinc-500">
                             <Globe className="size-3.5 shrink-0" />
                             <span className="truncate">{call.pageUrl || "Unknown page"}</span>
                           </div>
@@ -403,7 +403,7 @@ export default function CallsPage() {
                         <p
                           className={cn(
                             "mt-1.5 text-[10px] font-semibold",
-                            message.sender === "agent" ? "text-[#7B8B82]" : "text-white/75"
+                            message.sender === "agent" ? "text-[#7B8B82] dark:text-zinc-500" : "text-white/75"
                           )}
                         >
                           {formatRelative(message.createdAt)}
@@ -446,11 +446,11 @@ function Metric({
   };
 
   return (
-    <div className="rounded-[22px] border border-[#E4EBE1] bg-white/82 px-4 py-3">
+    <div className="rounded-[22px] border border-[#E4EBE1] dark:border-zinc-800 bg-white/82 dark:bg-zinc-900/80 px-4 py-3">
       <div className={cn("mb-2 flex size-8 items-center justify-center rounded-2xl", toneClasses[tone])}>
         <PhoneCall className="size-4" />
       </div>
-      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#7A877F]">{label}</p>
+      <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#7A877F] dark:text-zinc-500">{label}</p>
       <p className="mt-1 text-2xl font-black tracking-tight text-[#191C1D] dark:text-zinc-100">{value}</p>
     </div>
   );

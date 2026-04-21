@@ -426,13 +426,13 @@ export function KnowledgeBaseManager() {
   }
 
   return (
-    <div className="min-h-full bg-[radial-gradient(circle_at_top_left,_rgba(59,131,50,0.08),_transparent_22%),linear-gradient(180deg,_rgba(247,248,245,0.88)_0%,_rgba(255,255,255,1)_40%)] p-4 md:p-6">
+    <div className="min-h-full bg-[radial-gradient(circle_at_top_left,_rgba(59,131,50,0.08),_transparent_22%),linear-gradient(180deg,_rgba(247,248,245,0.88)_0%,_rgba(255,255,255,1)_40%)] dark:bg-[radial-gradient(circle_at_top_left,_rgba(59,131,50,0.04),_transparent_22%),linear-gradient(180deg,_rgba(9,9,11,1)_0%,_rgba(9,9,11,0.98)_40%)] p-4 md:p-6">
       <div className="mx-auto flex max-w-7xl flex-col gap-6">
-      <div className="flex flex-col gap-3 rounded-[30px] border border-[#E4EBE1] bg-white/92 p-6 shadow-[0_20px_60px_-42px_rgba(24,28,29,0.3)] lg:flex-row lg:items-end lg:justify-between">
+      <div className="flex flex-col gap-3 rounded-[30px] border border-[#E4EBE1] dark:border-zinc-800 bg-white/92 dark:bg-zinc-900/92 p-6 shadow-[0_20px_60px_-42px_rgba(24,28,29,0.3)] lg:flex-row lg:items-end lg:justify-between">
         <div className="space-y-1.5">
           <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-600">Knowledge Base</p>
-          <h1 className="text-3xl font-black tracking-tight text-[#191C1D]">Knowledge Base</h1>
-          <p className="max-w-xl text-sm leading-relaxed text-[#68746C]">
+          <h1 className="text-3xl font-black tracking-tight text-[#191C1D] dark:text-zinc-100">Knowledge Base</h1>
+          <p className="max-w-xl text-sm leading-relaxed text-[#68746C] dark:text-zinc-400">
             Ground your agent with business knowledge. Crawl a website, add documents, or write manual text sources.
           </p>
         </div>
@@ -502,7 +502,7 @@ export function KnowledgeBaseManager() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
-        <Card className="border border-[#E4EBE1] bg-white/92 shadow-[0_20px_60px_-42px_rgba(24,28,29,0.3)]">
+        <Card className="border border-[#E4EBE1] dark:border-zinc-800 bg-white/92 dark:bg-zinc-900/92 shadow-[0_20px_60px_-42px_rgba(24,28,29,0.3)]">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-semibold">Knowledge Bases</CardTitle>
           </CardHeader>
@@ -512,7 +512,7 @@ export function KnowledgeBaseManager() {
                 <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
               </div>
             ) : knowledgeBases.length === 0 ? (
-              <div className="rounded-[22px] border border-dashed border-[#D7E3D4] bg-[#F7FAF5] p-4 text-center">
+              <div className="rounded-[22px] border border-dashed border-[#D7E3D4] dark:border-zinc-800 bg-[#F7FAF5] dark:bg-zinc-800/50 p-4 text-center">
                 <BookOpen className="mx-auto mb-2 h-5 w-5 text-muted-foreground" />
                 <p className="text-sm font-medium">No knowledge bases</p>
                 <p className="mt-1 text-xs text-muted-foreground">
@@ -530,8 +530,8 @@ export function KnowledgeBaseManager() {
                     onClick={() => setSelectedKnowledgeBaseId(knowledgeBase._id)}
                     className={`w-full rounded-[22px] border p-3 text-left transition ${
                       isActive
-                        ? "border-emerald-500/50 bg-[#F3FAF0]"
-                        : "border-[#E4EBE1] bg-white hover:border-emerald-500/40 hover:bg-[#F7FAF5]"
+                        ? "border-emerald-500/50 dark:border-emerald-500/30 bg-[#F3FAF0] dark:bg-emerald-500/10"
+                        : "border-[#E4EBE1] dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-emerald-500/40 dark:hover:border-emerald-500/20 hover:bg-[#F7FAF5] dark:hover:bg-zinc-800"
                     }`}
                   >
                     <div className="flex items-start justify-between gap-2">
@@ -917,9 +917,9 @@ export function KnowledgeBaseManager() {
 
 function SummaryCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-border/60 bg-muted/10 p-3">
-      <p className="text-[10px] font-medium uppercase tracking-[0.15em] text-muted-foreground">{label}</p>
-      <p className="mt-1.5 text-xl font-semibold tracking-tight">{value}</p>
+    <div className="rounded-lg border border-border/60 dark:border-zinc-800 bg-muted/10 dark:bg-zinc-800/30 p-3">
+      <p className="text-[10px] font-medium uppercase tracking-[0.15em] text-muted-foreground dark:text-zinc-500">{label}</p>
+      <p className="mt-1.5 text-xl font-semibold tracking-tight dark:text-zinc-100">{value}</p>
     </div>
   );
 }
@@ -935,9 +935,9 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded border border-border/50 bg-background px-3 py-2">
-      <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground">{label}</p>
-      <p className="mt-0.5 text-sm">{value}</p>
+    <div className="rounded border border-border/50 dark:border-zinc-800 bg-background dark:bg-zinc-900 px-3 py-2">
+      <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground dark:text-zinc-500">{label}</p>
+      <p className="mt-0.5 text-sm dark:text-zinc-300">{value}</p>
     </div>
   );
 }
