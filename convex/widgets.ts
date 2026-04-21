@@ -1,5 +1,27 @@
 import { query, mutation, action } from "./_generated/server";
 import { v } from "convex/values";
+import { UTApi } from "uploadthing/server";
+
+export const deleteStorageFiles = action({
+  args: {
+    fileKeys: v.array(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const token = process.env.UPLOADTHING_TOKEN;
+    if (!token) {
+      console.warn("UPLOADTHING_TOKEN is not configured.");
+      return { success: false, error: "UPLOADTHING_TOKEN missing" };
+    }
+    const utapi = new UTApi({ token });
+    try {
+      await utapi.deleteFiles(args.fileKeys);
+      return { success: true };
+    } catch (error) {
+      console.error("Failed to delete files from UploadThing:", error);
+      return { success: false, error: String(error) };
+    }
+  },
+});
 
 export const testWebhook = action({
   args: {
@@ -118,6 +140,8 @@ export const create = mutation({
         welcomeMessage: v.optional(v.string()),
         placeholderText: v.optional(v.string()),
         botName: v.optional(v.string()),
+        logoUrl: v.optional(v.string()),
+        logoKey: v.optional(v.string()),
         showBranding: v.optional(v.boolean()),
         accentColor: v.optional(v.string()),
         headerTextColor: v.optional(v.string()),
@@ -179,6 +203,8 @@ export const update = mutation({
         welcomeMessage: v.optional(v.string()),
         placeholderText: v.optional(v.string()),
         botName: v.optional(v.string()),
+        logoUrl: v.optional(v.string()),
+        logoKey: v.optional(v.string()),
         showBranding: v.optional(v.boolean()),
         accentColor: v.optional(v.string()),
         headerTextColor: v.optional(v.string()),
@@ -235,6 +261,8 @@ export const updateTheme = mutation({
         welcomeMessage: v.optional(v.string()),
         placeholderText: v.optional(v.string()),
         botName: v.optional(v.string()),
+        logoUrl: v.optional(v.string()),
+        logoKey: v.optional(v.string()),
         showBranding: v.optional(v.boolean()),
         accentColor: v.optional(v.string()),
         headerTextColor: v.optional(v.string()),

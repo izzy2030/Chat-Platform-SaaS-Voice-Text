@@ -187,23 +187,23 @@ export default function ProfilePage() {
   return (
     <div className="container mx-auto max-w-2xl py-12">
       <div className="mb-10">
-        <h1 className="text-4xl font-bold tracking-tight text-foreground">Account Configuration</h1>
-        <p className="text-sm text-muted-foreground font-medium mt-1">Manage your identity and security preferences.</p>
+        <h1 className="text-4xl font-black tracking-tight text-foreground">Account Configuration</h1>
+        <p className="text-sm font-semibold text-muted-foreground/70 mt-1">Manage your identity and security preferences.</p>
       </div>
 
       <div className="grid gap-6">
-        <Card className="rounded-2xl shadow-md border-border/70 overflow-hidden bg-card">
-          <CardHeader className="pb-8">
-            <CardTitle className="text-xl font-bold">Public Profile</CardTitle>
-            <CardDescription className="text-muted-foreground/70">
+        <Card className="rounded-xl shadow-premium border-border bg-card">
+          <CardHeader className="pb-6">
+            <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/70">Public Profile</CardTitle>
+            <CardDescription className="text-xs font-medium text-muted-foreground/60">
               Update your public identity within the ecosystem.
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmitProfile(onProfileSubmit)} className="space-y-6">
               <div className="flex flex-col sm:flex-row items-center gap-8 mb-8">
-                <div className="rounded-3xl p-1 bg-primary/10 border border-primary/20 shadow-inner">
-                  <Avatar className="h-32 w-32 border-4 border-background shadow-xl">
+                <div className="rounded-xl p-1 bg-secondary/30 border border-border shadow-inner">
+                  <Avatar className="h-32 w-32 border-4 border-card shadow-premium">
                     {/* Prioritize currentPhotoURL from form state for preview, else fallback to user.user_metadata?.avatar_url */}
                     <AvatarImage src={currentPhotoURL || user?.imageUrl || undefined} alt={user?.fullName || 'Avatar'} className="object-cover" />
                     <AvatarFallback className="text-3xl font-bold bg-muted/50">
@@ -218,7 +218,7 @@ export default function ProfilePage() {
                       id="photoURL"
                       placeholder="https://example.com/avatar.png"
                       {...registerProfile('photoURL')}
-                      className="h-12 rounded-xl border-border/60 bg-muted/20"
+                      className="h-11 rounded-lg border-border bg-muted/20"
                     />
                     {profileErrors.photoURL && (
                       <p className="text-sm text-red-500">{profileErrors.photoURL.message}</p>
@@ -236,14 +236,14 @@ export default function ProfilePage() {
                   id="displayName"
                   placeholder="John Doe"
                   {...registerProfile('displayName')}
-                  className="h-12 rounded-xl border-border/60 bg-muted/20"
+                  className="h-11 rounded-lg border-border bg-muted/20"
                 />
                 {profileErrors.displayName && (
                   <p className="text-sm text-red-500">{profileErrors.displayName.message}</p>
                 )}
               </div>
 
-              <Button type="submit" disabled={isProfileLoading} className="w-full sm:w-auto h-11 px-8 rounded-xl bg-primary hover:bg-primary/90 text-white font-bold shadow-md transition-all">
+              <Button type="submit" disabled={isProfileLoading} className="w-full sm:w-auto h-11 px-8 rounded-lg font-black shadow-md transition-all">
                 {isProfileLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Sync Profile
               </Button>
@@ -262,29 +262,29 @@ export default function ProfilePage() {
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl shadow-md border-border/70 overflow-hidden bg-card">
+        <Card className="rounded-xl shadow-premium border-border bg-card">
           <CardHeader>
-            <CardTitle className="text-xl font-bold">Node Identity</CardTitle>
-            <CardDescription className="text-muted-foreground/70">
+            <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/70">Node Identity</CardTitle>
+            <CardDescription className="text-xs font-medium text-muted-foreground/60">
               Technical identifiers for your current session.
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-6">
             <div className="grid gap-2">
               <Label className="text-sm font-bold text-foreground">Authenticated Email</Label>
-              <Input value={user?.emailAddresses?.[0]?.emailAddress || ''} disabled readOnly className="h-11 rounded-xl border-border/40 bg-muted/10 opacity-70" />
+              <Input value={user?.emailAddresses?.[0]?.emailAddress || ''} disabled readOnly className="h-11 rounded-lg border-border bg-muted/20 opacity-70" />
             </div>
             <div className="grid gap-2">
               <Label className="text-sm font-bold text-foreground">Core User UID</Label>
-              <Input value={user?.id || ''} disabled readOnly className="h-11 rounded-xl border-border/40 bg-muted/10 font-mono text-xs opacity-70" />
+              <Input value={user?.id || ''} disabled readOnly className="h-11 rounded-lg border-border bg-muted/20 font-mono text-xs opacity-70" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="rounded-2xl shadow-md border-border/70 overflow-hidden bg-card">
+        <Card className="rounded-xl shadow-premium border-border bg-card">
           <CardHeader>
-            <CardTitle className="text-xl font-bold">Security Protocols</CardTitle>
-            <CardDescription className="text-muted-foreground/70">
+            <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/70">Security Protocols</CardTitle>
+            <CardDescription className="text-xs font-medium text-muted-foreground/60">
               Update your access credentials.
             </CardDescription>
           </CardHeader>
@@ -297,7 +297,7 @@ export default function ProfilePage() {
                   type="password"
                   placeholder="••••••••"
                   {...registerPassword('newPassword')}
-                  className="h-12 rounded-xl border-border/60 bg-muted/20"
+                  className="h-11 rounded-lg border-border bg-muted/20"
                 />
                 {passwordErrors.newPassword && (
                   <p className="text-sm text-red-500 font-medium">{passwordErrors.newPassword.message}</p>
@@ -310,13 +310,13 @@ export default function ProfilePage() {
                   type="password"
                   placeholder="••••••••"
                   {...registerPassword('confirmPassword')}
-                  className="h-12 rounded-xl border-border/60 bg-muted/20"
+                  className="h-11 rounded-lg border-border bg-muted/20"
                 />
                 {passwordErrors.confirmPassword && (
                   <p className="text-sm text-red-500 font-medium">{passwordErrors.confirmPassword.message}</p>
                 )}
               </div>
-              <Button type="submit" disabled={isPasswordLoading} className="w-full h-12 rounded-xl bg-foreground text-background hover:bg-foreground/90 font-bold shadow-md transition-all">
+              <Button type="submit" disabled={isPasswordLoading} className="w-full h-11 rounded-lg bg-surface-dark text-white hover:bg-surface-dark/90 font-black shadow-md transition-all">
                 {isPasswordLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Update Credentials
               </Button>

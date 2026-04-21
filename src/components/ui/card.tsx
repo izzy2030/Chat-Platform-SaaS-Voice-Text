@@ -5,14 +5,27 @@ import { cn } from "@/lib/utils"
 function Card({
   className,
   size = "default",
+  variant = "default",
   ...props
-}: React.ComponentProps<"div"> & { size?: "default" | "sm" }) {
+}: React.ComponentProps<"div"> & { 
+  size?: "default" | "sm",
+  variant?: "default" | "borderless" | "inline" | "dark"
+}) {
+  const variants = {
+    default: "border border-[#E5ECE1] bg-card/95 shadow-[0_20px_60px_-40px_rgba(24,28,29,0.3)] dark:border-zinc-800 dark:bg-zinc-900/95",
+    borderless: "border-none bg-transparent shadow-none",
+    inline: "border-border/60 bg-muted/10 shadow-none",
+    dark: "bg-[#1C2320] text-white shadow-[0_24px_70px_-35px_rgba(28,35,32,0.65)] dark:border-zinc-800",
+  }
+
   return (
     <div
       data-slot="card"
       data-size={size}
+      data-variant={variant}
       className={cn(
-        "group/card flex flex-col gap-6 overflow-hidden rounded-premium border-none bg-card py-6 text-sm text-card-foreground shadow-premium has-[>img:first-child]:pt-0 data-[size=sm]:gap-4 data-[size=sm]:py-4 *:[img:first-child]:rounded-t-premium *:[img:last-child]:rounded-b-premium",
+        "group/card flex flex-col gap-6 overflow-hidden rounded-xl py-0 text-sm text-card-foreground has-[>img:first-child]:pt-0 data-[size=sm]:gap-4 data-[size=sm]:py-0 *:[img:first-child]:rounded-t-xl *:[img:last-child]:rounded-b-xl",
+        variants[variant],
         className
       )}
       {...props}
@@ -25,7 +38,7 @@ function CardHeader({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card-header"
       className={cn(
-        "group/card-header @container/card-header grid auto-rows-min items-start gap-1 rounded-t-xl px-6 group-data-[size=sm]/card:px-4 has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto] [.border-b]:pb-6 group-data-[size=sm]/card:[.border-b]:pb-4",
+        "group/card-header @container/card-header grid auto-rows-min items-start gap-1 rounded-t-xl px-5 py-5 border-b border-[#EEF2EB] group-data-[size=sm]/card:px-4 group-data-[size=sm]/card:py-4 has-data-[slot=card-action]:grid-cols-[1fr_auto] has-data-[slot=card-description]:grid-rows-[auto_auto] [.border-b]:pb-5 group-data-[size=sm]/card:[.border-b]:pb-3 dark:border-zinc-800",
         className
       )}
       {...props}
@@ -73,7 +86,7 @@ function CardContent({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
       data-slot="card-content"
-      className={cn("px-6 group-data-[size=sm]/card:px-4", className)}
+      className={cn("px-5 py-5 group-data-[size=sm]/card:px-4 group-data-[size=sm]/card:py-4", className)}
       {...props}
     />
   )
@@ -84,7 +97,7 @@ function CardFooter({ className, ...props }: React.ComponentProps<"div">) {
     <div
       data-slot="card-footer"
       className={cn(
-        "flex items-center rounded-b-xl px-6 group-data-[size=sm]/card:px-4 [.border-t]:pt-6 group-data-[size=sm]/card:[.border-t]:pt-4",
+        "flex items-center rounded-b-xl px-5 py-5 group-data-[size=sm]/card:px-4 group-data-[size=sm]/card:py-4 [.border-t]:pt-5 group-data-[size=sm]/card:[.border-t]:pt-3 dark:border-zinc-800",
         className
       )}
       {...props}

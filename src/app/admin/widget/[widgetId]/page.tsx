@@ -8,7 +8,7 @@ import { useEffect, useState, use } from 'react';
 import { useUser } from '@clerk/nextjs';
 import { useQuery, useMutation, useAction } from 'convex/react';
 import { api } from 'convex/_generated/api';
-import { Loader2, Type, Palette, Code, Check, Copy, Globe, FlaskConical, Clock, Sparkles, ArrowLeft, Database, Plus, X, ExternalLink, Wrench, Cpu, ChevronLeft, ChevronRight, FileText } from 'lucide-react';
+import { Loader2, Type, Palette, Code, Check, Copy, Globe, FlaskConical, Clock, Sparkles, ArrowLeft, Database, Plus, X, ExternalLink, Wrench, Cpu, ChevronLeft, ChevronRight, FileText, ImageIcon, Trash2, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Form,
@@ -31,6 +31,64 @@ import confetti from 'canvas-confetti';
 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter } from '@/components/ui/dialog';
+import { uploadFiles } from '@/lib/uploadthing';
+import Cropper, { Point, Area } from 'react-easy-crop';
+import { Slider } from '@/components/ui/slider';
+
+const readFile = (file: File): Promise<string> => {
+  return new Promise((resolve) => {
+    const reader = new FileReader();
+    reader.addEventListener('load', () => resolve(reader.result as string), false);
+    reader.readAsDataURL(file);
+  });
+};
+
+const createImage = (url: string): Promise<HTMLImageElement> =>
+  new Promise((resolve, reject) => {
+    const image = new Image();
+    image.addEventListener('load', () => resolve(image));
+    image.addEventListener('error', (error) => reject(error));
+    image.setAttribute('crossOrigin', 'anonymous');
+    image.src = url;
+  });
+
+async function getCroppedImg(
+  imageSrc: string,
+  pixelCrop: Area
+): Promise<Blob> {
+  const image = await createImage(imageSrc);
+  const canvas = document.createElement('canvas');
+  const ctx = canvas.getContext('2d');
+
+  if (!ctx) {
+    throw new Error('No 2d context');
+  }
+
+  canvas.width = pixelCrop.width;
+  canvas.height = pixelCrop.height;
+
+  ctx.drawImage(
+    image,
+    pixelCrop.x,
+    pixelCrop.y,
+    pixelCrop.width,
+    pixelCrop.height,
+    0,
+    0,
+    pixelCrop.width,
+    pixelCrop.height
+  );
+
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        reject(new Error('Canvas is empty'));
+        return;
+      }
+      resolve(blob);
+    }, 'image/jpeg');
+  });
+}
 
 const widgetSchema = z.object({
   name: z.string().min(1, 'Widget Title is required'),
@@ -40,6 +98,8 @@ const widgetSchema = z.object({
   welcomeMessage: z.string().optional(),
   placeholderText: z.string().optional(),
   botName: z.string().optional(),
+  logoUrl: z.string().optional(),
+  logoKey: z.string().optional(),
   showBranding: z.boolean().default(true),
   knowledgeBaseId: z.string().optional(),
   aiModel: z.string().optional(),
@@ -97,6 +157,7 @@ function Preview({ widgetId, formValues }: { widgetId: string, formValues: Widge
         welcomeMessage: formValues.welcomeMessage,
         placeholderText: formValues.placeholderText,
         botName: formValues.botName,
+        logoUrl: formValues.logoUrl,
         showBranding: formValues.showBranding,
 
         // Design
@@ -121,8 +182,8 @@ function Preview({ widgetId, formValues }: { widgetId: string, formValues: Widge
   }, [widgetId, formValues]);
 
   return (
-    <div className="w-full h-full flex flex-col items-center justify-start py-12 bg-muted/30 relative overflow-y-auto pretty-scrollbar">
-      <div className="mb-6 flex items-center justify-between w-[400px] z-10 shrink-0 px-2">
+    <div className="w-full h-full flex flex-col items-center justify-center gap-4 p-6 bg-muted/30 relative overflow-hidden">
+      <div className="flex items-center justify-between w-[400px] z-10 shrink-0 px-2">
         <div className="flex flex-col">
           <span className="text-foreground/80 text-[11px] font-bold uppercase tracking-[0.15em] leading-none">Live Preview</span>
           <span className="text-[9px] text-muted-foreground/50 font-medium mt-1">Real-time Rendering</span>
@@ -132,7 +193,7 @@ function Preview({ widgetId, formValues }: { widgetId: string, formValues: Widge
         </Button>
       </div>
 
-      <div className="relative w-[400px] h-[640px] shadow-[0_32px_64px_-12px_rgba(0,0,0,0.2)] rounded-[2.5rem] border-[10px] border-[#191C1A] bg-[#191C1A] overflow-hidden z-10 ring-1 ring-white/10 shrink-0 mb-12 isolate" style={{ colorScheme: 'light' }}>
+      <div className="relative w-[400px] h-[min(640px,calc(100%-3.5rem))] shadow-[0_32px_64px_-12px_rgba(0,0,0,0.2)] rounded-[2.5rem] border-[10px] border-[#191C1A] bg-[#191C1A] overflow-hidden z-10 ring-1 ring-white/10 shrink-0 isolate" style={{ colorScheme: 'light' }}>
         <div className="absolute top-0 left-1/2 -translate-x-1/2 w-32 h-6 bg-[#191C1A] rounded-b-2xl z-20" />
         <div className="w-full h-full bg-white dark:bg-zinc-900 rounded-[1.6rem] overflow-hidden light text-zinc-900 override-light-mode">
           <ChatWidgetComponent
@@ -161,6 +222,14 @@ export default function BuilderPage({
   const [newKbName, setNewKbName] = useState('');
   const [newKbUrl, setNewKbUrl] = useState('');
   const [isCreatingKb, setIsCreatingKb] = useState(false);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [cropImage, setCropImage] = useState<string | null>(null);
+  const [crop, setCrop] = useState<Point>({ x: 0, y: 0 });
+  const [zoom, setZoom] = useState(1);
+  const [croppedAreaPixels, setCroppedAreaPixels] = useState<Area | null>(null);
+  const [isCropDialogOpen, setIsCropDialogOpen] = useState(false);
+  const avatarInputId = React.useId();
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
   const tabRailRef = React.useRef<HTMLDivElement>(null);
   const hasHydratedRef = React.useRef(false);
   const { user, isLoaded } = useUser();
@@ -190,6 +259,7 @@ export default function BuilderPage({
       welcomeMessage: 'Hi! How can I help you today?',
       placeholderText: 'Type your message...',
       botName: 'AI Assistant',
+      logoUrl: '',
       showBranding: true,
       recordingRetentionDays: 60,
       knowledgeBaseId: '',
@@ -234,6 +304,8 @@ export default function BuilderPage({
           welcomeMessage: data.welcomeMessage,
           placeholderText: data.placeholderText,
           botName: data.botName,
+          logoUrl: data.logoUrl,
+          logoKey: data.logoKey,
           showBranding: data.showBranding,
           accentColor: data.accentColor,
           headerTextColor: data.headerTextColor,
@@ -294,6 +366,7 @@ export default function BuilderPage({
         welcomeMessage: widget.theme?.welcomeMessage || 'Hi! How can I help you today?',
         placeholderText: widget.theme?.placeholderText || 'Type your message...',
         botName: widget.theme?.botName || 'AI Assistant',
+        logoUrl: widget.theme?.logoUrl || '',
         showBranding: widget.theme?.showBranding ?? true,
 
         accentColor: widget.theme?.accentColor || '#3b8332',
@@ -369,6 +442,92 @@ export default function BuilderPage({
       });
     } finally {
       setIsTestingWebhook(false);
+    }
+  };
+
+  const onAvatarSelected = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file || !user) return;
+
+    if (!file.type.startsWith('image/')) {
+      toast({
+        variant: 'destructive',
+        title: 'Invalid File',
+        description: 'Please choose an image file for the widget avatar.',
+      });
+      return;
+    }
+
+    try {
+      const imageDataUrl = await readFile(file);
+      setCropImage(imageDataUrl);
+      setZoom(1);
+      setCrop({ x: 0, y: 0 });
+      setIsCropDialogOpen(true);
+    } catch (error) {
+      toast({
+        variant: 'destructive',
+        title: 'Error',
+        description: 'Could not read image file.',
+      });
+    }
+  };
+
+  const deleteStorageFiles = useAction(api.widgets.deleteStorageFiles);
+  
+  const handleCropSave = async () => {
+    if (!cropImage || !croppedAreaPixels || !user) return;
+
+    setIsUploadingAvatar(true);
+    setIsCropDialogOpen(false);
+    
+    try {
+      // 1. Get old key for cleanup
+      const oldKey = form.getValues('logoKey');
+
+      // 2. Process and upload new file
+      const croppedImageBlob = await getCroppedImg(cropImage, croppedAreaPixels);
+      const file = new File([croppedImageBlob], 'avatar.jpg', { type: 'image/jpeg' });
+
+      const [uploadedFile] = await uploadFiles('widgetAvatar', {
+        files: [file],
+        input: {
+          widgetId,
+          userId: user.id,
+        },
+      });
+      
+      const logoUrl = uploadedFile?.serverData?.fileUrl || uploadedFile?.ufsUrl;
+      const logoKey = uploadedFile?.key;
+
+      if (!logoUrl || !logoKey) {
+        throw new Error('Upload finished, but no file data was returned.');
+      }
+      
+      // 3. Update form
+      form.setValue('logoUrl', logoUrl, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+      form.setValue('logoKey', logoKey, { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+      
+      // 4. Cleanup old file if it exists
+      if (oldKey) {
+        deleteStorageFiles({ fileKeys: [oldKey] }).catch(err => console.error('Failed to cleanup old avatar:', err));
+      }
+
+      toast({
+        title: 'Avatar Uploaded',
+        description: 'The widget preview has been updated.',
+      });
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : 'Avatar upload failed.';
+      toast({
+        variant: 'destructive',
+        title: 'Upload Failed',
+        description: message,
+      });
+    } finally {
+      setIsUploadingAvatar(false);
+      setCropImage(null);
     }
   };
 
@@ -450,7 +609,7 @@ export default function BuilderPage({
   const iframeSnippet = `<iframe src="${typeof window !== 'undefined' ? window.location.origin : ''}/widget/${widgetId}" style="position:fixed;bottom:0;right:0;width:400px;height:600px;border:none;z-index:99999;" allow="microphone"></iframe>`;
 
   return (
-    <div className="flex h-svh max-h-svh bg-background text-foreground overflow-hidden font-sans">
+    <div className="flex h-full max-h-full min-h-0 bg-background text-foreground overflow-hidden font-sans">
       
       {/* Left Sidebar - Builder */}
       <div className="w-[420px] bg-card border-r border-border flex flex-col h-full overflow-hidden shrink-0 z-10">
@@ -601,6 +760,78 @@ export default function BuilderPage({
                         <FormLabel className="text-[10px] text-muted-foreground/70 font-bold uppercase tracking-wider">Bot Name</FormLabel>
                         <FormControl>
                           <Input {...field} className="h-9 rounded-lg border-border/60 bg-background text-[13px] text-foreground focus-visible:ring-1 focus-visible:ring-primary/40 focus-visible:border-primary/40" />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="logoUrl"
+                    render={({ field }) => (
+                      <FormItem>
+                        <div className="flex items-center justify-between">
+                          <FormLabel className="text-[10px] text-muted-foreground/70 font-bold uppercase tracking-wider">Avatar Image</FormLabel>
+                          {field.value && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="sm"
+                              className="h-6 px-1.5 text-[9px] font-bold uppercase tracking-wider text-rose-500 hover:bg-rose-500/5 hover:text-rose-500 transition-colors"
+                              onClick={() => {
+                                const key = form.getValues('logoKey');
+                                if (key) {
+                                  deleteStorageFiles({ fileKeys: [key] }).catch(err => console.error('Failed to remove avatar:', err));
+                                }
+                                form.setValue('logoUrl', '', { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+                                form.setValue('logoKey', '', { shouldDirty: true, shouldTouch: true, shouldValidate: true });
+                              }}
+                              disabled={isUploadingAvatar}
+                            >
+                              <Trash2 className="mr-1 h-2.5 w-2.5" />
+                              Remove
+                            </Button>
+                          )}
+                        </div>
+                        <FormControl>
+                          <div className="flex items-center gap-3 rounded-lg border border-border/60 bg-background p-2">
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border border-border/60 bg-muted text-muted-foreground">
+                              {field.value ? (
+                                <img src={field.value} alt="" className="h-full w-full object-cover" />
+                              ) : (
+                                <ImageIcon className="h-4 w-4" />
+                              )}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <p className="truncate text-[12px] font-medium text-foreground/80">
+                                {field.value ? 'Custom avatar active' : 'Use the default bot icon'}
+                              </p>
+                              <p className="text-[9px] text-muted-foreground/50">
+                                PNG, JPG, GIF, or WebP up to 4MB.
+                              </p>
+                            </div>
+                            <div
+                              onClick={() => fileInputRef.current?.click()}
+                              className={`relative inline-flex h-8 shrink-0 cursor-pointer items-center justify-center overflow-hidden rounded-lg border border-border/60 bg-background px-3 text-[10px] font-bold uppercase tracking-wider text-foreground/80 shadow-none transition-all hover:bg-accent hover:text-accent-foreground ${
+                                isUploadingAvatar || !user ? 'opacity-50 cursor-not-allowed pointer-events-none' : ''
+                              }`}
+                            >
+                              <input
+                                ref={fileInputRef}
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                disabled={isUploadingAvatar || !user}
+                                onChange={onAvatarSelected}
+                              />
+                              {isUploadingAvatar ? (
+                                <Loader2 className="mr-1.5 h-3 w-3 animate-spin" />
+                              ) : (
+                                <Upload className="mr-1.5 h-3 w-3" />
+                              )}
+                              Upload
+                            </div>
+                          </div>
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -1199,6 +1430,72 @@ export default function BuilderPage({
       <div className="flex-1 bg-muted/30 flex flex-col min-w-0">
         <Preview widgetId={widgetId} formValues={currentValues} />
       </div>
+
+      {/* Avatar Crop Dialog */}
+      <Dialog open={isCropDialogOpen} onOpenChange={setIsCropDialogOpen}>
+        <DialogContent className="sm:max-w-[500px] p-0 overflow-hidden border-none bg-zinc-950">
+          <DialogHeader className="p-6 bg-zinc-900/50 border-b border-white/5">
+            <DialogTitle className="text-sm font-bold uppercase tracking-wider text-white">Center Avatar</DialogTitle>
+          </DialogHeader>
+          <div className="relative h-[400px] w-full bg-zinc-950">
+            {cropImage && (
+              <Cropper
+                image={cropImage}
+                crop={crop}
+                zoom={zoom}
+                aspect={1}
+                cropShape="round"
+                showGrid={false}
+                onCropChange={setCrop}
+                onCropComplete={(_, pixels) => setCroppedAreaPixels(pixels)}
+                onZoomChange={setZoom}
+              />
+            )}
+          </div>
+          <div className="p-6 space-y-6 bg-zinc-900/50 border-t border-white/5">
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-zinc-500">Zoom</span>
+                <span className="text-[10px] font-mono text-zinc-400">{Math.round(zoom * 100)}%</span>
+              </div>
+              <Slider
+                value={[zoom]}
+                min={1}
+                max={3}
+                step={0.1}
+                onValueChange={(val: number | readonly number[]) => {
+                  const zoomVal = Array.isArray(val) ? val[0] : (val as number);
+                  setZoom(zoomVal);
+                }}
+                className="py-2"
+              />
+            </div>
+            <DialogFooter className="flex items-center justify-between sm:justify-between gap-4">
+              <Button
+                type="button"
+                variant="ghost"
+                onClick={() => setIsCropDialogOpen(false)}
+                className="text-zinc-400 hover:text-white hover:bg-white/5 text-[10px] font-bold uppercase tracking-wider h-9"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={handleCropSave}
+                disabled={isUploadingAvatar}
+                className="bg-white text-black hover:bg-zinc-200 text-[10px] font-bold uppercase tracking-wider h-9 px-6"
+              >
+                {isUploadingAvatar ? (
+                  <Loader2 className="mr-2 h-3 w-3 animate-spin" />
+                ) : (
+                  <Check className="mr-2 h-3 w-3" />
+                )}
+                Apply Avatar
+              </Button>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

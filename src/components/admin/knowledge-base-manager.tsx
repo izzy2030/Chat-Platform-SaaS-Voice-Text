@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 
 import { api } from "convex/_generated/api";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -426,13 +427,13 @@ export function KnowledgeBaseManager() {
   }
 
   return (
-    <div className="min-h-full bg-[radial-gradient(circle_at_top_left,_rgba(59,131,50,0.08),_transparent_22%),linear-gradient(180deg,_rgba(247,248,245,0.88)_0%,_rgba(255,255,255,1)_40%)] dark:bg-[radial-gradient(circle_at_top_left,_rgba(59,131,50,0.04),_transparent_22%),linear-gradient(180deg,_rgba(9,9,11,1)_0%,_rgba(9,9,11,0.98)_40%)] p-4 md:p-6">
+    <div className="min-h-full">
       <div className="mx-auto flex max-w-7xl flex-col gap-6">
-      <div className="flex flex-col gap-3 rounded-[30px] border border-[#E4EBE1] dark:border-zinc-800 bg-white/92 dark:bg-zinc-900/92 p-6 shadow-[0_20px_60px_-42px_rgba(24,28,29,0.3)] lg:flex-row lg:items-end lg:justify-between">
+      <div className="flex flex-col gap-3 rounded-xl border border-border bg-card shadow-premium p-6 lg:flex-row lg:items-end lg:justify-between">
         <div className="space-y-1.5">
-          <p className="text-xs font-black uppercase tracking-[0.22em] text-emerald-600">Knowledge Base</p>
-          <h1 className="text-3xl font-black tracking-tight text-[#191C1D] dark:text-zinc-100">Knowledge Base</h1>
-          <p className="max-w-xl text-sm leading-relaxed text-[#68746C] dark:text-zinc-400">
+          <Badge className="w-fit border-none bg-secondary px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-secondary-foreground hover:bg-secondary">Knowledge Base</Badge>
+          <h1 className="text-3xl font-black tracking-tight text-foreground">Knowledge Base</h1>
+          <p className="max-w-xl text-sm leading-relaxed text-muted-foreground">
             Ground your agent with business knowledge. Crawl a website, add documents, or write manual text sources.
           </p>
         </div>
@@ -502,9 +503,9 @@ export function KnowledgeBaseManager() {
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[280px_minmax(0,1fr)]">
-        <Card className="border border-[#E4EBE1] dark:border-zinc-800 bg-white/92 dark:bg-zinc-900/92 shadow-[0_20px_60px_-42px_rgba(24,28,29,0.3)]">
+        <Card className="shadow-premium rounded-xl border-border bg-card">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-semibold">Knowledge Bases</CardTitle>
+            <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/70">Knowledge Bases</CardTitle>
           </CardHeader>
           <CardContent className="space-y-2">
             {knowledgeBases === undefined ? (
@@ -512,9 +513,9 @@ export function KnowledgeBaseManager() {
                 <Loader2 className="h-4 w-4 animate-spin text-muted-foreground" />
               </div>
             ) : knowledgeBases.length === 0 ? (
-              <div className="rounded-[22px] border border-dashed border-[#D7E3D4] dark:border-zinc-800 bg-[#F7FAF5] dark:bg-zinc-800/50 p-4 text-center">
-                <BookOpen className="mx-auto mb-2 h-5 w-5 text-muted-foreground" />
-                <p className="text-sm font-medium">No knowledge bases</p>
+              <div className="rounded-lg border border-dashed border-border bg-muted/30 p-6 text-center">
+                <BookOpen className="mx-auto mb-3 h-6 w-6 text-muted-foreground/60" />
+                <p className="text-sm font-black text-foreground">No knowledge bases</p>
                 <p className="mt-1 text-xs text-muted-foreground">
                   Create a website draft to get started.
                 </p>
@@ -528,10 +529,10 @@ export function KnowledgeBaseManager() {
                     key={knowledgeBase._id}
                     type="button"
                     onClick={() => setSelectedKnowledgeBaseId(knowledgeBase._id)}
-                    className={`w-full rounded-[22px] border p-3 text-left transition ${
+                    className={`w-full rounded-lg border p-3.5 text-left transition-all duration-300 ${
                       isActive
-                        ? "border-emerald-500/50 dark:border-emerald-500/30 bg-[#F3FAF0] dark:bg-emerald-500/10"
-                        : "border-[#E4EBE1] dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-emerald-500/40 dark:hover:border-emerald-500/20 hover:bg-[#F7FAF5] dark:hover:bg-zinc-800"
+                        ? "border-primary/30 bg-secondary/30 shadow-md"
+                        : "border-border/50 bg-card hover:border-border hover:bg-muted/30"
                     }`}
                   >
                     <div className="flex items-start justify-between gap-2">
@@ -556,7 +557,7 @@ export function KnowledgeBaseManager() {
         </Card>
 
         {!selectedKnowledgeBase ? (
-          <Card className="border-border/60">
+          <Card variant="inline">
             <CardContent className="flex min-h-[200px] flex-col items-center justify-center gap-3 p-8 text-center">
               <BookOpen className="h-6 w-6 text-muted-foreground" />
               <div className="space-y-1">
@@ -569,11 +570,11 @@ export function KnowledgeBaseManager() {
           </Card>
         ) : (
           <div className="space-y-4">
-            <Card className="border-border/60">
+            <Card variant="inline">
               <CardHeader className="flex flex-col gap-3 pb-2 lg:flex-row lg:items-start lg:justify-between">
                 <div>
-                  <CardTitle className="text-base font-semibold">{selectedKnowledgeBase.name}</CardTitle>
-                  <p className="mt-1 text-xs text-muted-foreground">
+                  <CardTitle className="text-xl font-black text-foreground">{selectedKnowledgeBase.name}</CardTitle>
+                  <p className="mt-1 text-xs font-medium text-muted-foreground">
                     {selectedKnowledgeBase.websiteUrl || "Manual source"} ·{" "}
                     {selectedKnowledgeBase.lastCrawledAt
                       ? `Updated ${formatDistanceToNow(new Date(selectedKnowledgeBase.lastCrawledAt), { addSuffix: true })}`
@@ -773,6 +774,7 @@ export function KnowledgeBaseManager() {
                     <Field label="Summary">
                       <Textarea
                         rows={3}
+                        className="rounded-lg border-border bg-muted/20"
                         value={editForm.summary}
                         onChange={(event) => setEditForm((current) => ({ ...current, summary: event.target.value }))}
                       />
@@ -780,11 +782,11 @@ export function KnowledgeBaseManager() {
                   </div>
 
                   <div className="space-y-3">
-                    <Card className="border-border/60 bg-muted/10">
+                    <Card className="rounded-xl border-border bg-muted/20 shadow-sm">
                       <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-semibold">Effective values</CardTitle>
+                        <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/70">Effective values</CardTitle>
                       </CardHeader>
-                      <CardContent className="space-y-2 text-sm">
+                      <CardContent className="space-y-3 text-sm">
                         <InfoRow
                           label="Business name"
                           value={getEffectiveValue({
@@ -811,21 +813,21 @@ export function KnowledgeBaseManager() {
                       </CardContent>
                     </Card>
 
-                    <Card className="border-border/60 bg-muted/10">
+                    <Card className="rounded-xl border-border bg-muted/20 shadow-sm">
                       <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-semibold">Sources</CardTitle>
+                        <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/70">Sources</CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-2">
                         {selectedKnowledgeBase.sources.map((source: any) => (
-                          <div key={source._id} className="rounded-lg border border-border/60 bg-background p-2.5">
+                          <div key={source._id} className="rounded-lg border border-border/50 bg-card p-3 shadow-sm">
                             <div className="flex items-center justify-between gap-2">
                             <div>
-                              <p className="text-sm font-medium">{source.label}</p>
-                              <p className="text-[10px] uppercase tracking-[0.15em] text-muted-foreground">
+                              <p className="text-sm font-black text-foreground">{source.label}</p>
+                              <p className="text-[10px] font-medium uppercase tracking-[0.15em] text-muted-foreground">
                                 {source.type} · {source.status}
                               </p>
                             </div>
-                              <div className="text-xs text-muted-foreground">{source.pageCount}</div>
+                              <div className="text-xs font-black text-primary">{source.pageCount}</div>
                             </div>
                           </div>
                         ))}
@@ -836,9 +838,9 @@ export function KnowledgeBaseManager() {
               </CardContent>
             </Card>
 
-            <Card className="border-border/60">
+            <Card className="rounded-xl border-border bg-card shadow-premium">
               <CardHeader className="pb-2">
-                <CardTitle className="text-base font-semibold">Crawled pages</CardTitle>
+                <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/70">Crawled pages</CardTitle>
               </CardHeader>
               <CardContent className="space-y-2">
                 {selectedKnowledgeBase.pages.length === 0 ? (
@@ -847,17 +849,17 @@ export function KnowledgeBaseManager() {
                   </div>
                 ) : (
                   selectedKnowledgeBase.pages.map((page: any) => (
-                    <div key={page._id} className="rounded-lg border border-border/60 p-3">
-                      <div className="flex flex-col gap-2 lg:flex-row lg:items-start lg:justify-between">
-                        <div className="space-y-1">
-                          <div className="flex items-center gap-1.5">
-                            <Globe className="h-3.5 w-3.5 text-muted-foreground" />
-                            <p className="text-sm font-medium">{page.title || page.url}</p>
+                    <div key={page._id} className="rounded-lg border border-border/50 bg-muted/10 p-4 transition-colors hover:bg-muted/20">
+                      <div className="flex flex-col gap-3 lg:flex-row lg:items-start lg:justify-between">
+                        <div className="space-y-1.5 min-w-0 flex-1">
+                          <div className="flex items-center gap-2">
+                            <Globe className="h-4 w-4 text-primary" />
+                            <p className="text-sm font-black text-foreground truncate">{page.title || page.url}</p>
                           </div>
-                          <p className="line-clamp-1 text-xs text-muted-foreground">
+                          <p className="line-clamp-2 text-xs font-medium leading-relaxed text-muted-foreground">
                             {page.summary || page.contentSnippet || "No summary"}
                           </p>
-                          <p className="text-[10px] text-muted-foreground">{page.url}</p>
+                          <p className="text-[10px] font-semibold text-muted-foreground/60 truncate">{page.url}</p>
                         </div>
 
                         <div className="flex flex-wrap items-center gap-2">
@@ -888,9 +890,9 @@ export function KnowledgeBaseManager() {
               </CardContent>
             </Card>
 
-            <Card className="border-border/60">
+            <Card className="rounded-xl border-border bg-card shadow-premium">
               <CardHeader className="pb-2">
-                <CardTitle className="text-base font-semibold">Sitemap</CardTitle>
+                <CardTitle className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/70">Sitemap</CardTitle>
               </CardHeader>
               <CardContent className="space-y-1">
                 {selectedKnowledgeBase.pages.map((page: any) => (
@@ -899,10 +901,10 @@ export function KnowledgeBaseManager() {
                     href={page.url}
                     target="_blank"
                     rel="noreferrer"
-                    className="flex items-center gap-2 rounded px-2 py-1.5 text-sm transition hover:bg-muted/30"
+                    className="flex items-center gap-2 rounded-lg px-2 py-2 text-sm transition-all duration-200 hover:bg-secondary/40"
                   >
-                    <div className={`h-2 w-2 rounded-full ${page.included ? "bg-emerald-500" : "bg-muted-foreground/40"}`} />
-                    <span className="truncate text-xs">{page.url}</span>
+                    <div className={`h-2 w-2 rounded-full shadow-sm ${page.included ? "bg-primary" : "bg-muted-foreground/30"}`} />
+                    <span className="truncate text-xs font-medium text-foreground/80">{page.url}</span>
                   </a>
                 ))}
               </CardContent>
@@ -917,9 +919,9 @@ export function KnowledgeBaseManager() {
 
 function SummaryCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-border/60 dark:border-zinc-800 bg-muted/10 dark:bg-zinc-800/30 p-3">
-      <p className="text-[10px] font-medium uppercase tracking-[0.15em] text-muted-foreground dark:text-zinc-500">{label}</p>
-      <p className="mt-1.5 text-xl font-semibold tracking-tight dark:text-zinc-100">{value}</p>
+    <div className="rounded-lg border border-border bg-muted/10 p-4 shadow-sm">
+      <p className="text-[10px] font-black uppercase tracking-[0.15em] text-muted-foreground/70">{label}</p>
+      <p className="mt-1.5 text-2xl font-black tracking-tight text-foreground">{value}</p>
     </div>
   );
 }
@@ -935,9 +937,9 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 function InfoRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded border border-border/50 dark:border-zinc-800 bg-background dark:bg-zinc-900 px-3 py-2">
-      <p className="text-[10px] font-medium uppercase tracking-[0.1em] text-muted-foreground dark:text-zinc-500">{label}</p>
-      <p className="mt-0.5 text-sm dark:text-zinc-300">{value}</p>
+    <div className="rounded-lg border border-border/40 bg-card p-3 shadow-sm">
+      <p className="text-[10px] font-black uppercase tracking-[0.1em] text-muted-foreground/60">{label}</p>
+      <p className="mt-1 text-sm font-semibold text-foreground/90">{value}</p>
     </div>
   );
 }

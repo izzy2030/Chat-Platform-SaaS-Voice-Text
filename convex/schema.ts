@@ -172,6 +172,8 @@ export default defineSchema({
         welcomeMessage: v.optional(v.string()),
         placeholderText: v.optional(v.string()),
         botName: v.optional(v.string()),
+        logoUrl: v.optional(v.string()),
+        logoKey: v.optional(v.string()),
         showBranding: v.optional(v.boolean()),
 
         // Design Tab

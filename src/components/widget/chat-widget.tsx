@@ -122,35 +122,41 @@ export function ChatWidgetComponent({
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  React.useEffect(() => {
-    const root = document.documentElement;
-    const themeVars: Record<string, string> = {
-      '--widget-bg': theme.chatBackgroundColor || theme.secondaryColor,
-      '--widget-user-bg': theme.accentColor || theme.primaryColor,
+  const themeVars = React.useMemo(() => {
+    const isDark = theme.colorMode === 'dark';
+    return {
+      // Isolate Shadcn UI variables so they use the widget's theme
+      '--background': theme.chatBackgroundColor || theme.secondaryColor || (isDark ? '#1F2937' : '#FFFFFF'),
+      '--foreground': theme.botTextColor || (isDark ? '#F9FAFB' : '#111827'),
+      '--card': theme.chatBackgroundColor || theme.secondaryColor || (isDark ? '#1F2937' : '#FFFFFF'),
+      '--card-foreground': theme.botTextColor || (isDark ? '#F9FAFB' : '#111827'),
+      '--muted': isDark ? '#374151' : '#F3F4F6',
+      '--muted-foreground': isDark ? '#9CA3AF' : '#6B7280',
+      '--border': theme.inputBorderColor || (isDark ? '#374151' : '#E5E7EB'),
+      '--input': theme.inputBgColor || (isDark ? '#374151' : '#FFFFFF'),
+      '--primary': theme.accentColor || theme.primaryColor || '#10b981',
+      '--primary-foreground': theme.userTextColor || '#FFFFFF',
+      '--ring': theme.accentColor || theme.primaryColor || '#10b981',
+
+      // Original Widget custom variables
+      '--widget-bg': theme.chatBackgroundColor || theme.secondaryColor || (isDark ? '#1F2937' : '#FFFFFF'),
+      '--widget-user-bg': theme.accentColor || theme.primaryColor || '#10b981',
       '--widget-user-text': theme.userTextColor || '#FFFFFF',
-      '--widget-bot-bg': theme.botBubbleBgColor || 'rgba(120, 113, 108, 0.5)',
+      '--widget-bot-bg': theme.botBubbleBgColor || (isDark ? 'rgba(55, 65, 81, 0.5)' : 'rgba(243, 244, 246, 0.8)'),
       '--widget-bot-text': theme.botTextColor || 'inherit',
-      '--widget-input-bg': theme.inputBgColor || 'rgba(255, 255, 255, 0.5)',
-      '--widget-input-border': theme.inputBorderColor || 'rgba(229, 231, 235, 0.4)',
+      '--widget-input-bg': theme.inputBgColor || (isDark ? '#1F2937' : '#FFFFFF'),
+      '--widget-input-border': theme.inputBorderColor || (isDark ? '#374151' : '#E5E7EB'),
       '--widget-input-text': theme.inputTextColor || 'inherit',
       '--widget-header-text': theme.headerTextColor || theme.headerTitleColor || 'var(--foreground)',
-      '--widget-accent': theme.accentColor || theme.primaryColor,
-      '--widget-accent-text': theme.userTextColor || '#fff',
-      '--widget-tabs-bg': theme.colorMode === 'dark' ? '#374151' : '#F3F4F6',
-      '--widget-tabs-text': theme.colorMode === 'dark' ? '#D1D5DB' : '#4B5563',
-      '--widget-avatar-bg': theme.colorMode === 'dark' ? '#374151' : '#F3F4F6',
-      '--widget-avatar-icon': theme.colorMode === 'dark' ? '#9CA3AF' : '#6B7280',
-    };
-
-    Object.entries(themeVars).forEach(([key, value]) => {
-      root.style.setProperty(key, value);
-    });
-
-    return () => {
-      Object.keys(themeVars).forEach(key => {
-        root.style.removeProperty(key);
-      });
-    };
+      '--widget-accent': theme.accentColor || theme.primaryColor || '#10b981',
+      '--widget-accent-text': theme.userTextColor || '#FFFFFF',
+      '--widget-tabs-bg': isDark ? '#374151' : '#F3F4F6',
+      '--widget-tabs-text': isDark ? '#D1D5DB' : '#4B5563',
+      '--widget-tabs-active-bg': theme.chatBackgroundColor || theme.secondaryColor || (isDark ? '#1F2937' : '#FFFFFF'),
+      '--widget-tabs-active-text': theme.headerTextColor || theme.botTextColor || (isDark ? '#F9FAFB' : '#111827'),
+      '--widget-avatar-bg': isDark ? '#374151' : '#F3F4F6',
+      '--widget-avatar-icon': isDark ? '#9CA3AF' : '#6B7280',
+    } as React.CSSProperties;
   }, [theme]);
 
   const { voiceState, timedOut, connectVoice, disconnectVoice, isVoiceActive } = useVoiceAgent({
@@ -237,7 +243,7 @@ export function ChatWidgetComponent({
   };
 
   return (
-    <div className="flex flex-col h-full bg-transparent w-full">
+    <div className="override-light-mode flex flex-col h-full bg-transparent w-full" style={themeVars}>
       <Card
         className="flex flex-col h-full w-full border border-border shadow-2xl overflow-hidden widget-bg"
         style={{
@@ -268,10 +274,10 @@ export function ChatWidgetComponent({
         }}>
           <div className="px-4 pt-4 shrink-0">
             <TabsList className="w-full grid grid-cols-2 rounded-xl p-1 widget-tabs-bg">
-              <TabsTrigger value="text" className="rounded-lg text-xs font-medium data-[state=active]:shadow-sm transition-all widget-tabs-text">
+              <TabsTrigger value="text" className="widget-tabs-trigger rounded-lg text-xs font-medium transition-all">
                 <MessageSquare className="w-3.5 h-3.5 mr-2" /> Text Chat
               </TabsTrigger>
-              <TabsTrigger value="voice" className="rounded-lg text-xs font-medium data-[state=active]:shadow-sm transition-all widget-tabs-text">
+              <TabsTrigger value="voice" className="widget-tabs-trigger rounded-lg text-xs font-medium transition-all">
                 <Mic className="w-3.5 h-3.5 mr-2" /> Voice Call
               </TabsTrigger>
             </TabsList>

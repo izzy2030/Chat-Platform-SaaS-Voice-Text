@@ -88,29 +88,29 @@ export default function SettingsPage() {
     setColors((current) => ({ ...current, [key]: value }));
 
   return (
-    <div className="min-h-full bg-[radial-gradient(circle_at_top_left,_rgba(59,131,50,0.12),_transparent_28%),linear-gradient(180deg,_rgba(247,248,245,0.95)_0%,_rgba(255,255,255,1)_38%)] px-4 py-6 sm:px-6 dark:bg-[radial-gradient(circle_at_top_left,_rgba(59,131,50,0.06),_transparent_28%),linear-gradient(180deg,_rgba(9,9,11,1)_0%,_rgba(9,9,11,0.98)_38%)]">
+    <div className="min-h-full">
       <div className="mx-auto flex w-full max-w-[1480px] flex-col gap-6">
-        <section className="overflow-hidden rounded-[34px] border border-white/70 bg-white/90 shadow-[0_30px_90px_-45px_rgba(24,28,29,0.35)] backdrop-blur dark:border-zinc-800/70 dark:bg-zinc-900/90">
+        <section className="overflow-hidden rounded-xl border border-border bg-card shadow-premium">
           <div className="grid gap-8 px-6 py-8 lg:grid-cols-[1.3fr_0.7fr] lg:px-8">
             <div className="space-y-5">
               <div className="flex flex-wrap items-center gap-3">
-                <Badge className="rounded-full border-none bg-[#ECF6E8] px-3 py-1 text-[10px] font-black uppercase tracking-[0.24em] text-[#2F6A29] hover:bg-[#ECF6E8] dark:bg-[#3b8332]/10 dark:text-emerald-500 dark:hover:bg-[#3b8332]/10">
+                <Badge className="rounded-full border-none bg-secondary px-3 py-1 text-[10px] font-black uppercase tracking-[0.24em] text-secondary-foreground hover:bg-secondary">
                   Brand & Workspace
                 </Badge>
                 <Badge
                   variant="outline"
-                  className="rounded-full border-[#DBE8D6] bg-[#F8FBF6] px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-[#5E6B61] dark:border-zinc-800 dark:bg-zinc-800/50 dark:text-zinc-400"
+                  className="rounded-full border-border bg-muted/30 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground"
                 >
                   Global Defaults
                 </Badge>
               </div>
 
               <div className="space-y-3">
-                <h1 className="max-w-3xl text-3xl font-black tracking-tight text-[#191C1D] sm:text-5xl dark:text-zinc-100">
+                <h1 className="max-w-3xl text-3xl font-black tracking-tight text-foreground sm:text-5xl">
                   Shape how every assistant looks, sounds, and introduces your
                   business.
                 </h1>
-                <p className="max-w-2xl text-sm font-medium leading-6 text-[#647066] sm:text-base dark:text-zinc-400">
+                <p className="max-w-2xl text-sm font-medium leading-relaxed text-muted-foreground sm:text-base">
                   Keep your brand kit, workspace identity, and assistant
                   defaults in one place. These settings are meant to guide new
                   widgets without replacing the per-widget controls inside
@@ -137,7 +137,7 @@ export default function SettingsPage() {
               </div>
             </div>
 
-            <div className="rounded-[28px] border border-[#E6ECE2] bg-[#F8FBF6] p-5 shadow-[inset_0_1px_0_rgba(255,255,255,0.85)] dark:border-zinc-800 dark:bg-zinc-900/50 dark:shadow-none">
+            <div className="rounded-xl border border-border bg-muted/10 p-5 shadow-sm">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-[10px] font-black uppercase tracking-[0.22em] text-[#6D7A70] dark:text-zinc-400">
@@ -148,7 +148,7 @@ export default function SettingsPage() {
                   </h2>
                 </div>
                 <div
-                  className="flex size-12 items-center justify-center rounded-2xl text-sm font-black text-white shadow-sm"
+                  className="flex size-12 items-center justify-center rounded-xl text-sm font-black text-white shadow-sm"
                   style={{ backgroundColor: colors.primary }}
                 >
                   {initials}
@@ -157,7 +157,7 @@ export default function SettingsPage() {
 
               <div className="mt-5 space-y-4">
                 <div
-                  className="rounded-[26px] border p-4 shadow-sm transition-colors duration-300 dark:!bg-zinc-900/50"
+                  className="rounded-xl border p-4 shadow-md transition-all duration-300 dark:bg-surface-dark"
                   style={{
                     backgroundColor: colors.surface,
                     borderColor: `${colors.primary}22`,
@@ -166,7 +166,7 @@ export default function SettingsPage() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div
-                        className="flex size-11 items-center justify-center rounded-2xl text-sm font-black text-white"
+                        className="flex size-11 items-center justify-center rounded-xl text-sm font-black text-white shadow-sm"
                         style={{ backgroundColor: colors.primary }}
                       >
                         {initials}
@@ -188,11 +188,11 @@ export default function SettingsPage() {
                   </div>
 
                   <div className="mt-4 space-y-3">
-                    <div className="rounded-2xl bg-white px-4 py-3 text-sm font-medium leading-6 text-[#334038] shadow-sm dark:bg-zinc-800 dark:text-zinc-300">
+                    <div className="rounded-lg border border-border/50 bg-card px-4 py-3 text-sm font-medium leading-relaxed text-foreground shadow-sm">
                       {previewWelcome}
                     </div>
                     <div
-                      className="rounded-2xl px-4 py-3 text-sm font-semibold shadow-sm"
+                      className="rounded-lg px-4 py-3 text-sm font-black shadow-sm"
                       style={{
                         backgroundColor: colors.primary,
                         color: "#ffffff",
@@ -207,18 +207,18 @@ export default function SettingsPage() {
                   {colorSlots.map((slot) => (
                     <div
                       key={slot.key}
-                      className="rounded-2xl border border-[#E5EBE1] bg-white p-3 shadow-sm dark:border-zinc-800 dark:bg-zinc-900"
+                      className="rounded-lg border border-border bg-card p-3 shadow-sm"
                     >
                       <div className="flex items-center gap-3">
                         <div
-                          className="size-10 rounded-2xl border border-black/5 dark:border-white/10"
+                          className="size-10 rounded-lg border border-border"
                           style={{ backgroundColor: colors[slot.key] }}
                         />
                         <div>
-                          <p className="text-xs font-black uppercase tracking-[0.18em] text-[#6D7A70] dark:text-zinc-400">
+                          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground">
                             {slot.label}
                           </p>
-                          <p className="text-sm font-semibold text-[#191C1D] dark:text-zinc-100">
+                          <p className="text-sm font-black text-foreground">
                             {colors[slot.key]}
                           </p>
                         </div>
@@ -227,11 +227,11 @@ export default function SettingsPage() {
                   ))}
                 </div>
 
-                <div className="rounded-[24px] border border-dashed border-[#D8E6D3] bg-white/70 p-4 dark:border-zinc-800 dark:bg-zinc-900/70">
-                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#6D7A70] dark:text-zinc-400">
+                <div className="rounded-lg border border-dashed border-border bg-muted/10 p-4">
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/70">
                     Applies to new widgets
                   </p>
-                  <ul className="mt-3 space-y-2 text-sm font-medium text-[#455247] dark:text-zinc-400">
+                  <ul className="mt-3 space-y-2 text-sm font-medium text-foreground/80">
                     <PreviewBullet text="Default welcome tone and brand language" />
                     <PreviewBullet text="Brand colors for future assistant experiences" />
                     <PreviewBullet text="Workspace contact details for shared identity" />
@@ -250,19 +250,19 @@ export default function SettingsPage() {
               description="Set the visual language new assistants should inherit by default."
             >
               <div className="grid gap-6 lg:grid-cols-[0.75fr_1.25fr]">
-                <div className="rounded-[26px] border border-dashed border-[#D7E4D3] bg-[#F8FBF6] p-5 dark:border-zinc-800 dark:bg-zinc-800/50">
+                <div className="rounded-xl border border-dashed border-border bg-muted/10 p-5">
                   <div className="flex items-center justify-between">
                     <div>
-                      <p className="text-sm font-black text-[#191C1D] dark:text-zinc-100">
+                      <p className="text-sm font-black text-foreground">
                         Company mark
                       </p>
-                      <p className="mt-1 text-sm text-[#6D7A70] dark:text-zinc-400">
+                      <p className="mt-1 text-sm font-medium text-muted-foreground">
                         Keep a shared logo and compact icon ready for future
                         widgets and surfaces.
                       </p>
                     </div>
                     <div
-                      className="flex size-14 items-center justify-center rounded-[20px] text-base font-black text-white"
+                      className="flex size-14 items-center justify-center rounded-xl text-base font-black text-white shadow-sm"
                       style={{ backgroundColor: colors.primary }}
                     >
                       {initials}
@@ -272,21 +272,20 @@ export default function SettingsPage() {
                   <div className="mt-5 space-y-3">
                     <Button
                       variant="outline"
-                      className="w-full justify-start rounded-2xl border-[#D7E4D3] bg-white text-[#1C2320] dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+                      className="w-full justify-start rounded-lg border-border bg-card text-foreground"
                     >
                       <Upload className="size-4" />
                       Upload primary logo
                     </Button>
                     <Button
                       variant="outline"
-                      className="w-full justify-start rounded-2xl border-[#D7E4D3] bg-white text-[#1C2320] dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-200"
+                      className="w-full justify-start rounded-lg border-border bg-card text-foreground"
                     >
                       <Upload className="size-4" />
                       Upload brand icon
                     </Button>
-                    <p className="text-xs font-medium leading-5 text-[#6D7A70] dark:text-zinc-400">
-                      Wiring file storage can come later. For now, this section
-                      establishes the right content model and visual hierarchy.
+                    <p className="text-xs font-medium leading-relaxed text-muted-foreground">
+                      Keep your brand assets centralized. These will be used across all your AI widgets.
                     </p>
                   </div>
                 </div>
@@ -299,7 +298,7 @@ export default function SettingsPage() {
                         id="companyName"
                         value={companyName}
                         onChange={(event) => setCompanyName(event.target.value)}
-                        className="h-11 rounded-xl border-[#D9E3D6] bg-white dark:border-zinc-700 dark:bg-zinc-900"
+                        className="h-11 rounded-lg border-border bg-card"
                       />
                     </Field>
                     <Field>
@@ -308,7 +307,7 @@ export default function SettingsPage() {
                         id="website"
                         value={website}
                         onChange={(event) => setWebsite(event.target.value)}
-                        className="h-11 rounded-xl border-[#D9E3D6] bg-white dark:border-zinc-700 dark:bg-zinc-900"
+                        className="h-11 rounded-lg border-border bg-card"
                       />
                     </Field>
                   </div>
@@ -317,7 +316,7 @@ export default function SettingsPage() {
                     {colorSlots.map((slot) => (
                       <Field key={slot.key}>
                         <Label htmlFor={slot.key}>{slot.label} color</Label>
-                        <div className="flex items-center gap-3 rounded-2xl border border-[#D9E3D6] bg-white px-3 py-2 shadow-xs dark:border-zinc-700 dark:bg-zinc-900">
+                        <div className="flex items-center gap-3 rounded-lg border border-border bg-card px-3 py-2 shadow-xs">
                           <input
                             id={slot.key}
                             aria-label={`${slot.label} color`}
@@ -355,7 +354,7 @@ export default function SettingsPage() {
                     id="brandSummary"
                     value={brandSummary}
                     onChange={(event) => setBrandSummary(event.target.value)}
-                    className="min-h-24 rounded-2xl border-[#D9E3D6] bg-white dark:border-zinc-700 dark:bg-zinc-900"
+                    className="min-h-24 rounded-lg border-border bg-card leading-relaxed"
                   />
                 </Field>
                 <Field>
@@ -366,7 +365,7 @@ export default function SettingsPage() {
                     onChange={(event) =>
                       setBrandPersonality(event.target.value)
                     }
-                    className="h-11 rounded-xl border-[#D9E3D6] bg-white dark:border-zinc-700 dark:bg-zinc-900"
+                    className="h-11 rounded-lg border-border bg-card"
                   />
                 </Field>
                 <Field>
@@ -377,7 +376,7 @@ export default function SettingsPage() {
                       if (value) setAssistantTone(value);
                     }}
                   >
-                    <SelectTrigger className="h-11 w-full rounded-xl border-[#D9E3D6] bg-white dark:border-zinc-700 dark:bg-zinc-900">
+                    <SelectTrigger className="h-11 w-full rounded-lg border-border bg-card">
                       <SelectValue placeholder="Choose a tone" />
                     </SelectTrigger>
                     <SelectContent>
@@ -396,7 +395,7 @@ export default function SettingsPage() {
                     onChange={(event) =>
                       setPreferredPhrases(event.target.value)
                     }
-                    className="min-h-28 rounded-2xl border-[#D9E3D6] bg-white dark:border-zinc-700 dark:bg-zinc-900"
+                    className="min-h-28 rounded-lg border-border bg-card leading-relaxed"
                   />
                 </Field>
                 <Field>
@@ -405,7 +404,7 @@ export default function SettingsPage() {
                     id="avoidPhrases"
                     value={avoidPhrases}
                     onChange={(event) => setAvoidPhrases(event.target.value)}
-                    className="min-h-28 rounded-2xl border-[#D9E3D6] bg-white dark:border-zinc-700 dark:bg-zinc-900"
+                    className="min-h-28 rounded-lg border-border bg-card leading-relaxed"
                   />
                 </Field>
               </div>
@@ -423,7 +422,7 @@ export default function SettingsPage() {
                     id="supportEmail"
                     value={supportEmail}
                     onChange={(event) => setSupportEmail(event.target.value)}
-                    className="h-11 rounded-xl border-[#D9E3D6] bg-white dark:border-zinc-700 dark:bg-zinc-900"
+                    className="h-11 rounded-lg border-border bg-card"
                   />
                 </Field>
                 <Field>
@@ -432,7 +431,7 @@ export default function SettingsPage() {
                     id="phone"
                     value={phone}
                     onChange={(event) => setPhone(event.target.value)}
-                    className="h-11 rounded-xl border-[#D9E3D6] bg-white dark:border-zinc-700 dark:bg-zinc-900"
+                    className="h-11 rounded-lg border-border bg-card"
                   />
                 </Field>
                 <Field>
@@ -443,7 +442,7 @@ export default function SettingsPage() {
                       if (value) setTimezone(value);
                     }}
                   >
-                    <SelectTrigger className="h-11 w-full rounded-xl border-[#D9E3D6] bg-white dark:border-zinc-700 dark:bg-zinc-900">
+                    <SelectTrigger className="h-11 w-full rounded-lg border-border bg-card">
                       <SelectValue placeholder="Select a timezone" />
                     </SelectTrigger>
                     <SelectContent>
@@ -468,7 +467,7 @@ export default function SettingsPage() {
                     id="location"
                     value={location}
                     onChange={(event) => setLocation(event.target.value)}
-                    className="h-11 rounded-xl border-[#D9E3D6] bg-white dark:border-zinc-700 dark:bg-zinc-900"
+                    className="h-11 rounded-lg border-border bg-card"
                   />
                 </Field>
               </div>
@@ -489,7 +488,7 @@ export default function SettingsPage() {
                         if (value) setLanguage(value);
                       }}
                     >
-                      <SelectTrigger className="h-11 w-full rounded-xl border-[#D9E3D6] bg-white dark:border-zinc-700 dark:bg-zinc-900">
+                    <SelectTrigger className="h-11 w-full rounded-lg border-border bg-card">
                         <SelectValue placeholder="Default language" />
                       </SelectTrigger>
                       <SelectContent>
@@ -506,7 +505,7 @@ export default function SettingsPage() {
                         if (value) setAiModel(value);
                       }}
                     >
-                      <SelectTrigger className="h-11 w-full rounded-xl border-[#D9E3D6] bg-white dark:border-zinc-700 dark:bg-zinc-900">
+                      <SelectTrigger className="h-11 w-full rounded-lg border-border bg-card">
                         <SelectValue placeholder="Model" />
                       </SelectTrigger>
                       <SelectContent>
@@ -530,7 +529,7 @@ export default function SettingsPage() {
                         if (value) setRetention(value);
                       }}
                     >
-                      <SelectTrigger className="h-11 w-full rounded-xl border-[#D9E3D6] bg-white dark:border-zinc-700 dark:bg-zinc-900">
+                      <SelectTrigger className="h-11 w-full rounded-lg border-border bg-card">
                         <SelectValue placeholder="Retention" />
                       </SelectTrigger>
                       <SelectContent>
@@ -543,8 +542,8 @@ export default function SettingsPage() {
                   </Field>
                   <Field>
                     <Label htmlFor="brandingDisplay">Branding</Label>
-                    <div className="flex h-11 items-center justify-between rounded-xl border border-[#D9E3D6] bg-white px-4 dark:border-zinc-700 dark:bg-zinc-900">
-                      <span className="text-sm font-medium text-[#1F2A22] dark:text-zinc-200">
+                    <div className="flex h-11 items-center justify-between rounded-lg border border-border bg-card px-4">
+                      <span className="text-sm font-black text-foreground">
                         Show branding
                       </span>
                       <Switch
@@ -566,7 +565,7 @@ export default function SettingsPage() {
                     onChange={(event) =>
                       setSystemPromptStarter(event.target.value)
                     }
-                    className="min-h-28 rounded-2xl border-[#D9E3D6] bg-white dark:border-zinc-700 dark:bg-zinc-900"
+                    className="min-h-28 rounded-lg border-border bg-card leading-relaxed"
                   />
                 </Field>
 
@@ -577,11 +576,11 @@ export default function SettingsPage() {
                     title="Celebration moments"
                     description="Enable success flourishes for future widgets when a goal or conversion is reached."
                   />
-                  <div className="rounded-[24px] border border-[#D9E3D6] bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
-                    <p className="text-sm font-black text-[#191C1D] dark:text-zinc-100">
+                  <div className="rounded-xl border border-border bg-card p-5 shadow-sm">
+                    <p className="text-sm font-black text-foreground">
                       What these defaults should do
                     </p>
-                    <ul className="mt-3 space-y-2 text-sm font-medium text-[#556156] dark:text-zinc-400">
+                    <ul className="mt-3 space-y-2 text-sm font-medium text-muted-foreground">
                       <PreviewBullet text="Speed up creation of future widgets" />
                       <PreviewBullet text="Create consistent voice and visual identity" />
                       <PreviewBullet text="Reduce repeated setup work in Widget Studio" />
@@ -593,34 +592,34 @@ export default function SettingsPage() {
           </div>
 
           <aside className="space-y-6 xl:sticky xl:top-6 xl:self-start">
-            <Card className="rounded-[28px] border border-[#E5ECE1] bg-white/95 py-0 shadow-[0_20px_60px_-40px_rgba(24,28,29,0.3)] dark:border-zinc-800 dark:bg-zinc-900/95">
-              <CardHeader className="border-b border-[#EEF2EB] px-5 py-5 dark:border-zinc-800">
-                <CardTitle className="text-lg font-black text-[#191C1D] dark:text-zinc-100">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg font-black text-foreground">
                   Workspace snapshot
                 </CardTitle>
-                <CardDescription className="text-sm font-medium text-[#6D7A70] dark:text-zinc-400">
+                <CardDescription className="text-sm font-medium text-muted-foreground">
                   A quick read on the identity your assistants will inherit.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-5 px-5 py-5">
-                <div className="rounded-[24px] bg-[#F7FAF5] p-4 dark:bg-zinc-800/50">
+              <CardContent className="space-y-5">
+                <div className="rounded-xl bg-secondary/30 p-5 border border-border shadow-sm">
                   <div className="flex items-center gap-3">
                     <div
-                      className="flex size-12 items-center justify-center rounded-2xl text-sm font-black text-white"
+                      className="flex size-12 items-center justify-center rounded-xl text-sm font-black text-white shadow-sm"
                       style={{ backgroundColor: colors.primary }}
                     >
                       {initials}
                     </div>
                     <div>
-                      <p className="text-base font-black text-[#191C1D] dark:text-zinc-100">
+                      <p className="text-base font-black text-foreground">
                         {companyName}
                       </p>
-                      <p className="text-sm font-medium text-[#6D7A70] dark:text-zinc-400">
+                      <p className="text-sm font-medium text-muted-foreground">
                         {supportEmail}
                       </p>
                     </div>
                   </div>
-                  <p className="mt-4 text-sm leading-6 text-[#445046]">
+                  <p className="mt-4 text-sm font-medium leading-relaxed text-foreground/80">
                     {brandSummary}
                   </p>
                 </div>
@@ -638,8 +637,8 @@ export default function SettingsPage() {
               </CardContent>
             </Card>
 
-            <Card className="rounded-[28px] border border-[#E5ECE1] bg-[#1C2320] py-0 text-white shadow-[0_24px_70px_-35px_rgba(28,35,32,0.65)] dark:border-zinc-800">
-              <CardHeader className="px-5 py-5">
+            <Card variant="dark">
+              <CardHeader>
                 <CardTitle className="text-lg font-black">
                   Voice guidance
                 </CardTitle>
@@ -647,12 +646,12 @@ export default function SettingsPage() {
                   A compact reminder of what the assistant should sound like.
                 </CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4 px-5 pb-5">
+              <CardContent className="space-y-4">
                 <div
-                  className="rounded-[22px] p-4"
+                  className="rounded-xl p-5 border border-white/10"
                   style={{
                     background:
-                      "linear-gradient(145deg, rgba(59,131,50,0.28), rgba(244,201,93,0.18))",
+                      "linear-gradient(145deg, rgba(var(--primary-rgb), 0.2), rgba(var(--secondary-rgb), 0.1))",
                   }}
                 >
                   <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/55">
@@ -691,16 +690,16 @@ function HeroStat({
   value: string;
 }) {
   return (
-    <div className="rounded-[24px] border border-[#E7EEE4] p-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-900/50">
+    <div className="rounded-xl border border-border bg-card p-4 shadow-sm">
       <div className="flex items-start gap-3">
-        <div className="flex size-10 items-center justify-center rounded-2xl bg-[#F0F7EF] text-[#3B8332] dark:bg-[#3B8332]/20 dark:text-emerald-500">
+        <div className="flex size-10 items-center justify-center rounded-xl bg-secondary text-secondary-foreground shadow-sm">
           <Icon className="size-4" />
         </div>
         <div className="space-y-1">
-          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#6D7A70] dark:text-zinc-400">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/70">
             {label}
           </p>
-          <p className="text-sm font-semibold leading-6 text-[#1E2521] dark:text-zinc-100">
+          <p className="text-sm font-black leading-relaxed text-foreground">
             {value}
           </p>
         </div>
@@ -721,23 +720,23 @@ function SettingsCard({
   children: ReactNode;
 }) {
   return (
-    <Card className="rounded-[30px] border border-[#E5ECE1] bg-white/95 py-0 shadow-[0_20px_55px_-40px_rgba(24,28,29,0.22)] dark:border-zinc-800 dark:bg-zinc-900">
-      <CardHeader className="border-b border-[#EEF2EB] px-6 py-6 dark:border-zinc-800">
+    <Card className="shadow-premium rounded-xl border-border bg-card overflow-hidden">
+      <CardHeader className="px-6 py-6 border-b border-border/40 bg-muted/10">
         <div className="flex items-start gap-4">
-          <div className="flex size-11 items-center justify-center rounded-2xl bg-[#EEF6EB] text-[#3B8332] shadow-sm dark:bg-[#3b8332]/10 dark:text-emerald-500">
+          <div className="flex size-11 items-center justify-center rounded-xl bg-secondary text-secondary-foreground shadow-sm">
             <Icon className="size-5" />
           </div>
           <div className="space-y-1">
-            <CardTitle className="text-xl font-black tracking-tight text-[#191C1D] dark:text-zinc-100">
+            <CardTitle className="text-xl font-black tracking-tight text-foreground">
               {title}
             </CardTitle>
-            <CardDescription className="max-w-2xl text-sm font-medium leading-6 text-[#6D7A70] dark:text-zinc-400">
+            <CardDescription className="max-w-2xl text-sm font-medium leading-relaxed text-muted-foreground">
               {description}
             </CardDescription>
           </div>
         </div>
       </CardHeader>
-      <CardContent className="px-6 py-6">{children}</CardContent>
+      <CardContent className="px-6 py-8">{children}</CardContent>
     </Card>
   );
 }
@@ -764,11 +763,11 @@ function ToggleCard({
   description: string;
 }) {
   return (
-    <div className="rounded-[24px] border border-[#D9E3D6] bg-white p-4 dark:border-zinc-800 dark:bg-zinc-900">
+    <div className="rounded-xl border border-border bg-muted/10 p-5 shadow-sm">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <p className="text-sm font-black text-[#191C1D] dark:text-zinc-100">{title}</p>
-          <p className="mt-1 text-sm leading-6 text-[#6D7A70] dark:text-zinc-400">{description}</p>
+          <p className="text-sm font-black text-foreground">{title}</p>
+          <p className="mt-1 text-sm font-medium leading-relaxed text-muted-foreground">{description}</p>
         </div>
         <Switch
           checked={checked}
@@ -801,15 +800,15 @@ function SnapshotRow({
   value: string;
 }) {
   return (
-    <div className="flex items-center gap-3 rounded-2xl border border-[#EEF2EB] bg-[#FBFCFA] px-3 py-3 dark:border-zinc-800 dark:bg-zinc-900/50">
-      <div className="flex size-9 items-center justify-center rounded-2xl bg-white text-[#587058] shadow-sm dark:bg-zinc-800 dark:text-zinc-400">
+    <div className="flex items-center gap-3 rounded-xl border border-border bg-muted/20 px-3 py-3 shadow-sm">
+      <div className="flex size-9 items-center justify-center rounded-xl bg-card text-primary shadow-sm">
         <Icon className="size-4" />
       </div>
       <div className="min-w-0">
-        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#7B877D] dark:text-zinc-500">
+        <p className="text-[10px] font-black uppercase tracking-[0.18em] text-muted-foreground/60">
           {label}
         </p>
-        <p className="truncate text-sm font-semibold text-[#1C2320] dark:text-zinc-200">{value}</p>
+        <p className="truncate text-sm font-semibold text-foreground">{value}</p>
       </div>
     </div>
   );
@@ -830,7 +829,7 @@ function VoiceList({
     .filter(Boolean);
 
   return (
-    <div className="rounded-[22px] border border-white/10 bg-white/5 p-4">
+    <div className="rounded-xl border border-white/10 bg-white/5 p-4">
       <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/55">
         {title}
       </p>

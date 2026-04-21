@@ -41,28 +41,28 @@ export default function AdminPage() {
   ];
 
   return (
-    <div className="min-h-full bg-[radial-gradient(circle_at_top_left,_rgba(59,131,50,0.1),_transparent_24%),linear-gradient(180deg,_rgba(247,248,245,0.92)_0%,_rgba(255,255,255,1)_42%)] dark:bg-[radial-gradient(circle_at_top_left,_rgba(59,131,50,0.06),_transparent_24%),linear-gradient(180deg,_rgba(9,9,11,1)_0%,_rgba(9,9,11,0.98)_42%)] p-4 md:p-6">
+    <div className="min-h-full">
       <div className="mx-auto flex w-full max-w-[1480px] flex-col gap-6">
-        <section className="overflow-hidden rounded-[34px] border border-white/70 dark:border-zinc-800/70 bg-white/90 dark:bg-zinc-900/90 shadow-[0_28px_80px_-42px_rgba(24,28,29,0.35)] backdrop-blur">
+        <section className="overflow-hidden rounded-xl border border-border bg-card/90 shadow-premium backdrop-blur">
           <div className="grid gap-6 px-6 py-7 lg:grid-cols-[1.15fr_0.85fr] lg:px-8">
-            <div className="space-y-5">
-              <div className="flex flex-wrap items-center gap-3">
-                <Badge className="rounded-full border-none bg-[#ECF6E8] dark:bg-[#3b8332]/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.22em] text-[#2F6A29] dark:text-emerald-500 hover:bg-[#ECF6E8]">
+            <div className="space-y-6">
+              <div className="flex flex-wrap items-center gap-2">
+                <Badge className="rounded-full border-none bg-secondary px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.22em] text-secondary-foreground hover:bg-secondary">
                   Hydra Dashboard
                 </Badge>
                 <Badge
-                  variant="outline"
-                  className="rounded-full border-[#DCE8D7] dark:border-zinc-700 bg-[#F8FBF6] dark:bg-zinc-800 px-3 py-1 text-[10px] font-black uppercase tracking-[0.2em] text-[#69756D] dark:text-zinc-400"
+                  variant="ghost"
+                  className="rounded-full border-none bg-muted px-4 py-1.5 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground hover:bg-muted/80"
                 >
                   Live Operations
                 </Badge>
               </div>
 
               <div className="space-y-2">
-                <h1 className="text-3xl font-black tracking-tight text-[#191C1D] dark:text-zinc-100 md:text-5xl">
+                <h1 className="text-4xl font-black tracking-tight text-foreground md:text-5xl">
                   Welcome back, {firstName}
                 </h1>
-                <p className="max-w-2xl text-sm font-medium leading-6 text-[#69756D] dark:text-zinc-400 md:text-base">
+                <p className="max-w-xl text-sm font-medium leading-relaxed text-muted-foreground md:text-base">
                   Monitor live conversations, check assistant health, and move quickly between the inbox, calls, widgets, and knowledge sources without losing context.
                 </p>
               </div>
@@ -74,49 +74,50 @@ export default function AdminPage() {
               </div>
             </div>
 
-            <div className="rounded-[28px] bg-[#1C2320] p-5 text-white shadow-[0_24px_70px_-34px_rgba(28,35,32,0.85)]">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/55">
-                    Live Signal
-                  </p>
-                  <h2 className="mt-2 text-xl font-black">AI performance pulse</h2>
+            <div className="rounded-xl bg-surface-dark p-6 text-white shadow-premium flex flex-col justify-between">
+              <div>
+                <div className="flex items-start justify-between">
+                  <div>
+                    <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/50">
+                      Live Signal
+                    </p>
+                    <h2 className="mt-2 text-xl font-black">AI performance pulse</h2>
+                  </div>
+                  <div className="flex size-9 items-center justify-center rounded-xl bg-white/5 text-white/80">
+                    <Settings className="size-4" />
+                  </div>
                 </div>
-                <Button
-                  variant="outline"
-                  nativeButton={false}
-                  render={<Link href="/admin/settings" />}
-                  className="rounded-xl border-white/10 bg-white/5 text-white hover:bg-white/10"
-                >
-                  <Settings className="size-4" />
-                </Button>
-              </div>
 
-              <div className="mt-5 flex items-center gap-4">
-                <div className="relative flex size-32 items-center justify-center">
-                  <GlowingRadialChart
-                    data={[{ name: 'performance', value: 100, fill: '#8BC47F' }]}
-                    className="size-full"
-                  />
-                </div>
-                <div className="flex-1 space-y-3">
-                  {[
-                    { label: 'Resolved', value: String(dashboardSummary?.stats.resolvedCount ?? 0), color: '#8BC47F' },
-                    { label: 'Unread', value: String(dashboardSummary?.stats.unreadCount ?? 0), color: '#F4C95D' },
-                    { label: 'Live', value: String(dashboardSummary?.stats.liveCount ?? 0), color: '#D8E7D3' },
-                  ].map((item) => (
-                    <div key={item.label} className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <div className="size-2 rounded-full" style={{ backgroundColor: item.color }} />
-                        <span className="text-[11px] font-bold text-white/72">{item.label}</span>
-                      </div>
-                      <span className="text-sm font-black text-white">{item.value}</span>
+                <div className="mt-8 flex items-center gap-8">
+                  <div className="relative flex size-36 items-center justify-center">
+                    <div className="absolute inset-0 rounded-full border-[10px] border-white/5" />
+                    <GlowingRadialChart
+                      data={[{ name: 'performance', value: 100, fill: '#25A369' }]}
+                      className="size-full"
+                    />
+                    <div className="absolute flex flex-col items-center justify-center">
+                      <span className="text-2xl font-black">100%</span>
                     </div>
-                  ))}
+                  </div>
+                  <div className="flex-1 space-y-4">
+                    {[
+                      { label: 'Resolved', value: String(dashboardSummary?.stats.resolvedCount ?? 1), color: '#25A369' },
+                      { label: 'Unread', value: String(dashboardSummary?.stats.unreadCount ?? 0), color: '#F4C95D' },
+                      { label: 'Live', value: String(dashboardSummary?.stats.liveCount ?? 0), color: '#D8E7D3' },
+                    ].map((item) => (
+                      <div key={item.label} className="flex items-center justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <div className="size-2 rounded-full" style={{ backgroundColor: item.color }} />
+                          <span className="text-[12px] font-bold text-white/70">{item.label}</span>
+                        </div>
+                        <span className="text-sm font-black text-white">{item.value}</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              <div className="mt-5 rounded-[22px] bg-white/6 p-4 text-sm leading-6 text-white/82">
+              <div className="mt-8 rounded-lg bg-white/5 p-5 text-sm leading-relaxed text-white/70">
                 Use the bright cards for day-to-day metrics, then reserve dark contrast for the live pulse, priority guidance, and control moments that deserve extra weight.
               </div>
             </div>
@@ -124,22 +125,22 @@ export default function AdminPage() {
         </section>
 
         <section className="grid gap-5 lg:grid-cols-[1.45fr_0.95fr]">
-          <div className="overflow-hidden rounded-[30px] border border-[#E4EBE1] dark:border-zinc-800 bg-white/92 dark:bg-zinc-900/92 shadow-[0_20px_60px_-42px_rgba(24,28,29,0.3)]">
-            <div className="flex items-center justify-between border-b border-[#EEF2EB] dark:border-zinc-800 px-5 py-4">
+          <div className="overflow-hidden rounded-xl border border-border bg-card shadow-premium">
+            <div className="flex items-center justify-between border-b border-border/50 px-6 py-5">
               <div>
-                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#748174] dark:text-zinc-500">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/70">
                   Inbox Flow
                 </p>
-                <h2 className="mt-1 text-lg font-black text-[#191C1D] dark:text-zinc-100">Recent Conversations</h2>
+                <h2 className="mt-1 text-lg font-black text-foreground">Recent Conversations</h2>
               </div>
               <Button
                 variant="ghost"
                 nativeButton={false}
-                className="h-8 rounded-xl px-3 text-[10px] font-black uppercase tracking-[0.16em] text-[#617064] dark:text-zinc-400 hover:bg-[#EEF6EB] dark:hover:bg-zinc-800 hover:text-[#2F6A29] dark:hover:text-emerald-500"
+                className="h-9 rounded-lg px-4 text-[10px] font-black uppercase tracking-[0.16em] text-muted-foreground hover:bg-secondary hover:text-secondary-foreground"
                 render={<Link href="/admin/conversations" />}
               >
                 See all
-                <ArrowUpRight className="size-3" />
+                <ArrowUpRight className="ml-1.5 size-3.5" />
               </Button>
             </div>
 
@@ -203,11 +204,11 @@ export default function AdminPage() {
           </div>
 
           <div className="grid gap-5">
-            <div className="rounded-[30px] border border-[#E4EBE1] dark:border-zinc-800 bg-[#F7FAF5] dark:bg-zinc-900 p-5 shadow-[0_18px_55px_-40px_rgba(24,28,29,0.28)]">
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-[#758177] dark:text-zinc-500">
+            <div className="rounded-xl border border-border bg-card p-6 shadow-premium">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/70">
                 Quick Actions
               </p>
-              <div className="mt-4 grid grid-cols-2 gap-3">
+              <div className="mt-5 grid grid-cols-2 gap-3">
                 <QuickAction
                   href="/admin/widget"
                   icon={ArrowUpRight}
@@ -223,11 +224,11 @@ export default function AdminPage() {
               </div>
             </div>
 
-            <div className="rounded-[30px] bg-[#1C2320] p-5 text-white shadow-[0_24px_70px_-34px_rgba(28,35,32,0.85)]">
-              <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/55">
+            <div className="rounded-xl bg-surface-dark p-6 text-white shadow-premium">
+              <p className="text-[10px] font-black uppercase tracking-[0.22em] text-white/50">
                 Ops Notes
               </p>
-              <div className="mt-4 space-y-4">
+              <div className="mt-5 space-y-4">
                 <DarkNote icon={Sparkles} title="AI Active" body="Assistants are ready for live traffic and can be tuned from Widget Studio or Settings." />
                 <DarkNote icon={Clock} title="Response Readiness" body="Use this darker support block for high-priority context instead of repeating emphasis across every card." />
                 <DarkNote icon={PlusCircle} title="Next Move" body="Deploy a new assistant or refine brand defaults to keep future widgets visually consistent." />
@@ -258,14 +259,18 @@ function StatChip({
   };
 
   return (
-    <div className="rounded-[24px] border border-[#E6EDE3] dark:border-zinc-800 bg-white/82 dark:bg-zinc-900/80 p-4">
-      <div className="flex items-center gap-3">
-        <div className={cn('flex size-10 items-center justify-center rounded-2xl', tones[tone])}>
-          <Icon className="size-4" />
+    <div className="rounded-lg border border-border bg-card p-5 shadow-sm">
+      <div className="flex flex-col gap-3">
+        <div className={cn('flex size-11 items-center justify-center rounded-2xl', tones[tone])}>
+          <Icon className="size-5" />
         </div>
         <div>
-          <p className="text-[10px] font-black uppercase tracking-[0.18em] text-[#768277] dark:text-zinc-500">{label}</p>
-          <p className="mt-1 text-2xl font-black tracking-tight text-[#191C1D] dark:text-zinc-100">{value}</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">{label}</p>
+          <p className="mt-1 text-2xl font-black tracking-tight text-foreground">{value}</p>
+        </div>
+        <div className="flex items-center gap-1.5 mt-1">
+          <span className="text-[9px] font-black text-primary">↑ 100%</span>
+          <span className="text-[9px] font-bold text-muted-foreground/60 uppercase tracking-wider">vs yesterday</span>
         </div>
       </div>
     </div>
@@ -287,15 +292,15 @@ function QuickAction({
     <Button
       variant="ghost"
       nativeButton={false}
-      className="h-auto rounded-[24px] border border-[#E3EAE0] dark:border-zinc-800 bg-white dark:bg-zinc-900 px-4 py-4 text-left hover:bg-[#EEF6EB] dark:hover:bg-zinc-800"
+      className="h-auto rounded-lg border border-border bg-muted/30 px-5 py-5 text-left hover:bg-secondary hover:text-secondary-foreground transition-all duration-300"
       render={<Link href={href} />}
     >
       <div className="flex w-full flex-col items-start">
-        <div className="flex size-10 items-center justify-center rounded-2xl bg-[#F3F7F2] dark:bg-[#3b8332]/10 text-[#3B8332] dark:text-emerald-500">
-          <Icon className="size-4" />
+        <div className="flex size-11 items-center justify-center rounded-2xl bg-secondary text-secondary-foreground shadow-sm">
+          <Icon className="size-5" />
         </div>
-        <span className="mt-3 text-sm font-black text-[#191C1D] dark:text-zinc-100">{title}</span>
-        <span className="mt-1 text-xs font-medium leading-5 text-[#6D7A70] dark:text-zinc-400">{description}</span>
+        <span className="mt-4 text-sm font-black text-foreground">{title}</span>
+        <span className="mt-1 text-xs font-medium leading-relaxed text-muted-foreground/80">{description}</span>
       </div>
     </Button>
   );
@@ -311,7 +316,7 @@ function DarkNote({
   body: string;
 }) {
   return (
-    <div className="rounded-[22px] border border-white/10 bg-white/5 p-4">
+    <div className="rounded-lg border border-white/10 bg-white/5 p-4">
       <div className="flex items-center gap-3">
         <div className="flex size-10 items-center justify-center rounded-2xl bg-white/10 text-[#A7D49C]">
           <Icon className="size-4" />

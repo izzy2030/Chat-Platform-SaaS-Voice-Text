@@ -4,6 +4,29 @@ import { createUploadthing, type FileRouter } from "uploadthing/next";
 const f = createUploadthing();
 
 export const uploadRouter = {
+  widgetAvatar: f({
+    image: {
+      maxFileCount: 1,
+      maxFileSize: "4MB",
+    },
+  })
+    .input(
+      z.object({
+        widgetId: z.string(),
+        userId: z.string(),
+      })
+    )
+    .middleware(async ({ input }) => {
+      return { ...input };
+    })
+    .onUploadComplete(async ({ file, metadata }) => {
+      return {
+        widgetId: metadata.widgetId,
+        userId: metadata.userId,
+        fileKey: file.key,
+        fileUrl: file.ufsUrl,
+      };
+    }),
   voiceRecording: f({
     audio: {
       maxFileCount: 1,

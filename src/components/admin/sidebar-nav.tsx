@@ -49,6 +49,9 @@ export function SidebarNav() {
     await signOut({ redirectUrl: '/login' });
   };
 
+  const fullName = user?.firstName ? `${user.firstName}${user.lastName ? ' ' + user.lastName : ''}` : (user?.username || 'Operator');
+  const initials = getInitials(fullName);
+
   return (
     <Sidebar collapsible="icon" className="border-r border-white/5">
       <SidebarHeader>
@@ -156,15 +159,12 @@ export function SidebarNav() {
                     alt={user?.fullName || ''}
                   />
                   <AvatarFallback className="rounded bg-primary/20 text-primary font-semibold text-xs">
-                    {getInitials(user?.emailAddresses?.[0]?.emailAddress)}
+                    {initials}
                   </AvatarFallback>
                 </Avatar>
                 <div className="grid flex-1 text-left text-sm leading-tight ml-2">
                   <span className="truncate font-medium text-xs">
-                    {user?.fullName || 'Operator'}
-                  </span>
-                  <span className="truncate text-[9px] text-gray-500">
-                    {user?.emailAddresses?.[0]?.emailAddress || ''}
+                    {fullName}
                   </span>
                 </div>
                 <Settings className="ml-auto size-3.5 text-gray-400" />

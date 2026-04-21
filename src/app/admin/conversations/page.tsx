@@ -138,20 +138,20 @@ export default function ConversationsPage() {
   };
 
   return (
-    <div className="min-h-full bg-[radial-gradient(circle_at_top_left,_rgba(59,131,50,0.08),_transparent_22%),linear-gradient(180deg,_rgba(247,248,245,0.88)_0%,_rgba(255,255,255,1)_40%)] dark:bg-[radial-gradient(circle_at_top_left,_rgba(59,131,50,0.04),_transparent_22%),linear-gradient(180deg,_rgba(9,9,11,1)_0%,_rgba(9,9,11,0.98)_40%)] p-4 md:p-5 lg:p-6">
+    <div className="min-h-full">
       <div className="mx-auto flex w-full max-w-7xl flex-col gap-5">
-        <section className="rounded-[30px] border border-[#E4EBE1] dark:border-zinc-800 bg-white/92 dark:bg-zinc-900/92 shadow-[0_20px_60px_-42px_rgba(24,28,29,0.3)]">
+        <section className="rounded-xl border border-border bg-card shadow-premium">
           <div className="flex flex-col gap-5 p-5 md:p-6">
             <div className="flex flex-col gap-4 xl:flex-row xl:items-end xl:justify-between">
               <div className="space-y-2">
-                <Badge className="w-fit border-none bg-[#f0f7ef] dark:bg-[#3b8332]/10 px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-[#3b8332] dark:text-emerald-500">
+                <Badge className="w-fit border-none bg-secondary px-3 py-1 text-[10px] font-black uppercase tracking-[0.18em] text-secondary-foreground hover:bg-secondary">
                   Conversation Log
                 </Badge>
                 <div className="space-y-1">
-                  <h1 className="text-2xl font-black tracking-tight text-[#191C1D] dark:text-zinc-100 md:text-3xl">
+                  <h1 className="text-3xl font-black tracking-tight text-foreground">
                     Conversations
                   </h1>
-                  <p className="max-w-xl text-sm font-medium leading-6 text-[#6D7A70] dark:text-zinc-400">
+                  <p className="max-w-xl text-sm font-medium leading-relaxed text-muted-foreground">
                     Review visitor chat history, filter by status, and open full transcripts in one place.
                   </p>
                 </div>
@@ -171,7 +171,7 @@ export default function ConversationsPage() {
                   value={query}
                   onChange={(event) => setQuery(event.target.value)}
                   placeholder="Search by visitor, widget, or page URL..."
-                  className="h-11 rounded-2xl border-[#DCE4DF] dark:border-zinc-800 bg-[#FCFDFC] dark:bg-zinc-900/80 pl-11 text-sm shadow-none placeholder:text-[#96A39A] focus-visible:ring-[#3b8332]/20"
+                  className="h-11 rounded-lg border-border bg-muted pl-11 text-sm shadow-none placeholder:text-muted-foreground/60 focus-visible:ring-primary/20"
                 />
               </div>
 
@@ -179,7 +179,7 @@ export default function ConversationsPage() {
                 value={channelFilter}
                 onValueChange={(value) => setChannelFilter((value as ChannelFilter | null) ?? "all")}
               >
-                <SelectTrigger className="h-11 w-full rounded-2xl border-[#DCE4DF] dark:border-zinc-800 bg-[#FCFDFC] dark:bg-zinc-900/80 px-4 text-sm font-semibold text-[#31423B] dark:text-zinc-200 shadow-none">
+                <SelectTrigger className="h-11 w-full rounded-lg border-border bg-muted px-4 text-sm font-semibold text-foreground shadow-none">
                   <SelectValue placeholder="All Channels" />
                 </SelectTrigger>
                 <SelectContent>
@@ -195,7 +195,7 @@ export default function ConversationsPage() {
                 value={statusFilter}
                 onValueChange={(value) => setStatusFilter((value as StatusFilter | null) ?? "all")}
               >
-                <SelectTrigger className="h-11 w-full rounded-2xl border-[#DCE4DF] dark:border-zinc-800 bg-[#FCFDFC] dark:bg-zinc-900/80 px-4 text-sm font-semibold text-[#31423B] dark:text-zinc-200 shadow-none">
+                <SelectTrigger className="h-11 w-full rounded-lg border-border bg-muted px-4 text-sm font-semibold text-foreground shadow-none">
                   <SelectValue placeholder="All Status" />
                 </SelectTrigger>
                 <SelectContent>
@@ -211,7 +211,7 @@ export default function ConversationsPage() {
         </section>
 
         <section className="grid gap-5 xl:grid-cols-[minmax(0,1.3fr)_minmax(320px,0.9fr)]">
-          <div className="overflow-hidden rounded-[30px] border border-[#E4EBE1] dark:border-zinc-800 bg-white/92 dark:bg-zinc-900/92 shadow-[0_20px_60px_-42px_rgba(24,28,29,0.3)]">
+          <div className="overflow-hidden rounded-xl border border-border bg-card shadow-premium">
             <div className="flex items-center justify-between border-b border-[#ECF0ED] dark:border-zinc-800 px-4 py-3">
               <div>
                 <h2 className="text-sm font-black uppercase tracking-[0.18em] text-[#6D7A70] dark:text-zinc-400">
@@ -226,11 +226,11 @@ export default function ConversationsPage() {
             <div className="flex flex-col p-3">
               {conversationList === undefined ? (
                 [...Array(8)].map((_, index) => (
-                  <div key={index} className="mb-2 h-[92px] animate-pulse rounded-[22px] bg-[#F4F7F5] dark:bg-zinc-800" />
+                  <div key={index} className="mb-2 h-[92px] animate-pulse rounded-lg bg-muted/50" />
                 ))
               ) : filteredConversations.length === 0 ? (
                 <div className="flex min-h-[320px] flex-col items-center justify-center gap-3 p-8 text-center">
-                  <div className="flex size-14 items-center justify-center rounded-3xl bg-[#f0f7ef] dark:bg-[#3b8332]/10 text-[#3b8332]">
+                  <div className="flex size-14 items-center justify-center rounded-2xl bg-secondary text-secondary-foreground shadow-sm">
                     <MessageSquare className="size-6" />
                   </div>
                   <div className="space-y-1">
@@ -250,14 +250,14 @@ export default function ConversationsPage() {
                       type="button"
                       onClick={() => setSelectedId(conversation._id)}
                       className={cn(
-                        "mb-2 rounded-[22px] border px-4 py-3 text-left transition-all duration-200",
+                        "mb-2 rounded-lg border px-4 py-3 text-left transition-all duration-300",
                         isSelected
-                          ? "border-[#B9E9D1] dark:border-emerald-800/40 bg-[#F7FFFB] dark:bg-zinc-900/40 shadow-[0_14px_40px_rgba(0,177,113,0.08)]"
-                          : "border-[#ECF0ED] dark:border-zinc-800 bg-white dark:bg-zinc-900 hover:border-[#D8E6DE] dark:border-zinc-800 hover:bg-[#FBFCFB] dark:bg-zinc-900/50"
+                          ? "border-primary/30 bg-secondary/30 shadow-md"
+                          : "border-border/50 bg-card hover:border-border hover:bg-muted/30"
                       )}
                     >
                       <div className="flex items-start gap-3">
-                        <div className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-2xl bg-[#F2F5F3] dark:bg-zinc-800/60 text-[#66746C] dark:text-zinc-400">
+                        <div className="mt-0.5 flex size-10 shrink-0 items-center justify-center rounded-2xl bg-secondary text-secondary-foreground shadow-sm">
                           {conversation.channel === "voice" ? (
                             <PhoneCall className="size-4" />
                           ) : (
@@ -305,7 +305,7 @@ export default function ConversationsPage() {
             </div>
           </div>
 
-          <div className="overflow-hidden rounded-[30px] bg-[#1C2320] text-white shadow-[0_24px_70px_-34px_rgba(28,35,32,0.8)]">
+          <div className="overflow-hidden rounded-xl bg-surface-dark text-white shadow-premium">
             {activeConversation ? (
               <div className="flex h-full flex-col">
                 <div className="border-b border-white/10 px-4 py-4">
@@ -329,7 +329,7 @@ export default function ConversationsPage() {
                         variant="outline"
                         disabled={isUpdatingStatus}
                         onClick={handleResolveConversation}
-                        className="h-9 rounded-2xl border-white/10 bg-white/6 px-4 text-[11px] font-black uppercase tracking-[0.16em] text-white shadow-none hover:bg-white/10"
+                        className="h-9 rounded-lg border-white/10 bg-white/5 px-4 text-[11px] font-black uppercase tracking-[0.16em] text-white shadow-none hover:bg-white/10"
                       >
                         {isUpdatingStatus ? <Loader2 className="mr-2 size-3.5 animate-spin" /> : null}
                         Close Conversation
@@ -362,15 +362,15 @@ export default function ConversationsPage() {
                     </div>
                   </div>
 
-                  <div className="flex flex-1 flex-col gap-2 rounded-[24px] bg-white/5 p-3">
+                  <div className="flex flex-1 flex-col gap-2 rounded-lg bg-white/5 p-4">
                     {activeConversation.messages.map((message) => (
                       <div
                         key={message._id}
                         className={cn(
-                          "max-w-[88%] rounded-[20px] px-3.5 py-2.5 shadow-sm",
+                          "max-w-[88%] rounded-lg px-4 py-3 shadow-sm",
                           message.sender === "agent"
-                            ? "self-start bg-white dark:bg-zinc-900 text-[#203129]"
-                            : "self-end bg-[#3b8332] text-white"
+                            ? "self-start bg-white dark:bg-surface-dark text-foreground border border-border"
+                            : "self-end bg-primary text-white"
                         )}
                       >
                         <div className="mb-1 flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.14em]">
@@ -472,12 +472,12 @@ function DetailRow({
   icon: React.ComponentType<{ className?: string }>;
 }) {
   return (
-    <div className="flex items-start gap-3 rounded-2xl border border-white/10 bg-white/6 p-3">
-      <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-2xl bg-white/10 text-white/70">
+    <div className="flex items-start gap-3 rounded-lg border border-white/10 bg-white/5 p-4">
+      <div className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-xl bg-white/10 text-white/70">
         <Icon className="size-4" />
       </div>
       <div className="min-w-0">
-        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-white/46">{label}</p>
+        <p className="text-[10px] font-black uppercase tracking-[0.16em] text-white/40">{label}</p>
         <p className="mt-1 break-words text-sm font-semibold text-white">{value}</p>
       </div>
     </div>

@@ -77,11 +77,13 @@ export default function AdminLayout({
 
   return (
     <ErrorBoundary>
-      <SidebarProvider className="h-svh overflow-hidden">
+      <SidebarProvider className="h-svh overflow-hidden bg-[radial-gradient(circle_at_top_left,_rgba(59,131,50,0.08),_transparent_22%),linear-gradient(180deg,_rgba(247,248,245,0.88)_0%,_rgba(255,255,255,1)_40%)] dark:bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,0.02),_transparent_25%),linear-gradient(180deg,_rgba(10,10,10,1)_0%,_rgba(0,0,0,1)_100%)]">
         <AdminSidebar user={user} handleSignOut={handleSignOut} setTheme={setTheme} theme={theme} />
         <ErrorBoundary>
-          <SidebarInset className="flex flex-col overflow-y-auto pretty-scrollbar transition-colors duration-300">
-            {children}
+          <SidebarInset className="flex flex-col overflow-y-auto pretty-scrollbar transition-colors duration-300 bg-transparent">
+            <div className="flex-1 py-12 px-8">
+              {children}
+            </div>
           </SidebarInset>
         </ErrorBoundary>
       </SidebarProvider>
@@ -93,10 +95,9 @@ function AdminSidebar({ user, handleSignOut, setTheme, theme }: { user: any, han
   const pathname = usePathname();
   const { state, toggleSidebar } = useSidebar();
 
-  const fullName = user?.fullName || 'Operator';
-  const email = user?.emailAddresses?.[0]?.emailAddress || '';
+  const fullName = user?.firstName ? `${user.firstName}${user.lastName ? ' ' + user.lastName : ''}` : (user?.username || 'Operator');
   const avatarUrl = user?.imageUrl || '';
-  const initials = getInitials(email);
+  const initials = getInitials(fullName);
 
   const menuItems = [
     { title: 'Dashboard', icon: LayoutDashboard, href: '/admin', color: 'text-[#3b8332]' },
@@ -108,10 +109,10 @@ function AdminSidebar({ user, handleSignOut, setTheme, theme }: { user: any, han
   ];
 
   return (
-    <Sidebar collapsible="icon" variant="inset" className="border-none">
+    <Sidebar collapsible="icon" variant="sidebar" className="border-none">
       <SidebarHeader>
         <div className="flex items-center gap-2 px-4 py-4 transition-all duration-300">
-          <div className="flex items-center justify-center rounded-lg bg-[#3b8332] p-1.5 size-8 shadow-sm shadow-[#3b8332]/20">
+          <div className="flex items-center justify-center rounded-lg bg-primary p-1.5 size-8 shadow-sm shadow-primary/20">
             <div className="text-white font-black text-sm">H</div>
           </div>
           <div className="flex flex-col group-data-[collapsible=icon]:hidden">
@@ -135,18 +136,18 @@ function AdminSidebar({ user, handleSignOut, setTheme, theme }: { user: any, han
                       isActive={isActive}
                       tooltip={item.title}
                       className={cn(
-                        "h-9 rounded-xl px-3 transition-all duration-200 group relative",
+                        "h-10 rounded-xl px-3 transition-all duration-200 group relative",
                         isActive 
-                          ? "bg-[#f0f7ef] dark:bg-[#3b8332]/10 text-[#2a5d24] dark:text-[#80c179] font-black" 
-                          : "text-slate-500 dark:text-zinc-400 hover:bg-[#F2F4F5] dark:hover:bg-zinc-900/50 hover:text-[#191C1D] dark:hover:text-white"
+                          ? "bg-sidebar-accent text-sidebar-accent-foreground font-black" 
+                          : "text-sidebar-foreground hover:bg-muted/50 hover:text-foreground"
                       )}
                     >
                       <item.icon className={cn(
                         "size-4 transition-colors",
-                        isActive ? "text-[#3b8332]" : cn("text-slate-400", item.color)
+                        isActive ? "text-primary" : "text-sidebar-foreground/60 group-hover:text-sidebar-foreground"
                       )} />
                       <span className="text-[13px]">{item.title}</span>
-                      {isActive && <div className="absolute right-2.5 size-1 rounded-full bg-[#3b8332] ring-3 ring-[#f0f7ef] dark:ring-zinc-900" />}
+                      {isActive && <div className="absolute right-2.5 size-1 rounded-full bg-primary ring-3 ring-sidebar-accent" />}
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 );
@@ -175,7 +176,6 @@ function AdminSidebar({ user, handleSignOut, setTheme, theme }: { user: any, han
                   </Avatar>
                   <div className="grid flex-1 text-left text-sm leading-tight ml-2 group-data-[collapsible=icon]:hidden">
                     <span className="truncate font-black text-xs text-[#191C1D] dark:text-white">{fullName}</span>
-                    <span className="truncate text-[9px] text-slate-400 font-bold tracking-tighter">{email}</span>
                   </div>
                   <ChevronRight className="ml-auto size-4 text-[#BCCABE] dark:text-zinc-500 group-data-[collapsible=icon]:hidden" />
                 </DropdownMenuTrigger>
